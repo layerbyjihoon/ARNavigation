@@ -1,0 +1,7317 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'"><title>문화관 · 노드 지도</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;color:#1e353e;background:#f4f7f7;--teal:#126b66;--muted:#62777d;--border:#dce5e6}*{box-sizing:border-box}body{margin:0;min-width:1060px}button,select,input{font:inherit}button,a,select{touch-action:manipulation}button{cursor:pointer}button:focus-visible,a:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:3px solid #47bfb7;outline-offset:3px}header{height:92px;padding:0 27px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:white}h1{font-size:24px;letter-spacing:-.8px;margin:0 0 6px;font-weight:730}header p{margin:0;font-size:12px;color:var(--muted)}.brandmark{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--teal);margin-right:9px}.actions{display:flex;align-items:center;gap:9px}.button,button{background:white;color:#29464f;border:1px solid #ccdada;border-radius:7px;padding:9px 12px;font-size:12px;text-decoration:none}button:hover,.button:hover{background:#edf6f4}main{display:grid;grid-template-columns:266px minmax(440px,1fr) 285px;height:calc(100dvh - 92px);min-height:660px}.controls,.inspector{padding:23px 20px;background:#fff;overflow:auto}.controls{border-right:1px solid var(--border)}.inspector{border-left:1px solid var(--border)}.eyebrow{font-size:10px;font-weight:700;color:#849499;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:10px}.section{margin-bottom:24px}.section h2,.inspector h2{font-size:14px;margin:0 0 13px;font-weight:650}.floors{display:flex;gap:5px}.floors button{flex:1;padding:10px 0;font-size:13px;font-weight:650}.floors button[aria-pressed=true]{color:white;background:var(--teal);border-color:var(--teal)}label{font-size:12px;display:block;color:var(--muted);margin:12px 0 6px}.endpoint{display:grid;grid-template-columns:58px 1fr;gap:7px}select{min-width:0;width:100%;height:38px;border:1px solid #ccdada;border-radius:6px;padding:0 8px;background:#fff;color:#263f48;font-size:13px}.check{display:flex;gap:8px;align-items:center;line-height:1.5;color:#29464f;margin:13px 0;font-size:12px}.check input{accent-color:var(--teal);margin:0;width:15px;height:15px;flex:none}.primary{background:var(--teal);border-color:var(--teal);color:white;width:100%;font-weight:650;font-size:13px;padding:11px}.primary:hover{background:#0d5955}.hint{font-size:11px;color:var(--muted);line-height:1.7;margin:9px 0}.divider{height:1px;background:var(--border);margin:22px 0}.legend{display:grid;gap:10px;font-size:11px;color:var(--muted)}.legend div{display:flex;align-items:center;gap:9px}.key{width:8px;height:8px;border-radius:50%;background:#b1c9d0;display:inline-block}.key.door{background:var(--teal)}.key.stair{background:#8765aa;border-radius:2px}.key.line{width:22px;height:3px;background:#d48228;border-radius:1px}.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:23px}.counts strong{font-size:19px;display:block;color:#264850}.counts span{font-size:10px;color:var(--muted)}.stage{position:relative;overflow:hidden;background:#f5f8f8}.map{width:100%;height:100%;display:block;cursor:grab;touch-action:none}.map.dragging{cursor:grabbing}.map-title{position:absolute;top:23px;left:25px;pointer-events:none}.map-title b{display:block;font-size:30px;font-weight:600;letter-spacing:-1px}.map-title span{font-size:11px;color:var(--muted);display:block;margin-top:5px}.tools{position:absolute;right:17px;top:23px;display:flex;gap:5px}.tools button{padding:7px 10px;background:#ffffffeb}.routebox{position:absolute;top:112px;left:24px;max-width:310px;background:#ffffffef;border:1px solid #d6e5e4;border-left:3px solid var(--teal);padding:15px 17px;border-radius:0 7px 7px 0;box-shadow:0 3px 16px #153c4810}.routebox[hidden]{display:none}.routebox strong{font-size:14px;display:block}.routebox p{font-size:11px;line-height:1.7;color:var(--muted);margin:7px 0 0}.steps{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}.steps button{font-size:10px;padding:6px 9px}.steps button[aria-current=step]{color:#fff;border-color:var(--teal);background:var(--teal)}.statusbar{position:absolute;bottom:0;left:0;right:0;padding:12px 20px;border-top:1px solid var(--border);background:#f9fbfbe8;font-size:10px;color:var(--muted);display:flex;justify-content:space-between;gap:15px;pointer-events:none}.statusbar strong{color:#566d74;font-weight:500}.pill{display:inline-block;background:#edf5f3;border:1px solid #d2e7e0;color:#27665b;border-radius:4px;padding:4px 6px;font-size:10px;margin-bottom:11px}.value-grid{margin:14px 0;display:grid;grid-template-columns:80px 1fr;gap:9px;font-size:12px;line-height:1.5}.value-grid dt{color:var(--muted)}.value-grid dd{margin:0;overflow-wrap:anywhere}.jsonbox{background:#f5f8f8;border:1px solid var(--border);border-radius:6px;font:10px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px;color:#34545c}.item-id{font:12px/1.5 ui-monospace,SFMono-Regular,monospace;overflow-wrap:anywhere;color:var(--teal);font-weight:700}.inspector .empty{padding-top:22px}.inspector p{font-size:12px;line-height:1.8;color:var(--muted)}.mini-button{font-size:10px;padding:5px 7px;margin:3px 3px 0 0}.row-buttons{margin-top:12px}.error{color:#a24f24!important}.corridor-base{stroke:#e3eded;stroke-width:18;stroke-linecap:round;fill:none}.edge{stroke:#b0c7cd;stroke-width:1.5;fill:none;vector-effect:non-scaling-stroke}.edge.internal_access{stroke-dasharray:3 3;stroke:#a78255}.edge.selected{stroke:#087d75;stroke-width:3}.edge-hit{stroke:none;fill:transparent;cursor:pointer}.node{fill:#b7ccd2;stroke:#f5f8f8;stroke-width:1.3;vector-effect:non-scaling-stroke}.node.room_door,.node.room_access{fill:#197d71}.node.stair_landing{fill:#8765aa}.node.entrance{fill:#2e6eab}.node.selected{stroke:#084740;stroke-width:3;fill:#62ceb3}.node-hit{fill:transparent;cursor:pointer}.room-label{cursor:pointer}.room-label rect{fill:#fff;stroke:#ccdedd;stroke-width:1;vector-effect:non-scaling-stroke;rx:5}.room-label text{fill:#294c55;font-size:13px;font-weight:600;text-anchor:middle;dominant-baseline:middle}.room-label:hover rect{fill:#eef9f5;stroke:#54a798}.room-label.start rect{fill:#deeee9;stroke:#218b77}.room-label.end rect{fill:#fff0d9;stroke:#d0923d}.leader{stroke:#cfdddf;stroke-width:1;fill:none;pointer-events:none}.stair-label{font-size:11px;fill:#70518e;font-weight:650;paint-order:stroke;stroke:#f5f8f8;stroke-width:4}.route-line{stroke:#d08026;stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;pointer-events:none}.route-end{fill:#d08026;stroke:#fff;stroke-width:2;pointer-events:none}.route-text{font-size:11px;fill:#86551d;paint-order:stroke;stroke:#fff;stroke-width:4;pointer-events:none}.muted-item{opacity:.25}a{color:var(--teal)}#loadFile{display:none}#dataStatus{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:var(--muted)}.scale-text{font:10px ui-monospace,monospace;fill:#84979b}.axis{stroke:#aebfc3;stroke-width:1}.stage [hidden]{display:none}
+.room-shape{fill:#e6eff0;stroke:#9ab5b9;stroke-width:1.2;vector-effect:non-scaling-stroke;cursor:pointer;stroke-linejoin:round}.room-shape:hover{fill:#d8e9e8;stroke:#4d9390}.room-shape.start{fill:#d1e9e0;stroke:#368c78}.room-shape.end{fill:#fbebcd;stroke:#c9913f}.room-shape.open{stroke-dasharray:4 3}.room-label text{font-size:15px}.room-label rect{fill:#ffffffeb;stroke:#adc5c6}.room-shape:focus-visible{outline:none;stroke:#167c70;stroke-width:3}</style></head><body>
+<header><div><h1><i class="brandmark"></i>문화관 노드 지도</h1><p>원본 도면 없이 보는 경로 데이터 · 지상 1–5층</p></div><div class="actions"><span id="dataStatus">내장 데이터 · 2026-10-07</span><input id="loadFile" type="file" accept=".json,application/json"><button id="loadBtn">JSON 불러오기</button><a class="button" href="graph.json" download>graph.json</a><a class="button" href="README.md">데이터 설명</a></div></header>
+<main><aside class="controls"><section class="section"><div class="eyebrow">01 / Floor</div><h2>층별 연결 구조</h2><div id="floors" class="floors"></div></section><section class="section"><div class="eyebrow">02 / Route</div><h2>경로 확인</h2><label for="start">출발 호실</label><div class="endpoint"><select id="startFloor" aria-label="출발 층"></select><select id="start"></select></div><label for="end">도착 호실</label><div class="endpoint"><select id="endFloor" aria-label="도착 층"></select><select id="end"></select></div><label class="check"><input id="allowStairs" type="checkbox">층간 후보 사용 <span style="color:#956126;font-size:10px">시연용</span></label><button id="routeBtn" class="primary">경로 확인</button><p class="hint">호실 번호를 차례로 눌러 출발·도착을 고를 수도 있어요.</p></section><div class="divider"></div><section class="section"><div class="eyebrow">03 / Inspect</div><h2>지점을 눌러 데이터 확인</h2><p class="hint">점은 노드, 선은 연결 구간이에요.<br>선택한 항목의 ID와 수치를 오른쪽에서 확인하세요.</p><label class="check"><input id="showLabels" type="checkbox" checked>호실 번호 표시</label><button id="clearBtn">경로 지우기</button></section><div class="legend"><div><i class="key door"></i>문 앞 / 진입 지점</div><div><i class="key"></i>복도 연결점</div><div><i class="key stair"></i>주계단 진입부</div><div><i class="key line"></i>선택한 경로</div></div><div id="counts" class="counts"></div><p class="hint">위치·거리는 도면 기반 추정값입니다.<br>방 윤곽은 배치 이해를 위한 단순 도형입니다.</p></aside>
+<section class="stage" aria-label="노드 지도"><svg id="map" class="map" viewBox="-130 -65 1320 1020" aria-label="층별 노드와 연결 지도" role="img"><defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M100 0H0V100" stroke="#e3eaea" stroke-width="1" fill="none"/></pattern></defs><rect x="-10000" y="-10000" width="20000" height="20000" fill="url(#grid)"/><g id="drawing"></g></svg><div class="map-title"><b id="floorTitle">2F</b><span id="floorSubtitle"></span></div><div class="tools"><button id="zoomIn" aria-label="확대">＋</button><button id="zoomOut" aria-label="축소">−</button><button id="fit">전체 보기</button></div><div id="routeBox" class="routebox" hidden aria-live="polite"></div><div class="statusbar"><strong>도면에서 얻은 평면 좌표 · 현장 확인 전</strong><span>드래그로 이동 · 휠로 확대</span></div></section>
+<aside class="inspector" aria-label="데이터 상세"><div class="eyebrow">Data inspector</div><h2>선택한 항목</h2><div id="detail" aria-live="polite"><div class="empty"><span class="pill">JSON과 같은 ID</span><p>노드나 연결선을 누르면<br>실제 데이터 항목이 표시됩니다.</p><p>예를 들어 복도 구간을 누르면<br>도면상 거리와 실측 여부를<br>구분해서 볼 수 있어요.</p></div></div></aside></main>
+<script id="embedded-graph" type="application/json">{
+  "schema_version": "1.0",
+  "dataset_id": "munhwagwan-navigation-2026-10-07",
+  "building": "숭실대학교 문화관",
+  "data_status": "plan_derived_not_field_verified",
+  "coordinate_system": {
+    "unit": "meter",
+    "value_kind": "plan_estimate",
+    "origin": "지상층 공통 기준축 X0/Y0 교점. 현장 기준점은 아직 지정하지 않음.",
+    "x_axis": "도면 기준 오른쪽",
+    "y_axis": "도면 기준 위쪽",
+    "floor_alignment": "도면 기준축을 맞춘 2D 좌표. 현장 정렬 미검증.",
+    "z_axis": null,
+    "ar_transform": null,
+    "field_measured": false
+  },
+  "scope": {
+    "floors": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "description": "일반 호실·복도·주계단과 1층 하단 출입구",
+    "excluded": [
+      "지하·옥상",
+      "시설실·화장실의 출입 경로",
+      "외부·부속계단",
+      "무번호 공간"
+    ]
+  },
+  "routing_policy": {
+    "default": "include_in_draft_route=true인 연결만 사용",
+    "same_floor_weight": "distance_m이 양수이면 실측값, 없으면 plan_distance_m 사용. 둘 다 없으면 가중 경로 탐색에서 제외.",
+    "demo_stairs": "type=stairs인 연결 후보를 명시적으로 허용할 때만 추가. 층 이동 횟수 우선, 다음으로 알려진 평면 거리 합을 최소화. 계단 거리를 0m라고 해석하지 않음.",
+    "arrival": "도착 노드는 문 앞 후보 위치이며 실제 도착 판정은 별도 구현"
+  },
+  "nodes": [
+    {
+      "id": "F1_R101_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "101호 진입 1",
+      "x_m": 8.399,
+      "y_m": 4.436,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R102_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "102호 진입 1",
+      "x_m": 4.173,
+      "y_m": 4.436,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R103_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "103호 진입 1",
+      "x_m": 4.066,
+      "y_m": 6.093,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R104_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "104호 진입 1",
+      "x_m": 8.399,
+      "y_m": 6.093,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R105-1_D1",
+      "floor": 1,
+      "type": "room_access",
+      "label": "105-1호 진입 1",
+      "x_m": 17.601,
+      "y_m": 2.298,
+      "z_m": null,
+      "field_verified": false,
+      "note": "관리도면상 로비와 열린 공간. 별도 출입문으로 가정하지 않음."
+    },
+    {
+      "id": "F1_R105_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "105호 진입 1",
+      "x_m": 20.597,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R105_D2",
+      "floor": 1,
+      "type": "room_door",
+      "label": "105호 진입 2",
+      "x_m": 28.514,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R106_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "106호 진입 1",
+      "x_m": 33.436,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R106_D2",
+      "floor": 1,
+      "type": "room_door",
+      "label": "106호 진입 2",
+      "x_m": 36.646,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R113_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "113호 진입 1",
+      "x_m": 41.193,
+      "y_m": 34.315,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R114_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "114호 진입 1",
+      "x_m": 44.778,
+      "y_m": 34.315,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R115_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "115호 진입 1",
+      "x_m": 47.613,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R112_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "112호 진입 1",
+      "x_m": 41.728,
+      "y_m": 28.489,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R111_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "111호 진입 1",
+      "x_m": 41.728,
+      "y_m": 24.267,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R111_D2",
+      "floor": 1,
+      "type": "room_door",
+      "label": "111호 진입 2",
+      "x_m": 41.728,
+      "y_m": 18.708,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_R107_D1",
+      "floor": 1,
+      "type": "room_door",
+      "label": "107호 진입 1",
+      "x_m": 41.728,
+      "y_m": 1.122,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F1_STAIR_A",
+      "floor": 1,
+      "type": "stair_landing",
+      "label": "계단 A",
+      "x_m": 12.144,
+      "y_m": 6.521,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F1_STAIR_B",
+      "floor": 1,
+      "type": "stair_landing",
+      "label": "계단 B",
+      "x_m": 45.955,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F2_R201_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "201호 진입 1",
+      "x_m": 8.399,
+      "y_m": 4.436,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R202_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "202호 진입 1",
+      "x_m": 4.173,
+      "y_m": 4.436,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R203_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "203호 진입 1",
+      "x_m": 5.671,
+      "y_m": 6.093,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R204_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "204호 진입 1",
+      "x_m": 8.399,
+      "y_m": 6.093,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R205_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "205호 진입 1",
+      "x_m": 16.424,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R205_D2",
+      "floor": 2,
+      "type": "room_door",
+      "label": "205호 진입 2",
+      "x_m": 20.704,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R206_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "206호 진입 1",
+      "x_m": 25.572,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R206_D2",
+      "floor": 2,
+      "type": "room_door",
+      "label": "206호 진입 2",
+      "x_m": 30.708,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R207_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "207호 진입 1",
+      "x_m": 35.63,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R213_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "213호 진입 1",
+      "x_m": 41.193,
+      "y_m": 34.315,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R214_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "214호 진입 1",
+      "x_m": 44.778,
+      "y_m": 34.315,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R215_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "215호 진입 1",
+      "x_m": 47.613,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R212_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "212호 진입 1",
+      "x_m": 41.728,
+      "y_m": 28.436,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R212_D2",
+      "floor": 2,
+      "type": "room_door",
+      "label": "212호 진입 2",
+      "x_m": 41.728,
+      "y_m": 24.908,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R211_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "211호 진입 1",
+      "x_m": 41.728,
+      "y_m": 18.334,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R208_D1",
+      "floor": 2,
+      "type": "room_door",
+      "label": "208호 진입 1",
+      "x_m": 41.728,
+      "y_m": 7.964,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_R208_D2",
+      "floor": 2,
+      "type": "room_door",
+      "label": "208호 진입 2",
+      "x_m": 41.728,
+      "y_m": 1.122,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F2_STAIR_A",
+      "floor": 2,
+      "type": "stair_landing",
+      "label": "계단 A",
+      "x_m": 12.144,
+      "y_m": 6.521,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F2_STAIR_B",
+      "floor": 2,
+      "type": "stair_landing",
+      "label": "계단 B",
+      "x_m": 45.955,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F3_R301_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "301호 진입 1",
+      "x_m": 8.774,
+      "y_m": 4.329,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R302_D1",
+      "floor": 3,
+      "type": "room_access",
+      "label": "302호 진입 1",
+      "x_m": 5.082,
+      "y_m": 4.436,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면상 열린 진입부. 현장 출입문 유무 확인 필요."
+    },
+    {
+      "id": "F3_R303_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "303호 진입 1",
+      "x_m": 4.708,
+      "y_m": 6.093,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R304_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "304호 진입 1",
+      "x_m": 8.774,
+      "y_m": 6.093,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R306_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "306호 진입 1",
+      "x_m": 16.424,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R307_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "307호 진입 1",
+      "x_m": 23.325,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R307_D2",
+      "floor": 3,
+      "type": "room_door",
+      "label": "307호 진입 2",
+      "x_m": 28.407,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R308_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "308호 진입 1",
+      "x_m": 30.44,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R308_D2",
+      "floor": 3,
+      "type": "room_door",
+      "label": "308호 진입 2",
+      "x_m": 38.465,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R314_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "314호 진입 1",
+      "x_m": 40.605,
+      "y_m": 32.338,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R313_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "313호 진입 1",
+      "x_m": 41.728,
+      "y_m": 30.734,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R312_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "312호 진입 1",
+      "x_m": 41.728,
+      "y_m": 25.763,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R312_D2",
+      "floor": 3,
+      "type": "room_door",
+      "label": "312호 진입 2",
+      "x_m": 41.728,
+      "y_m": 21.647,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R312_D3",
+      "floor": 3,
+      "type": "room_door",
+      "label": "312호 진입 3",
+      "x_m": 41.728,
+      "y_m": 18.654,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R309_D1",
+      "floor": 3,
+      "type": "room_door",
+      "label": "309호 진입 1",
+      "x_m": 41.728,
+      "y_m": 7.964,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_R309_D2",
+      "floor": 3,
+      "type": "room_door",
+      "label": "309호 진입 2",
+      "x_m": 41.728,
+      "y_m": 1.122,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F3_STAIR_A",
+      "floor": 3,
+      "type": "stair_landing",
+      "label": "계단 A",
+      "x_m": 12.144,
+      "y_m": 6.521,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F3_STAIR_B",
+      "floor": 3,
+      "type": "stair_landing",
+      "label": "계단 B",
+      "x_m": 45.955,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F4_R401_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "401호 진입 1",
+      "x_m": 6.42,
+      "y_m": 4.329,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R402_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "402호 진입 1",
+      "x_m": 4.761,
+      "y_m": 5.238,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R403_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "403호 진입 1",
+      "x_m": 4.654,
+      "y_m": 7.483,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R404_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "404호 진입 1",
+      "x_m": 5.671,
+      "y_m": 8.338,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R405_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "405호 진입 1",
+      "x_m": 16.424,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R406_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "406호 진입 1",
+      "x_m": 23.486,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R406-1_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "406-1호 진입 1",
+      "x_m": 21.613,
+      "y_m": 6.307,
+      "z_m": null,
+      "field_verified": false,
+      "note": "406호 내부를 통해 출입하는 구획. 406호 출입 가능 여부 확인 필요."
+    },
+    {
+      "id": "F4_R407_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "407호 진입 1",
+      "x_m": 28.514,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R407_D2",
+      "floor": 4,
+      "type": "room_door",
+      "label": "407호 진입 2",
+      "x_m": 33.65,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R407_D3",
+      "floor": 4,
+      "type": "room_door",
+      "label": "407호 진입 3",
+      "x_m": 38.519,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R413_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "413호 진입 1",
+      "x_m": 40.658,
+      "y_m": 32.605,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R411_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "411호 진입 1",
+      "x_m": 41.728,
+      "y_m": 31.108,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R411_D2",
+      "floor": 4,
+      "type": "room_door",
+      "label": "411호 진입 2",
+      "x_m": 41.728,
+      "y_m": 25.817,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R411_D3",
+      "floor": 4,
+      "type": "room_door",
+      "label": "411호 진입 3",
+      "x_m": 41.728,
+      "y_m": 18.494,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R408_D1",
+      "floor": 4,
+      "type": "room_door",
+      "label": "408호 진입 1",
+      "x_m": 41.728,
+      "y_m": 7.964,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_R408_D2",
+      "floor": 4,
+      "type": "room_door",
+      "label": "408호 진입 2",
+      "x_m": 41.728,
+      "y_m": 1.122,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F4_STAIR_A",
+      "floor": 4,
+      "type": "stair_landing",
+      "label": "계단 A",
+      "x_m": 12.144,
+      "y_m": 6.521,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F4_STAIR_B",
+      "floor": 4,
+      "type": "stair_landing",
+      "label": "계단 B",
+      "x_m": 45.955,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F5_R501_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "501호 진입 1",
+      "x_m": 8.667,
+      "y_m": 3.955,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R502_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "502호 진입 1",
+      "x_m": 6.152,
+      "y_m": 3.955,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R503_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "503호 진입 1",
+      "x_m": 4.868,
+      "y_m": 6.414,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R504_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "504호 진입 1",
+      "x_m": 5.885,
+      "y_m": 8.499,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R505_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "505호 진입 1",
+      "x_m": 8.774,
+      "y_m": 5.612,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R506_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "506호 진입 1",
+      "x_m": 16.21,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R506_D2",
+      "floor": 5,
+      "type": "room_door",
+      "label": "506호 진입 2",
+      "x_m": 20.597,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R507_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "507호 진입 1",
+      "x_m": 25.626,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R507-1_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "507-1호 진입 1",
+      "x_m": 30.708,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R508_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "508호 진입 1",
+      "x_m": 35.63,
+      "y_m": 2.352,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R517_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "517호 진입 1",
+      "x_m": 40.07,
+      "y_m": 34.422,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R516_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "516호 진입 1",
+      "x_m": 45.045,
+      "y_m": 34.101,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R515_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "515호 진입 1",
+      "x_m": 41.728,
+      "y_m": 30.253,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R514_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "514호 진입 1",
+      "x_m": 41.728,
+      "y_m": 25.336,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R513_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "513호 진입 1",
+      "x_m": 41.728,
+      "y_m": 20.258,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R510_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "510호 진입 1",
+      "x_m": 41.728,
+      "y_m": 7.857,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_R509_D1",
+      "floor": 5,
+      "type": "room_door",
+      "label": "509호 진입 1",
+      "x_m": 41.728,
+      "y_m": 1.39,
+      "z_m": null,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "F5_STAIR_A",
+      "floor": 5,
+      "type": "stair_landing",
+      "label": "계단 A",
+      "x_m": 12.144,
+      "y_m": 6.521,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F5_STAIR_B",
+      "floor": 5,
+      "type": "stair_landing",
+      "label": "계단 B",
+      "x_m": 45.955,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "층별 같은 위치의 주계단. 층고·계단 보행거리 미측정."
+    },
+    {
+      "id": "F1_ENTRY_MAIN",
+      "floor": 1,
+      "type": "entrance",
+      "label": "1층 도면 하단 출입구",
+      "x_m": 11.877,
+      "y_m": 0.107,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면에 표시된 하단 출입구. 평상시 개방 여부 현장 확인 필요."
+    },
+    {
+      "id": "F4_INT406_1",
+      "floor": 4,
+      "type": "internal_access",
+      "label": "406호 내부 통로",
+      "x_m": 23.486,
+      "y_m": 7.323,
+      "z_m": null,
+      "field_verified": false,
+      "note": "406-1호 출입용. 가구·출입 제한 현장 확인 필요."
+    },
+    {
+      "id": "F4_INT406_2",
+      "floor": 4,
+      "type": "internal_access",
+      "label": "406호 내부 통로",
+      "x_m": 21.613,
+      "y_m": 7.323,
+      "z_m": null,
+      "field_verified": false,
+      "note": "406-1호 출입용. 가구·출입 제한 현장 확인 필요."
+    },
+    {
+      "id": "F1_C001",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 3.156,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C002",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 4.066,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C003",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 4.173,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C004",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 8.399,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C005",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 12.144,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C006",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C007",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C008",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 17.601,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C009",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 20.597,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C010",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 28.514,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C011",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 33.436,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C012",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 36.646,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C013",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C014",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 1.122,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C015",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C016",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 18.708,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C017",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 24.267,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C018",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 28.489,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C019",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C020",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 41.193,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C021",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 44.778,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C022",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 47.025,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F1_C023",
+      "floor": 1,
+      "type": "corridor",
+      "label": "1층 복도 연결점",
+      "x_m": 47.56,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C001",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 3.156,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C002",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 4.173,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C003",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 5.671,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C004",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 8.399,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C005",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 12.144,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C006",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C007",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C008",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 16.424,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C009",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 20.704,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C010",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 25.572,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C011",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 30.708,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C012",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 35.63,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C013",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C014",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 1.122,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C015",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 7.964,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C016",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C017",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 18.334,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C018",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 24.908,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C019",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 28.436,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C020",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C021",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 41.193,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C022",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 44.778,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C023",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 47.025,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F2_C024",
+      "floor": 2,
+      "type": "corridor",
+      "label": "2층 복도 연결점",
+      "x_m": 47.56,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C001",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 5.885,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C002",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 8.774,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C003",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 12.144,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C004",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C005",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C006",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 16.424,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C007",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 23.325,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C008",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 28.407,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C009",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 30.44,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C010",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 38.465,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C011",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C012",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 1.122,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C013",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 7.964,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C014",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C015",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 18.654,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C016",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 21.647,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C017",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 25.763,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C018",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 30.734,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C019",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 31.75,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C020",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 5.885,
+      "y_m": 6.093,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F3_C021",
+      "floor": 3,
+      "type": "corridor",
+      "label": "3층 복도 연결점",
+      "x_m": 5.885,
+      "y_m": 7.537,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C001",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 5.189,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C002",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 6.42,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C003",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 12.144,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C004",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 5.131,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C005",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C006",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 16.424,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C007",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 23.486,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C008",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 28.514,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C009",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 33.65,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C010",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 38.519,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C011",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C012",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 1.122,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C013",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 7.964,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C014",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C015",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 18.494,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C016",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 25.817,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C017",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 31.108,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C018",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 32.017,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C019",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 5.189,
+      "y_m": 5.238,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C020",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 5.189,
+      "y_m": 7.483,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F4_C021",
+      "floor": 4,
+      "type": "corridor",
+      "label": "4층 복도 연결점",
+      "x_m": 5.189,
+      "y_m": 8.124,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C001",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 6.366,
+      "y_m": 4.757,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C002",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 8.667,
+      "y_m": 4.757,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C003",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 8.774,
+      "y_m": 4.757,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C004",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 12.144,
+      "y_m": 4.757,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C005",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 4.757,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C006",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 12.251,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C007",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 16.21,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C008",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 20.597,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C009",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 25.626,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C010",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 30.708,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C011",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 35.63,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C012",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 0.962,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C013",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 1.39,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C014",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 7.857,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C015",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 13.683,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C016",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 20.258,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C017",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 25.336,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C018",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 30.253,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C019",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 40.658,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C020",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 45.045,
+      "y_m": 33.353,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C021",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 6.366,
+      "y_m": 6.414,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    },
+    {
+      "id": "F5_C022",
+      "floor": 5,
+      "type": "corridor",
+      "label": "5층 복도 연결점",
+      "x_m": 6.366,
+      "y_m": 7.483,
+      "z_m": null,
+      "field_verified": false,
+      "note": "도면 복도 내 수동 배치"
+    }
+  ],
+  "edges": [
+    {
+      "id": "E001",
+      "from": "F1_C001",
+      "to": "F1_C002",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.91,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E002",
+      "from": "F1_C002",
+      "to": "F1_C003",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.107,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E003",
+      "from": "F1_C003",
+      "to": "F1_C004",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.226,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E004",
+      "from": "F1_C004",
+      "to": "F1_C005",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.745,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E005",
+      "from": "F1_C005",
+      "to": "F1_C006",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.107,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E006",
+      "from": "F1_C006",
+      "to": "F1_C007",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.169,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E007",
+      "from": "F1_C007",
+      "to": "F1_C008",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.35,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E008",
+      "from": "F1_C008",
+      "to": "F1_C009",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.996,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E009",
+      "from": "F1_C009",
+      "to": "F1_C010",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 7.917,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E010",
+      "from": "F1_C010",
+      "to": "F1_C011",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.922,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E011",
+      "from": "F1_C011",
+      "to": "F1_C012",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.21,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E012",
+      "from": "F1_C012",
+      "to": "F1_C013",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.012,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E013",
+      "from": "F1_C013",
+      "to": "F1_C014",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.16,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E014",
+      "from": "F1_C014",
+      "to": "F1_C015",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 12.561,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E015",
+      "from": "F1_C015",
+      "to": "F1_C016",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.025,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E016",
+      "from": "F1_C016",
+      "to": "F1_C017",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.559,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E017",
+      "from": "F1_C017",
+      "to": "F1_C018",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.222,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E018",
+      "from": "F1_C018",
+      "to": "F1_C019",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.864,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E019",
+      "from": "F1_C019",
+      "to": "F1_C020",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.535,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E020",
+      "from": "F1_C020",
+      "to": "F1_C021",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.585,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E021",
+      "from": "F1_C021",
+      "to": "F1_C022",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.247,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E022",
+      "from": "F1_C022",
+      "to": "F1_C023",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.535,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E023",
+      "from": "F1_R101_D1",
+      "to": "F1_C004",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.695,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E024",
+      "from": "F1_R102_D1",
+      "to": "F1_C003",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.695,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E025",
+      "from": "F1_R103_D1",
+      "to": "F1_C002",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E026",
+      "from": "F1_R104_D1",
+      "to": "F1_C004",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E027",
+      "from": "F1_R105-1_D1",
+      "to": "F1_C008",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.336,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E028",
+      "from": "F1_R105_D1",
+      "to": "F1_C009",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E029",
+      "from": "F1_R105_D2",
+      "to": "F1_C010",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E030",
+      "from": "F1_R106_D1",
+      "to": "F1_C011",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E031",
+      "from": "F1_R106_D2",
+      "to": "F1_C012",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E032",
+      "from": "F1_R113_D1",
+      "to": "F1_C020",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E033",
+      "from": "F1_R114_D1",
+      "to": "F1_C021",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E034",
+      "from": "F1_R115_D1",
+      "to": "F1_C022",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.588,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E035",
+      "from": "F1_R112_D1",
+      "to": "F1_C018",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E036",
+      "from": "F1_R111_D1",
+      "to": "F1_C017",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E037",
+      "from": "F1_R111_D2",
+      "to": "F1_C016",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E038",
+      "from": "F1_R107_D1",
+      "to": "F1_C014",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E039",
+      "from": "F1_STAIR_A",
+      "to": "F1_C005",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E040",
+      "from": "F1_STAIR_B",
+      "to": "F1_C015",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.297,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E041",
+      "from": "F1_ENTRY_MAIN",
+      "to": "F1_C007",
+      "type": "entrance_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.933,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E042",
+      "from": "F2_C001",
+      "to": "F2_C002",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.017,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E043",
+      "from": "F2_C002",
+      "to": "F2_C003",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.498,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E044",
+      "from": "F2_C003",
+      "to": "F2_C004",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.728,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E045",
+      "from": "F2_C004",
+      "to": "F2_C005",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.745,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E046",
+      "from": "F2_C005",
+      "to": "F2_C006",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.107,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E047",
+      "from": "F2_C006",
+      "to": "F2_C007",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.169,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E048",
+      "from": "F2_C007",
+      "to": "F2_C008",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.173,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E049",
+      "from": "F2_C008",
+      "to": "F2_C009",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.28,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E050",
+      "from": "F2_C009",
+      "to": "F2_C010",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.868,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E051",
+      "from": "F2_C010",
+      "to": "F2_C011",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.136,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E052",
+      "from": "F2_C011",
+      "to": "F2_C012",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.922,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E053",
+      "from": "F2_C012",
+      "to": "F2_C013",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.028,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E054",
+      "from": "F2_C013",
+      "to": "F2_C014",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.16,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E055",
+      "from": "F2_C014",
+      "to": "F2_C015",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 6.842,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E056",
+      "from": "F2_C015",
+      "to": "F2_C016",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.719,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E057",
+      "from": "F2_C016",
+      "to": "F2_C017",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.651,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E058",
+      "from": "F2_C017",
+      "to": "F2_C018",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 6.574,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E059",
+      "from": "F2_C018",
+      "to": "F2_C019",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.528,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E060",
+      "from": "F2_C019",
+      "to": "F2_C020",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.917,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E061",
+      "from": "F2_C020",
+      "to": "F2_C021",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.535,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E062",
+      "from": "F2_C021",
+      "to": "F2_C022",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.585,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E063",
+      "from": "F2_C022",
+      "to": "F2_C023",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.247,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E064",
+      "from": "F2_C023",
+      "to": "F2_C024",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.535,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E065",
+      "from": "F2_R201_D1",
+      "to": "F2_C004",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.695,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E066",
+      "from": "F2_R202_D1",
+      "to": "F2_C002",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.695,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E067",
+      "from": "F2_R203_D1",
+      "to": "F2_C003",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E068",
+      "from": "F2_R204_D1",
+      "to": "F2_C004",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E069",
+      "from": "F2_R205_D1",
+      "to": "F2_C008",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E070",
+      "from": "F2_R205_D2",
+      "to": "F2_C009",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E071",
+      "from": "F2_R206_D1",
+      "to": "F2_C010",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E072",
+      "from": "F2_R206_D2",
+      "to": "F2_C011",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E073",
+      "from": "F2_R207_D1",
+      "to": "F2_C012",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E074",
+      "from": "F2_R213_D1",
+      "to": "F2_C021",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E075",
+      "from": "F2_R214_D1",
+      "to": "F2_C022",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E076",
+      "from": "F2_R215_D1",
+      "to": "F2_C023",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.588,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E077",
+      "from": "F2_R212_D1",
+      "to": "F2_C019",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E078",
+      "from": "F2_R212_D2",
+      "to": "F2_C018",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E079",
+      "from": "F2_R211_D1",
+      "to": "F2_C017",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E080",
+      "from": "F2_R208_D1",
+      "to": "F2_C015",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E081",
+      "from": "F2_R208_D2",
+      "to": "F2_C014",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E082",
+      "from": "F2_STAIR_A",
+      "to": "F2_C005",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E083",
+      "from": "F2_STAIR_B",
+      "to": "F2_C016",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.297,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E084",
+      "from": "F3_C001",
+      "to": "F3_C002",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.889,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E085",
+      "from": "F3_C002",
+      "to": "F3_C003",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.37,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E086",
+      "from": "F3_C003",
+      "to": "F3_C004",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.107,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E087",
+      "from": "F3_C004",
+      "to": "F3_C005",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.169,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E088",
+      "from": "F3_C005",
+      "to": "F3_C006",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.173,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E089",
+      "from": "F3_C006",
+      "to": "F3_C007",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 6.901,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E090",
+      "from": "F3_C007",
+      "to": "F3_C008",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.082,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E091",
+      "from": "F3_C008",
+      "to": "F3_C009",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.033,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E092",
+      "from": "F3_C009",
+      "to": "F3_C010",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 8.025,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E093",
+      "from": "F3_C010",
+      "to": "F3_C011",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.193,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E094",
+      "from": "F3_C011",
+      "to": "F3_C012",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.16,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E095",
+      "from": "F3_C012",
+      "to": "F3_C013",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 6.842,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E096",
+      "from": "F3_C013",
+      "to": "F3_C014",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.719,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E097",
+      "from": "F3_C014",
+      "to": "F3_C015",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.971,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E098",
+      "from": "F3_C015",
+      "to": "F3_C016",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.993,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E099",
+      "from": "F3_C016",
+      "to": "F3_C017",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.116,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E100",
+      "from": "F3_C017",
+      "to": "F3_C018",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.971,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E101",
+      "from": "F3_C018",
+      "to": "F3_C019",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.016,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E102",
+      "from": "F3_C001",
+      "to": "F3_C020",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E103",
+      "from": "F3_C020",
+      "to": "F3_C021",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.444,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E104",
+      "from": "F3_R301_D1",
+      "to": "F3_C002",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.802,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E105",
+      "from": "F3_R302_D1",
+      "to": "F3_C001",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.062,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E106",
+      "from": "F3_R303_D1",
+      "to": "F3_C020",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.177,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E107",
+      "from": "F3_R304_D1",
+      "to": "F3_C002",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.962,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E108",
+      "from": "F3_R306_D1",
+      "to": "F3_C006",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E109",
+      "from": "F3_R307_D1",
+      "to": "F3_C007",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E110",
+      "from": "F3_R307_D2",
+      "to": "F3_C008",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E111",
+      "from": "F3_R308_D1",
+      "to": "F3_C009",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E112",
+      "from": "F3_R308_D2",
+      "to": "F3_C010",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E113",
+      "from": "F3_R314_D1",
+      "to": "F3_C019",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.59,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E114",
+      "from": "F3_R313_D1",
+      "to": "F3_C018",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E115",
+      "from": "F3_R312_D1",
+      "to": "F3_C017",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E116",
+      "from": "F3_R312_D2",
+      "to": "F3_C016",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E117",
+      "from": "F3_R312_D3",
+      "to": "F3_C015",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E118",
+      "from": "F3_R309_D1",
+      "to": "F3_C013",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E119",
+      "from": "F3_R309_D2",
+      "to": "F3_C012",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E120",
+      "from": "F3_STAIR_A",
+      "to": "F3_C003",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E121",
+      "from": "F3_STAIR_B",
+      "to": "F3_C014",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.297,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E122",
+      "from": "F4_C001",
+      "to": "F4_C002",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.231,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E123",
+      "from": "F4_C002",
+      "to": "F4_C003",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.724,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E124",
+      "from": "F4_C003",
+      "to": "F4_C004",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.107,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E125",
+      "from": "F4_C004",
+      "to": "F4_C005",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.169,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E126",
+      "from": "F4_C005",
+      "to": "F4_C006",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.173,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E127",
+      "from": "F4_C006",
+      "to": "F4_C007",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 7.062,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E128",
+      "from": "F4_C007",
+      "to": "F4_C008",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.028,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E129",
+      "from": "F4_C008",
+      "to": "F4_C009",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.136,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E130",
+      "from": "F4_C009",
+      "to": "F4_C010",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.869,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E131",
+      "from": "F4_C010",
+      "to": "F4_C011",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.139,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E132",
+      "from": "F4_C011",
+      "to": "F4_C012",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.16,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E133",
+      "from": "F4_C012",
+      "to": "F4_C013",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 6.842,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E134",
+      "from": "F4_C013",
+      "to": "F4_C014",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.719,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E135",
+      "from": "F4_C014",
+      "to": "F4_C015",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.811,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E136",
+      "from": "F4_C015",
+      "to": "F4_C016",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 7.323,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E137",
+      "from": "F4_C016",
+      "to": "F4_C017",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.291,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E138",
+      "from": "F4_C017",
+      "to": "F4_C018",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.909,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E139",
+      "from": "F4_C001",
+      "to": "F4_C019",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.107,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E140",
+      "from": "F4_C019",
+      "to": "F4_C020",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.245,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E141",
+      "from": "F4_C020",
+      "to": "F4_C021",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.641,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E142",
+      "from": "F4_R401_D1",
+      "to": "F4_C002",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.802,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E143",
+      "from": "F4_R402_D1",
+      "to": "F4_C019",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.428,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E144",
+      "from": "F4_R403_D1",
+      "to": "F4_C020",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.535,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E145",
+      "from": "F4_R404_D1",
+      "to": "F4_C021",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.527,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E146",
+      "from": "F4_R405_D1",
+      "to": "F4_C006",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E147",
+      "from": "F4_R406_D1",
+      "to": "F4_C007",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E148",
+      "from": "F4_R407_D1",
+      "to": "F4_C008",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E149",
+      "from": "F4_R407_D2",
+      "to": "F4_C009",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E150",
+      "from": "F4_R407_D3",
+      "to": "F4_C010",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E151",
+      "from": "F4_R413_D1",
+      "to": "F4_C018",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.588,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E152",
+      "from": "F4_R411_D1",
+      "to": "F4_C017",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E153",
+      "from": "F4_R411_D2",
+      "to": "F4_C016",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E154",
+      "from": "F4_R411_D3",
+      "to": "F4_C015",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E155",
+      "from": "F4_R408_D1",
+      "to": "F4_C013",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E156",
+      "from": "F4_R408_D2",
+      "to": "F4_C012",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E157",
+      "from": "F4_STAIR_A",
+      "to": "F4_C003",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E158",
+      "from": "F4_STAIR_B",
+      "to": "F4_C014",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.297,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E159",
+      "from": "F5_C001",
+      "to": "F5_C002",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 2.301,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E160",
+      "from": "F5_C002",
+      "to": "F5_C003",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.107,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E161",
+      "from": "F5_C003",
+      "to": "F5_C004",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.37,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E162",
+      "from": "F5_C004",
+      "to": "F5_C005",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.107,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E163",
+      "from": "F5_C005",
+      "to": "F5_C006",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.795,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E164",
+      "from": "F5_C006",
+      "to": "F5_C007",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.959,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E165",
+      "from": "F5_C007",
+      "to": "F5_C008",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.387,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E166",
+      "from": "F5_C008",
+      "to": "F5_C009",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.029,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E167",
+      "from": "F5_C009",
+      "to": "F5_C010",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.082,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E168",
+      "from": "F5_C010",
+      "to": "F5_C011",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.922,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E169",
+      "from": "F5_C011",
+      "to": "F5_C012",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.028,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E170",
+      "from": "F5_C012",
+      "to": "F5_C013",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.428,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E171",
+      "from": "F5_C013",
+      "to": "F5_C014",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 6.467,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E172",
+      "from": "F5_C014",
+      "to": "F5_C015",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.826,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E173",
+      "from": "F5_C015",
+      "to": "F5_C016",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 6.575,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E174",
+      "from": "F5_C016",
+      "to": "F5_C017",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.078,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E175",
+      "from": "F5_C017",
+      "to": "F5_C018",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.917,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E176",
+      "from": "F5_C018",
+      "to": "F5_C019",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 3.1,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E177",
+      "from": "F5_C019",
+      "to": "F5_C020",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.387,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E178",
+      "from": "F5_C001",
+      "to": "F5_C021",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.657,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E179",
+      "from": "F5_C021",
+      "to": "F5_C022",
+      "type": "corridor",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.069,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E180",
+      "from": "F5_R501_D1",
+      "to": "F5_C002",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.802,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E181",
+      "from": "F5_R502_D1",
+      "to": "F5_C001",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.83,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E182",
+      "from": "F5_R503_D1",
+      "to": "F5_C021",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.498,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E183",
+      "from": "F5_R504_D1",
+      "to": "F5_C022",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.124,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E184",
+      "from": "F5_R505_D1",
+      "to": "F5_C003",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.855,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E185",
+      "from": "F5_R506_D1",
+      "to": "F5_C007",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E186",
+      "from": "F5_R506_D2",
+      "to": "F5_C008",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E187",
+      "from": "F5_R507_D1",
+      "to": "F5_C009",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E188",
+      "from": "F5_R507-1_D1",
+      "to": "F5_C010",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E189",
+      "from": "F5_R508_D1",
+      "to": "F5_C011",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.39,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E190",
+      "from": "F5_R517_D1",
+      "to": "F5_C019",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.22,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E191",
+      "from": "F5_R516_D1",
+      "to": "F5_C020",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 0.748,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E192",
+      "from": "F5_R515_D1",
+      "to": "F5_C018",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E193",
+      "from": "F5_R514_D1",
+      "to": "F5_C017",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E194",
+      "from": "F5_R513_D1",
+      "to": "F5_C016",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E195",
+      "from": "F5_R510_D1",
+      "to": "F5_C014",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E196",
+      "from": "F5_R509_D1",
+      "to": "F5_C013",
+      "type": "door_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.07,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E197",
+      "from": "F5_STAIR_A",
+      "to": "F5_C004",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.764,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E198",
+      "from": "F5_STAIR_B",
+      "to": "F5_C015",
+      "type": "stair_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 5.297,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": ""
+    },
+    {
+      "id": "E199",
+      "from": "F4_R406_D1",
+      "to": "F4_INT406_1",
+      "type": "internal_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 4.971,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": "406호 내부 경유. 통행 가능 여부 확인 필요."
+    },
+    {
+      "id": "E200",
+      "from": "F4_INT406_1",
+      "to": "F4_INT406_2",
+      "type": "internal_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.873,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": "406호 내부 경유. 통행 가능 여부 확인 필요."
+    },
+    {
+      "id": "E201",
+      "from": "F4_INT406_2",
+      "to": "F4_R406-1_D1",
+      "type": "internal_access",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": 1.016,
+      "status": "plan_interpreted",
+      "include_in_draft_route": true,
+      "field_verified": false,
+      "note": "406호 내부 경유. 통행 가능 여부 확인 필요."
+    },
+    {
+      "id": "E202",
+      "from": "F1_STAIR_A",
+      "to": "F2_STAIR_A",
+      "type": "stairs",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": null,
+      "status": "plan_aligned_stair_candidate",
+      "include_in_draft_route": false,
+      "field_verified": false,
+      "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+    },
+    {
+      "id": "E203",
+      "from": "F1_STAIR_B",
+      "to": "F2_STAIR_B",
+      "type": "stairs",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": null,
+      "status": "plan_aligned_stair_candidate",
+      "include_in_draft_route": false,
+      "field_verified": false,
+      "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+    },
+    {
+      "id": "E204",
+      "from": "F2_STAIR_A",
+      "to": "F3_STAIR_A",
+      "type": "stairs",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": null,
+      "status": "plan_aligned_stair_candidate",
+      "include_in_draft_route": false,
+      "field_verified": false,
+      "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+    },
+    {
+      "id": "E205",
+      "from": "F2_STAIR_B",
+      "to": "F3_STAIR_B",
+      "type": "stairs",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": null,
+      "status": "plan_aligned_stair_candidate",
+      "include_in_draft_route": false,
+      "field_verified": false,
+      "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+    },
+    {
+      "id": "E206",
+      "from": "F3_STAIR_A",
+      "to": "F4_STAIR_A",
+      "type": "stairs",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": null,
+      "status": "plan_aligned_stair_candidate",
+      "include_in_draft_route": false,
+      "field_verified": false,
+      "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+    },
+    {
+      "id": "E207",
+      "from": "F3_STAIR_B",
+      "to": "F4_STAIR_B",
+      "type": "stairs",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": null,
+      "status": "plan_aligned_stair_candidate",
+      "include_in_draft_route": false,
+      "field_verified": false,
+      "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+    },
+    {
+      "id": "E208",
+      "from": "F4_STAIR_A",
+      "to": "F5_STAIR_A",
+      "type": "stairs",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": null,
+      "status": "plan_aligned_stair_candidate",
+      "include_in_draft_route": false,
+      "field_verified": false,
+      "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+    },
+    {
+      "id": "E209",
+      "from": "F4_STAIR_B",
+      "to": "F5_STAIR_B",
+      "type": "stairs",
+      "bidirectional": true,
+      "distance_m": null,
+      "plan_distance_m": null,
+      "status": "plan_aligned_stair_candidate",
+      "include_in_draft_route": false,
+      "field_verified": false,
+      "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+    }
+  ],
+  "rooms": [
+    {
+      "room_id": "101",
+      "floor": 1,
+      "label": "101호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R101_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 4.868,
+          "y_m": 4.169
+        },
+        {
+          "x_m": 9.416,
+          "y_m": 4.169
+        },
+        {
+          "x_m": 9.416,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 4.868,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 7.142,
+        "y_m": 2.191
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "102",
+      "floor": 1,
+      "label": "102호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R102_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 4.169
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 4.169
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 2.327,
+        "y_m": 2.191
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "103",
+      "floor": 1,
+      "label": "103호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R103_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 6.361
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 6.361
+        }
+      ],
+      "label_position_m": {
+        "x_m": 2.327,
+        "y_m": 9.3
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "104",
+      "floor": 1,
+      "label": "104호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R104_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 4.922,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 6.361
+        },
+        {
+          "x_m": 4.922,
+          "y_m": 6.361
+        }
+      ],
+      "label_position_m": {
+        "x_m": 7.195,
+        "y_m": 9.3
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "105-1",
+      "floor": 1,
+      "label": "105-1호",
+      "category": "open_area",
+      "door_node_ids": [
+        "F1_R105-1_D1"
+      ],
+      "field_verified": false,
+      "note": "관리도면상 로비와 열린 공간. 별도 출입문으로 가정하지 않음.",
+      "outline_m": [
+        {
+          "x_m": 14.872,
+          "y_m": 12.026
+        },
+        {
+          "x_m": 19.045,
+          "y_m": 12.026
+        },
+        {
+          "x_m": 19.045,
+          "y_m": 2.886
+        },
+        {
+          "x_m": 14.872,
+          "y_m": 2.886
+        }
+      ],
+      "label_position_m": {
+        "x_m": 16.959,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "105",
+      "floor": 1,
+      "label": "105호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R105_D1",
+        "F1_R105_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 19.848,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 29.156,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 29.156,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 19.848,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 24.502,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "106",
+      "floor": 1,
+      "label": "106호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R106_D1",
+        "F1_R106_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 29.905,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.107,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.107,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 29.905,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 34.506,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "113",
+      "floor": 1,
+      "label": "113호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R113_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 39.802,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 43.44,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 43.44,
+          "y_m": 34.636
+        },
+        {
+          "x_m": 39.802,
+          "y_m": 34.636
+        }
+      ],
+      "label_position_m": {
+        "x_m": 41.621,
+        "y_m": 36.934
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "114",
+      "floor": 1,
+      "label": "114호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R114_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 43.922,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 47.506,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 47.506,
+          "y_m": 34.636
+        },
+        {
+          "x_m": 43.922,
+          "y_m": 34.636
+        }
+      ],
+      "label_position_m": {
+        "x_m": 45.714,
+        "y_m": 36.934
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "115",
+      "floor": 1,
+      "label": "115호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R115_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 47.988,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.84,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.84,
+          "y_m": 32.926
+        },
+        {
+          "x_m": 47.988,
+          "y_m": 32.926
+        }
+      ],
+      "label_position_m": {
+        "x_m": 49.914,
+        "y_m": 36.079
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "112",
+      "floor": 1,
+      "label": "112호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R112_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 32.177
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 32.177
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 27.794
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 27.794
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 29.986
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "111",
+      "floor": 1,
+      "label": "111호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R111_D1",
+        "F1_R111_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 27.153
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 27.153
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 17.853
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 17.853
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 22.503
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "107",
+      "floor": 1,
+      "label": "107호",
+      "category": "room",
+      "door_node_ids": [
+        "F1_R107_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 6.093
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 6.093
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 0.267
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 0.267
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 3.18
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "201",
+      "floor": 2,
+      "label": "201호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R201_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 4.868,
+          "y_m": 4.169
+        },
+        {
+          "x_m": 9.416,
+          "y_m": 4.169
+        },
+        {
+          "x_m": 9.416,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 4.868,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 7.142,
+        "y_m": 2.191
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "202",
+      "floor": 2,
+      "label": "202호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R202_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 4.169
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 4.169
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 2.327,
+        "y_m": 2.191
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "203",
+      "floor": 2,
+      "label": "203호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R203_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 7.483
+        },
+        {
+          "x_m": 6.313,
+          "y_m": 7.483
+        },
+        {
+          "x_m": 6.313,
+          "y_m": 6.093
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 6.093
+        }
+      ],
+      "label_position_m": {
+        "x_m": 2.327,
+        "y_m": 9.3
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "204",
+      "floor": 2,
+      "label": "204호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R204_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 4.922,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 6.361
+        },
+        {
+          "x_m": 6.634,
+          "y_m": 6.361
+        },
+        {
+          "x_m": 6.634,
+          "y_m": 7.697
+        },
+        {
+          "x_m": 4.922,
+          "y_m": 7.697
+        }
+      ],
+      "label_position_m": {
+        "x_m": 7.195,
+        "y_m": 9.3
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "205",
+      "floor": 2,
+      "label": "205호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R205_D1",
+        "F2_R205_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 14.819,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 24.128,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 24.128,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 14.819,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 19.473,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "206",
+      "floor": 2,
+      "label": "206호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R206_D1",
+        "F2_R206_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 24.984,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 34.132,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 34.132,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 24.984,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 29.558,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "207",
+      "floor": 2,
+      "label": "207호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R207_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 35.041,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.107,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.107,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 35.041,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 37.074,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "213",
+      "floor": 2,
+      "label": "213호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R213_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 39.802,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 43.44,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 43.44,
+          "y_m": 34.636
+        },
+        {
+          "x_m": 39.802,
+          "y_m": 34.636
+        }
+      ],
+      "label_position_m": {
+        "x_m": 41.621,
+        "y_m": 36.934
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "214",
+      "floor": 2,
+      "label": "214호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R214_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 43.922,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 47.506,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 47.506,
+          "y_m": 34.636
+        },
+        {
+          "x_m": 43.922,
+          "y_m": 34.636
+        }
+      ],
+      "label_position_m": {
+        "x_m": 45.714,
+        "y_m": 36.934
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "215",
+      "floor": 2,
+      "label": "215호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R215_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 47.988,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.84,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.84,
+          "y_m": 32.926
+        },
+        {
+          "x_m": 47.988,
+          "y_m": 32.926
+        }
+      ],
+      "label_position_m": {
+        "x_m": 49.914,
+        "y_m": 36.079
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "212",
+      "floor": 2,
+      "label": "212호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R212_D1",
+        "F2_R212_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 32.177
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 32.177
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 22.877
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 22.877
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 27.527
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "211",
+      "floor": 2,
+      "label": "211호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R211_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 22.129
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 22.129
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 17.853
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 17.853
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 19.991
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "208",
+      "floor": 2,
+      "label": "208호",
+      "category": "room",
+      "door_node_ids": [
+        "F2_R208_D1",
+        "F2_R208_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 8.552
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 8.552
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 0.267
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 0.267
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 4.41
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "301",
+      "floor": 3,
+      "label": "301호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R301_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 4.922,
+          "y_m": 4.009
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 4.009
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 4.922,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 7.195,
+        "y_m": 2.111
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "302",
+      "floor": 3,
+      "label": "302호",
+      "category": "open_area",
+      "door_node_ids": [
+        "F3_R302_D1"
+      ],
+      "field_verified": false,
+      "note": "도면상 열린 진입부. 현장 출입문 유무 확인 필요.",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 5.666
+        },
+        {
+          "x_m": 4.547,
+          "y_m": 5.666
+        },
+        {
+          "x_m": 4.547,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 2.354,
+        "y_m": 2.94
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "303",
+      "floor": 3,
+      "label": "303호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R303_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 6.313,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 6.313,
+          "y_m": 8.231
+        },
+        {
+          "x_m": 5.35,
+          "y_m": 8.231
+        },
+        {
+          "x_m": 5.35,
+          "y_m": 6.361
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 6.361
+        }
+      ],
+      "label_position_m": {
+        "x_m": 2.702,
+        "y_m": 9.327
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "304",
+      "floor": 3,
+      "label": "304호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R304_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 6.741,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.362,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.362,
+          "y_m": 6.361
+        },
+        {
+          "x_m": 6.741,
+          "y_m": 6.361
+        }
+      ],
+      "label_position_m": {
+        "x_m": 8.051,
+        "y_m": 9.3
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "306",
+      "floor": 3,
+      "label": "306호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R306_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 14.819,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 19.045,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 19.045,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 14.819,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 16.932,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "307",
+      "floor": 3,
+      "label": "307호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R307_D1",
+        "F3_R307_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 19.955,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 29.21,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 29.21,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 19.955,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 24.582,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "308",
+      "floor": 3,
+      "label": "308호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R308_D1",
+        "F3_R308_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 29.852,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.053,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.053,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 29.852,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 34.453,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "314",
+      "floor": 3,
+      "label": "314호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R314_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 39.802,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 32.872
+        },
+        {
+          "x_m": 39.802,
+          "y_m": 32.872
+        }
+      ],
+      "label_position_m": {
+        "x_m": 45.767,
+        "y_m": 36.052
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "313",
+      "floor": 3,
+      "label": "313호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R313_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 32.07
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 32.07
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 27.794
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 27.794
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 29.932
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "312",
+      "floor": 3,
+      "label": "312호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R312_D1",
+        "F3_R312_D2",
+        "F3_R312_D3"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 27.099
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 27.099
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 17.853
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 17.853
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 22.476
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "309",
+      "floor": 3,
+      "label": "309호",
+      "category": "room",
+      "door_node_ids": [
+        "F3_R309_D1",
+        "F3_R309_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 8.552
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 8.552
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 0.267
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 0.267
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 4.41
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "401",
+      "floor": 4,
+      "label": "401호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R401_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 5.938,
+          "y_m": 4.062
+        },
+        {
+          "x_m": 9.416,
+          "y_m": 4.062
+        },
+        {
+          "x_m": 9.416,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 5.938,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 7.677,
+        "y_m": 2.138
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "402",
+      "floor": 4,
+      "label": "402호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R402_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 5.505
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 5.505
+        },
+        {
+          "x_m": 4.494,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 2.327,
+        "y_m": 2.86
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "403",
+      "floor": 4,
+      "label": "403호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R403_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 4.387,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 4.387,
+          "y_m": 6.361
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 6.361
+        }
+      ],
+      "label_position_m": {
+        "x_m": 2.274,
+        "y_m": 9.3
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "404",
+      "floor": 4,
+      "label": "404호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R404_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 5.885,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 6.307
+        },
+        {
+          "x_m": 5.885,
+          "y_m": 6.307
+        }
+      ],
+      "label_position_m": {
+        "x_m": 7.677,
+        "y_m": 9.274
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "405",
+      "floor": 4,
+      "label": "405호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R405_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 14.819,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 19.099,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 19.099,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 14.819,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 16.959,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "406",
+      "floor": 4,
+      "label": "406호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R406_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 19.955,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 24.074,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 24.074,
+          "y_m": 2.619
+        },
+        {
+          "x_m": 23.004,
+          "y_m": 2.619
+        },
+        {
+          "x_m": 23.004,
+          "y_m": 6.628
+        },
+        {
+          "x_m": 19.955,
+          "y_m": 6.628
+        }
+      ],
+      "label_position_m": {
+        "x_m": 21.988,
+        "y_m": 9.514
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "406-1",
+      "floor": 4,
+      "label": "406-1호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R406-1_D1"
+      ],
+      "field_verified": false,
+      "note": "406호 내부를 통해 출입하는 구획. 406호 출입 가능 여부 확인 필요.",
+      "outline_m": [
+        {
+          "x_m": 19.955,
+          "y_m": 6.254
+        },
+        {
+          "x_m": 22.576,
+          "y_m": 6.254
+        },
+        {
+          "x_m": 22.576,
+          "y_m": 2.726
+        },
+        {
+          "x_m": 19.955,
+          "y_m": 2.726
+        }
+      ],
+      "label_position_m": {
+        "x_m": 21.265,
+        "y_m": 4.49
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "407",
+      "floor": 4,
+      "label": "407호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R407_D1",
+        "F4_R407_D2",
+        "F4_R407_D3"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 24.93,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.107,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.107,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 24.93,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 32.019,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "413",
+      "floor": 4,
+      "label": "413호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R413_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 39.802,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 32.872
+        },
+        {
+          "x_m": 39.802,
+          "y_m": 32.872
+        }
+      ],
+      "label_position_m": {
+        "x_m": 45.767,
+        "y_m": 36.052
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "411",
+      "floor": 4,
+      "label": "411호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R411_D1",
+        "F4_R411_D2",
+        "F4_R411_D3"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 32.124
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 32.124
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 17.853
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 17.853
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 24.988
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "408",
+      "floor": 4,
+      "label": "408호",
+      "category": "room",
+      "door_node_ids": [
+        "F4_R408_D1",
+        "F4_R408_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 8.552
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 8.552
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 0.267
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 0.267
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 4.41
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "501",
+      "floor": 5,
+      "label": "501호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R501_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 6.901,
+          "y_m": 3.688
+        },
+        {
+          "x_m": 9.523,
+          "y_m": 3.688
+        },
+        {
+          "x_m": 9.523,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 6.901,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 8.212,
+        "y_m": 1.951
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "502",
+      "floor": 5,
+      "label": "502호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R502_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 3.635
+        },
+        {
+          "x_m": 6.045,
+          "y_m": 3.635
+        },
+        {
+          "x_m": 6.045,
+          "y_m": 0.214
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 0.214
+        }
+      ],
+      "label_position_m": {
+        "x_m": 3.103,
+        "y_m": 1.924
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "503",
+      "floor": 5,
+      "label": "503호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R503_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 8.071
+        },
+        {
+          "x_m": 4.601,
+          "y_m": 8.071
+        },
+        {
+          "x_m": 4.601,
+          "y_m": 4.116
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 4.116
+        }
+      ],
+      "label_position_m": {
+        "x_m": 2.381,
+        "y_m": 6.093
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "504",
+      "floor": 5,
+      "label": "504호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R504_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 0.16,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 6.099,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 6.099,
+          "y_m": 8.499
+        },
+        {
+          "x_m": 0.16,
+          "y_m": 8.499
+        }
+      ],
+      "label_position_m": {
+        "x_m": 3.13,
+        "y_m": 10.369
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "505",
+      "floor": 5,
+      "label": "505호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R505_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 6.634,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 9.469,
+          "y_m": 5.826
+        },
+        {
+          "x_m": 6.634,
+          "y_m": 5.826
+        }
+      ],
+      "label_position_m": {
+        "x_m": 8.051,
+        "y_m": 9.033
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "506",
+      "floor": 5,
+      "label": "506호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R506_D1",
+        "F5_R506_D2"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 14.819,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 24.074,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 24.074,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 14.819,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 19.447,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "507",
+      "floor": 5,
+      "label": "507호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R507_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 24.93,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 29.156,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 29.156,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 24.93,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 27.043,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "507-1",
+      "floor": 5,
+      "label": "507-1호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R507-1_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 29.905,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 34.078,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 34.078,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 29.905,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 31.992,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "508",
+      "floor": 5,
+      "label": "508호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R508_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 34.881,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.107,
+          "y_m": 12.24
+        },
+        {
+          "x_m": 39.107,
+          "y_m": 2.673
+        },
+        {
+          "x_m": 34.881,
+          "y_m": 2.673
+        }
+      ],
+      "label_position_m": {
+        "x_m": 36.994,
+        "y_m": 7.456
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "517",
+      "floor": 5,
+      "label": "517호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R517_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 39.856,
+          "y_m": 39.179
+        },
+        {
+          "x_m": 43.28,
+          "y_m": 39.179
+        },
+        {
+          "x_m": 43.28,
+          "y_m": 34.796
+        },
+        {
+          "x_m": 39.856,
+          "y_m": 34.796
+        }
+      ],
+      "label_position_m": {
+        "x_m": 41.568,
+        "y_m": 36.988
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "516",
+      "floor": 5,
+      "label": "516호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R516_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 43.922,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 39.233
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 33.032
+        },
+        {
+          "x_m": 46.222,
+          "y_m": 33.032
+        },
+        {
+          "x_m": 46.222,
+          "y_m": 34.636
+        },
+        {
+          "x_m": 43.922,
+          "y_m": 34.636
+        }
+      ],
+      "label_position_m": {
+        "x_m": 47.827,
+        "y_m": 36.133
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "515",
+      "floor": 5,
+      "label": "515호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R515_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 32.284
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 32.284
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 27.955
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 27.955
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 30.119
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "514",
+      "floor": 5,
+      "label": "514호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R514_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 27.367
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 27.367
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 23.037
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 23.037
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 25.202
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "513",
+      "floor": 5,
+      "label": "513호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R513_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 22.289
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 22.289
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 17.959
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 17.959
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 20.124
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "510",
+      "floor": 5,
+      "label": "510호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R510_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 8.552
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 8.552
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 5.238
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 5.238
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 6.895
+      },
+      "outline_status": "approximate_display_only"
+    },
+    {
+      "room_id": "509",
+      "floor": 5,
+      "label": "509호",
+      "category": "room",
+      "door_node_ids": [
+        "F5_R509_D1"
+      ],
+      "field_verified": false,
+      "note": "",
+      "outline_m": [
+        {
+          "x_m": 42.263,
+          "y_m": 4.597
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 4.597
+        },
+        {
+          "x_m": 51.733,
+          "y_m": 0.267
+        },
+        {
+          "x_m": 42.263,
+          "y_m": 0.267
+        }
+      ],
+      "label_position_m": {
+        "x_m": 46.998,
+        "y_m": 2.432
+      },
+      "outline_status": "approximate_display_only"
+    }
+  ]
+}</script>
+<script>
+'use strict';
+const $=s=>document.querySelector(s),NS='http://www.w3.org/2000/svg';
+let G=JSON.parse($('#embedded-graph').textContent),nodes,edges,rooms,adj,edgePairs,floor=2,route=[],selected=null,choose=0,view=[-130,-65,1320,1020],drag=null,moved=false;
+const typeNames={corridor:'복도 연결점',room_door:'문 앞',room_access:'열린 진입부',stair_landing:'계단 진입부',internal_access:'방 내부 통로',entrance:'출입구',door_access:'호실 진입 연결',stair_access:'계단 접근 연결',entrance_access:'출입구 연결',stairs:'층간 연결 후보'};
+function text(tag,content,cls){const e=document.createElement(tag);e.textContent=content;if(cls)e.className=cls;return e}
+function svg(tag,attr={},content,parent=$('#drawing')){const e=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attr))e.setAttribute(k,v);if(content!==undefined)e.textContent=content;parent.append(e);return e}
+function xy(n){return[n.x_m*20,(40-n.y_m)*20]}
+function path(points){return points.map((p,i)=>(i?'L':'M')+p.join(' ')).join(' ')}
+function validate(g){
+ if(g.schema_version!=='1.0'||g.coordinate_system?.unit!=='meter'||!Array.isArray(g.nodes)||!Array.isArray(g.edges)||!Array.isArray(g.rooms))throw Error('전달 형식(schema_version 1.0)의 graph.json을 선택해주세요.');
+ const ids=new Map();for(const n of g.nodes){if(typeof n.id!=='string'||ids.has(n.id)||!Number.isInteger(n.floor)||n.floor<1||n.floor>5||![n.x_m,n.y_m].every(Number.isFinite)||Math.abs(n.x_m)>1000||Math.abs(n.y_m)>1000)throw Error('노드 ID·층·좌표를 확인해주세요.');ids.set(n.id,n)}
+ const eids=new Set();for(const e of g.edges){if(typeof e.id!=='string'||eids.has(e.id)||!ids.has(e.from)||!ids.has(e.to)||e.from===e.to||typeof e.bidirectional!=='boolean'||typeof e.include_in_draft_route!=='boolean'||![e.distance_m,e.plan_distance_m].every(v=>v===null||(Number.isFinite(v)&&v>0)))throw Error('연결 ID·참조·거리 값을 확인해주세요.');const df=Math.abs(ids.get(e.from).floor-ids.get(e.to).floor);if((e.type==='stairs'&&df!==1)||(e.type!=='stairs'&&df!==0))throw Error('연결 종류와 층이 맞지 않습니다.');eids.add(e.id)}
+ const rids=new Set();for(const r of g.rooms){if(typeof r.room_id!=='string'||rids.has(r.room_id)||!Array.isArray(r.door_node_ids)||!r.door_node_ids.length||!r.door_node_ids.every(id=>ids.has(id)&&ids.get(id).floor===r.floor))throw Error('호실 ID와 진입 노드 참조를 확인해주세요.');if(r.outline_m&&(!Array.isArray(r.outline_m)||r.outline_m.length<3||!r.outline_m.every(p=>Number.isFinite(p.x_m)&&Number.isFinite(p.y_m))))throw Error('방 윤곽 좌표를 확인해주세요.');if(r.label_position_m&&(!Number.isFinite(r.label_position_m.x_m)||!Number.isFinite(r.label_position_m.y_m)))throw Error('호실 표기 좌표를 확인해주세요.');rids.add(r.room_id)}
+ if(![1,2,3,4,5].every(f=>g.rooms.some(r=>r.floor===f)))throw Error('1~5층 호실 데이터가 필요합니다.');return g;
+}
+function index(){nodes=new Map(G.nodes.map(n=>[n.id,n]));edges=new Map(G.edges.map(e=>[e.id,e]));rooms=new Map(G.rooms.map(r=>[r.room_id,r]));adj=new Map(G.nodes.map(n=>[n.id,[]]));edgePairs=new Map();for(const e of G.edges){adj.get(e.from).push({to:e.to,e});edgePairs.set(e.from+'|'+e.to,e);if(e.bidirectional){adj.get(e.to).push({to:e.from,e});edgePairs.set(e.to+'|'+e.from,e)}}}
+function weight(e){return e.distance_m>0?e.distance_m:e.plan_distance_m>0?e.plan_distance_m:null}
+function cost(p){let transitions=0,meters=0,measured=0,estimated=0;for(let i=1;i<p.length;i++){const e=edgePairs.get(p[i-1]+'|'+p[i]);if(e.type==='stairs')transitions++;else{meters+=weight(e);if(e.distance_m>0)measured++;else estimated++}}return[transitions,meters,measured,estimated]}
+function less(a,b){return a[0]<b[0]||(a[0]===b[0]&&a[1]<b[1])}
+function shortest(a,b){const fa=nodes.get(a).floor,fb=nodes.get(b).floor,dir=Math.sign(fb-fa),dist=new Map([[a,[0,0]]]),prev=new Map([[a,null]]),open=new Set([a]);while(open.size){let n=[...open].reduce((x,y)=>less(dist.get(x),dist.get(y))?x:y);open.delete(n);if(n===b){const p=[];while(n!==null){p.push(n);n=prev.get(n)}return p.reverse()}for(const{to,e}of adj.get(n)){const cf=nodes.get(n).floor,nf=nodes.get(to).floor;if(nf<Math.min(fa,fb)||nf>Math.max(fa,fb)||(nf!==cf&&Math.sign(nf-cf)!==dir))continue;const stair=e.type==='stairs';if(!e.include_in_draft_route&&!(stair&&$('#allowStairs').checked))continue;const w=stair?0:weight(e);if(w===null)continue;const c=dist.get(n),nc=[c[0]+(stair?1:0),c[1]+w];if(!dist.has(to)||less(nc,dist.get(to))){dist.set(to,nc);prev.set(to,n);open.add(to)}}}return null}
+function fill(which,f,pick){$('#'+which+'Floor').value=f;const select=$('#'+which);select.replaceChildren();for(const r of G.rooms.filter(r=>r.floor===f).sort((a,b)=>a.room_id.localeCompare(b.room_id,'en',{numeric:true}))){const o=text('option',r.room_id+'호');o.value=r.room_id;select.append(o)}if(pick&&rooms.has(pick)&&rooms.get(pick).floor===f)select.value=pick}
+function notify(title,msg,error=false){const box=$('#routeBox');box.replaceChildren(text('strong',title),text('p',msg,error?'error':''));box.hidden=false}
+function clear(){route=[];choose=0;$('#routeBox').hidden=true;draw()}
+function findRoute(){route=[];choose=0;const a=rooms.get($('#start').value),b=rooms.get($('#end').value);if(a.room_id===b.room_id){draw();notify('같은 호실입니다.','출발지와 도착지를 다르게 골라주세요.');return}if(a.floor!==b.floor&&!$('#allowStairs').checked&&!G.edges.some(e=>e.type==='stairs'&&e.include_in_draft_route)){draw();notify('층간 후보 사용이 꺼져 있어요.','다른 층을 연결하려면 왼쪽의 시연용 옵션을 켜주세요. 실제 통행이 확인된 경로는 아닙니다.');return}for(const x of a.door_node_ids)for(const y of b.door_node_ids){const p=shortest(x,y);if(p&&(!route.length||less(cost(p),cost(route))))route=p}if(!route.length){draw();notify('연결 가능한 경로가 없습니다.','활성 연결과 거리 값, 목적지 진입 노드를 확인해주세요.');return}setFloor(a.floor)}
+function segments(){const out=[];for(const id of route){const f=nodes.get(id).floor;let last=out.at(-1);if(!last||last.floor!==f){last={floor:f,ids:[]};out.push(last)}last.ids.push(id)}return out}
+function summary(){const c=cost(route),parts=segments(),part=parts.find(s=>s.floor===floor),idx=parts.indexOf(part),a=$('#start').value,b=$('#end').value;notify(a+'호 → '+b+'호',c[2]&&c[3]?'도면 추정 + 실측 혼합 · 평면 구간 약 '+c[1].toFixed(1)+' m':(c[2]?'실측 구간 합계 ':'도면상 평면 구간 약 ')+c[1].toFixed(1)+' m'+(c[2]?'':' · 현장 실측 아님'));const box=$('#routeBox');if(parts.length>1){box.append(text('p','계단 거리 제외 · 실제 연결·통행 미확인'));const nav=text('div','','steps');for(const s of parts){const b=text('button',s.floor+'층');b.setAttribute('aria-current',s.floor===floor?'step':'false');b.onclick=()=>setFloor(s.floor);nav.append(b)}box.append(nav);if(part&&parts[idx+1]){const n=parts[idx+1];const next=text('button',n.floor+'층에서 이어보기','mini-button');next.onclick=()=>setFloor(n.floor);box.append(next)}}if(!part)box.append(text('p','현재 층은 선택한 경로에 포함되지 않습니다.'));if(a==='406-1'||b==='406-1')box.append(text('p','406호 내부 경유 · 출입 허용 여부 확인 필요'));}
+function pickRoom(id){const r=rooms.get(id),phase=choose;route=[];if(phase===0){fill('start',r.floor,id);choose=1;notify(id+'호에서 출발','도착 호실을 눌러주세요. 다른 층을 고를 수도 있어요.');inspect('room',id);draw()}else{fill('end',r.floor,id);choose=0;findRoute();inspect('room',id)}}
+function inspect(kind,id){selected={kind,id};const item=kind==='node'?nodes.get(id):kind==='edge'?edges.get(id):rooms.get(id),box=$('#detail');box.replaceChildren();box.append(text('span',kind==='edge'?'연결 구간':kind==='node'?'노드':'호실','pill'),text('div',id,'item-id'));const dl=text('dl','','value-grid');function pair(k,v){dl.append(text('dt',k),text('dd',v))}if(kind==='node'){pair('종류',typeNames[item.type]||item.type);pair('층',item.floor+'층');pair('X / Y',item.x_m.toFixed(3)+' / '+item.y_m.toFixed(3)+' m');pair('높이',item.z_m===null?'미확인':item.z_m+' m');pair('현장 확인',item.field_verified?'확인됨':'미확인');box.append(dl);const links=text('div','','row-buttons');for(const e of G.edges.filter(e=>e.from===id||e.to===id)){const b=text('button',e.id,'mini-button');b.onclick=()=>{inspect('edge',e.id);draw()};links.append(b)}box.append(text('p','이 노드에 연결된 구간'),links)}else if(kind==='edge'){pair('종류',typeNames[item.type]||item.type);pair('시작',item.from);pair('끝',item.to);pair('도면 거리',item.plan_distance_m===null?'미확인':item.plan_distance_m.toFixed(3)+' m');pair('실측 거리',item.distance_m===null?'미측정':item.distance_m.toFixed(3)+' m');pair('방향',item.bidirectional?'양방향':'단방향');pair('기본 경로',item.include_in_draft_route?'포함':'제외');pair('현장 확인',item.field_verified?'확인됨':'미확인');box.append(dl)}else{pair('호실',item.room_id+'호');pair('층',item.floor+'층');pair('진입 지점',item.door_node_ids.length+'개');box.append(dl);for(const id of item.door_node_ids){const b=text('button',id,'mini-button');b.onclick=()=>{inspect('node',id);draw()};box.append(b)}}if(item.note)box.append(text('p',item.note));box.append(text('pre',JSON.stringify(item,null,2),'jsonbox'))}
+function accessible(el,action){el.addEventListener('click',()=>{if(!moved)action()});el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();action()}})}
+function draw(){const drawing=$('#drawing');drawing.replaceChildren();const fn=G.nodes.filter(n=>n.floor===floor),fe=G.edges.filter(e=>e.type!=='stairs'&&nodes.get(e.from).floor===floor);for(const r of G.rooms.filter(r=>r.floor===floor&&r.outline_m)){const shape=svg('polygon',{points:r.outline_m.map(p=>xy(p).join(',')).join(' '),class:'room-shape'+(r.room_id===$('#start').value?' start':'')+(r.room_id===$('#end').value?' end':'')+(r.category==='open_area'?' open':''),tabindex:0,role:'button','aria-label':r.room_id+'호 윤곽'});accessible(shape,()=>pickRoom(r.room_id))}for(const e of fe){const d=path([xy(nodes.get(e.from)),xy(nodes.get(e.to))]);if(e.type==='corridor')svg('path',{d,class:'corridor-base'});svg('path',{d,class:'edge '+e.type+(selected?.kind==='edge'&&selected.id===e.id?' selected':'')});const pa=xy(nodes.get(e.from)),pb=xy(nodes.get(e.to)),dx=pb[0]-pa[0],dy=pb[1]-pa[1];const hit=svg('rect',{x:0,y:-6,width:Math.hypot(dx,dy),height:12,transform:'translate('+pa.join(' ')+') rotate('+(Math.atan2(dy,dx)*180/Math.PI)+')',class:'edge-hit',tabindex:0,role:'button','aria-label':'구간 '+e.id});svg('title',{},e.id+' · '+(e.plan_distance_m===null?'거리 미확인':e.plan_distance_m+' m'),hit);accessible(hit,()=>{inspect('edge',e.id);draw()})}
+ for(const n of fn){const[x,y]=xy(n),is=selected?.kind==='node'&&selected.id===n.id;svg('circle',{cx:x,cy:y,r:n.type==='corridor'?3:5,class:'node '+n.type+(is?' selected':'')});const hit=svg('circle',{cx:x,cy:y,r:7,class:'node-hit',tabindex:0,role:'button','aria-label':'노드 '+n.id});svg('title',{},n.label+' · '+n.id,hit);accessible(hit,()=>{inspect('node',n.id);draw()});if(n.type==='stair_landing')svg('text',{x:x+10,y:y-10,class:'stair-label'},n.label);if(n.type==='entrance')svg('text',{x:x-10,y:y+25,class:'stair-label'},'출입구')}
+ if($('#showLabels').checked){const placed=[];for(const r of G.rooms.filter(r=>r.floor===floor).sort((a,b)=>a.room_id.localeCompare(b.room_id,'en',{numeric:true}))){const nd=r.door_node_ids.map(id=>nodes.get(id)),pts=nd.map(xy),center=[pts.reduce((s,p)=>s+p[0],0)/pts.length,pts.reduce((s,p)=>s+p[1],0)/pts.length];let vx=0,vy=0;for(const n of nd){const es=G.edges.filter(e=>e.type!=='stairs'&&(e.from===n.id||e.to===n.id));if(es.length){const other=nodes.get(es[0].from===n.id?es[0].to:es[0].from);vx+=n.x_m-other.x_m;vy-=n.y_m-other.y_m}}const len=Math.hypot(vx,vy)||1;vx/=len;vy/=len;if(Math.abs(vx)+Math.abs(vy)<.1)vy=-1;const w=r.room_id.length>3?60:46,h=26;let target;for(const dist of [28,49,72,94]){for(const shift of [0,32,-32,64,-64]){const x=center[0]+vx*dist-vy*shift,y=center[1]+vy*dist+vx*shift;if(!placed.some(b=>Math.abs(x-b.x)<(w+b.w)/2+5&&Math.abs(y-b.y)<(h+b.h)/2+5)){target={x,y,w,h};break}}if(target)break}target??={x:center[0]+vx*110,y:center[1]+vy*110,w,h};if(r.label_position_m){const p=xy(r.label_position_m);target={x:p[0],y:p[1],w,h}}placed.push(target);if(!r.label_position_m)svg('path',{d:path([center,[target.x,target.y]]),class:'leader'});const cl='room-label'+(r.room_id===$('#start').value?' start':'')+(r.room_id===$('#end').value?' end':'');const group=svg('g',{class:cl,tabindex:0,role:'button','aria-label':r.room_id+'호 선택'});svg('rect',{x:target.x-w/2,y:target.y-h/2,width:w,height:h},undefined,group);svg('text',{x:target.x,y:target.y+1},r.room_id,group);accessible(group,()=>pickRoom(r.room_id))}}
+ if(route.length){const part=segments().find(s=>s.floor===floor);if(part){const pts=part.ids.map(id=>xy(nodes.get(id)));svg('path',{d:path(pts),class:'route-line'});for(const[i,l]of pts.length===1?[[0,'층 이동']]:[[0,route[0]===part.ids[0]?'출발':'계단 도착'],[pts.length-1,route.at(-1)===part.ids.at(-1)?'도착':'층 이동']]){const[x,y]=pts[i];svg('circle',{cx:x,cy:y,r:6,class:'route-end'});svg('text',{x:x+9,y:y+18,class:'route-text'},l)}}summary()}
+ svg('path',{d:'M-35 890H65M-35 886V894M65 886V894',class:'axis'});svg('text',{x:-35,y:912,class:'scale-text'},'5 m · 도면 기준');$('#floorSubtitle').textContent=G.rooms.filter(r=>r.floor===floor).length+'개 호실 · '+fn.length+'개 노드';
+}
+function setFloor(f){floor=f;$('#floorTitle').textContent=f+'F';document.querySelectorAll('#floors button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.floor===f)));fit();draw()}
+function updateView(){$('#map').setAttribute('viewBox',view.join(' '))}function fit(){view=[-130,-65,1320,1020];updateView()}function zoom(f,center){const[x,y,w,h]=view,c=center||[x+w/2,y+h/2],nw=Math.min(2300,Math.max(200,w*f)),scale=nw/w;view=[c[0]-(c[0]-x)*scale,c[1]-(c[1]-y)*scale,nw,h*scale];updateView()}
+function initialize(){index();for(const which of ['start','end']){const select=$('#'+which+'Floor');select.replaceChildren();for(const f of [1,2,3,4,5]){const o=text('option',f+'층');o.value=f;select.append(o)}}fill('start',2,rooms.has('205')?'205':null);fill('end',2,rooms.has('212')?'212':null);$('#counts').replaceChildren();for(const[n,label]of[[G.rooms.length,'호실'],[G.nodes.length,'노드'],[G.edges.length,'연결']]){const e=text('div','');e.append(text('strong',n),text('span',label));$('#counts').append(e)}route=[];selected=null;choose=0;$('#routeBox').hidden=true;setFloor(2)}
+for(const f of [1,2,3,4,5]){const b=text('button',f+'F');b.dataset.floor=f;b.setAttribute('aria-label',f+'층');b.onclick=()=>setFloor(f);$('#floors').append(b)}
+$('#routeBtn').onclick=findRoute;$('#clearBtn').onclick=clear;$('#showLabels').onchange=draw;$('#allowStairs').onchange=()=>{if(route.length)clear()};for(const which of ['start','end']){$('#'+which+'Floor').onchange=()=>{fill(which,+$('#'+which+'Floor').value);clear()};$('#'+which).onchange=clear}
+$('#zoomIn').onclick=()=>zoom(.8);$('#zoomOut').onclick=()=>zoom(1.25);$('#fit').onclick=fit;
+const map=$('#map');function point(e){const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(map.getScreenCTM().inverse());return[p.x,p.y]}
+map.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY<0?.9:1.11,point(e))},{passive:false});map.addEventListener('pointerdown',e=>{if(e.button!==0)return;moved=false;drag={x:e.clientX,y:e.clientY,view:[...view],matrix:map.getScreenCTM().inverse()}});map.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.hypot(dx,dy)>4){moved=true;map.setPointerCapture(e.pointerId);map.classList.add('dragging')}if(moved){view=[drag.view[0]-dx*drag.matrix.a,drag.view[1]-dy*drag.matrix.d,drag.view[2],drag.view[3]];updateView()}});map.addEventListener('pointerup',()=>{drag=null;map.classList.remove('dragging');setTimeout(()=>moved=false,0)});map.addEventListener('pointercancel',()=>{drag=null;map.classList.remove('dragging')});
+$('#loadBtn').onclick=()=>$('#loadFile').click();$('#loadFile').onchange=async()=>{const f=$('#loadFile').files[0];if(!f)return;try{if(f.size>5e6)throw Error('5MB 이하의 노드 JSON을 선택해주세요.');const candidate=validate(JSON.parse(await f.text()));G=candidate;initialize();$('#dataStatus').textContent='불러온 데이터 · '+f.name;$('#detail').replaceChildren(text('span','로컬에서 읽음','pill'),text('p','선택한 JSON을 반영했습니다. 원본 파일은 변경하지 않았습니다.'));}catch(e){notify('JSON을 불러오지 못했어요.',e.message||'전달 형식의 graph.json을 선택해주세요.',true)}finally{$('#loadFile').value=''}};
+validate(G);initialize();
+</script></body></html>
