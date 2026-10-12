@@ -1,0 +1,57 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace = 'com.example.modelevaluation'
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = 'com.example.modelevaluation'
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 1
+        versionName = '1.0.0'
+
+        testInstrumentationRunner = 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        viewBinding = true
+    }
+
+    androidResources {
+        noCompress += ['onnx']
+    }
+
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = true
+        disable.add('AndroidGradlePluginVersion')
+    }
+}
+
+dependencies {
+    implementation 'androidx.activity:activity:1.13.0'
+    implementation 'androidx.appcompat:appcompat:1.8.0'
+    implementation 'androidx.camera:camera-camera2:1.6.2'
+    implementation 'androidx.camera:camera-lifecycle:1.6.2'
+    implementation 'androidx.camera:camera-view:1.6.2'
+    implementation 'com.google.android.material:material:1.14.0'
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.30.0'
+
+    testImplementation 'junit:junit:4.13.2'
+}

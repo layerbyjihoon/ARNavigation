@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Model Evaluation</string>
+    <string name="lab_eyebrow">LIVE MODEL LAB</string>
+    <string name="screen_title">실시간 온디바이스 모델 평가</string>
+    <string name="camera_metrics_initial">Camera — FPS 0.0 · Frame 0</string>
+    <string name="model_metrics_initial">Latency — · FPS —</string>
+    <string name="camera_start_failed">카메라 시작 실패: %1$s</string>
+    <string name="camera_permission_required">실시간 평가를 위해 카메라 권한이 필요합니다.</string>
+    <string name="grant_permission">권한 허용</string>
+    <string name="places_model">ResNet18 · Places365</string>
+    <string name="yolo_model">YOLO26n-seg · Doorway</string>
+    <string name="waiting">모델 준비 중…</string>
+    <string name="no_result">아직 결과가 없습니다.</string>
+    <string name="confidence_initial">신뢰도 기준 35%</string>
+    <string name="pause">일시정지</string>
+    <string name="resume">다시 시작</string>
+</resources>

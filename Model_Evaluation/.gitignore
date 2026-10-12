@@ -1,0 +1,8 @@
+.gradle/
+.idea/
+local.properties
+**/build/
+*.iml
+app/src/main/assets/*.onnx
+tools/.venv/
+tools/.downloads/
