@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright 2016 Google LLC
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<resources>
+  <string name="ar_developer_label">개발/테스트</string>
+  <string name="ar_record_start">AR 녹화 시작</string>
+  <string name="ar_record_stop">녹화 종료</string>
+  <string name="ar_recording">녹화 중 ●</string>
+  <string name="ar_recordings">AR 녹화 데이터</string>
+  <string name="ar_live_mode">일반 AR 모드 · Live Camera</string>
+  <string name="ar_playback_mode">AR 재생 모드 · Recorded ARCore Dataset</string>
+  <string name="ar_playback_finished">AR 재생 모드 · 재생 완료</string>
+  <string name="ar_playback_stop">재생 종료</string>
+  <string name="app_name">실내 AR 내비게이션</string>
+  <string name="navigation_calibrate">방향 보정</string>
+  <string name="navigation_start">길안내 시작</string>
+  <string name="navigation_reset">초기화</string>
+  <string name="navigation_initial">위치 추적 중…\n주변 공간을 천천히 비춰주세요.</string>
+  <string name="navigation_tracking">Tracking: %1$s (%2$s)\n위치 추적 중…\n주변 공간을 천천히 비춰주세요.</string>
+  <string name="navigation_ready">Tracking: TRACKING\n위치 추적 준비 완료\n처음에는 방향 보정에서 건물 기준 방향을 설정하세요.\n출발점 바닥을 비춘 뒤 길안내 시작을 누르세요.\n경로: 기준 방향 2m → 2m → 오른쪽 2m</string>
+  <string name="navigation_debug">Tracking: TRACKING\nX: %1$.2f m\nY: %2$.2f m\nZ: %3$.2f m\nWP: %4$d / %5$d\n거리: %6$.2f m</string>
+  <string name="navigation_origin_paused">Tracking: TRACKING / Origin: PAUSED\n시작점 추적 복구 중…\n주변 공간을 천천히 비춰주세요.</string>
+  <string name="navigation_origin_lost">시작점 추적이 종료되었습니다.\n길안내 시작을 다시 눌러주세요.</string>
+  <string name="navigation_arrived">목적지 도착!\nWP: %1$d / %1$d 완료\n길안내 시작을 누르면 새 경로를 시작합니다.</string>
+  <string name="navigation_ready_map">Tracking: TRACKING\n지도 경로: %1$s\n출발 진입점에서 바닥을 비춘 뒤 시작하세요.\n처음에는 방향 보정에서 지도 기준 방향을 설정하세요.</string>
+  <string name="navigation_ready_entry">Tracking: TRACKING\n지도 경로: %1$s\n출발 기준: %2$s\n출발 지점 주변의 바닥을 먼저 비춘 뒤, 문에서 표시된 복도 쪽을 바라보고 길안내 시작을 누르세요.</string>
+  <string name="navigation_ready_sensor">Tracking: TRACKING\n지도 경로: %1$s\n문화관 정렬: 폰 방위 센서 + 자북 기준 반시계 85.5°\n출발 지점에서 바닥을 비춘 뒤 길안내 시작을 누르세요. 폰이 바라보는 방향은 자유입니다.</string>
+  <string name="map_sensor_alignment_instruction">문화관 도면 위쪽은 폰 센서의 자북 기준 반시계 85.5°(방위각 274.5°)로 정렬합니다. 폰을 특정 방향으로 맞출 필요 없이 출발 진입점에서 바닥을 인식시킨 뒤 시작하세요. 추가 회전각은 기본 0°이며 이 정렬에 한 번만 더해집니다.</string>
+  <string name="map_entry_alignment_instruction">표시된 출발 진입점에서 문→복도 방향을 바라보고 AR 화면의 길안내 시작을 누르세요. 녹화 없이도 이 방향을 자동 적용합니다. 추가 회전각 0°가 기본이며, 별도 회전각은 이 기준에 더해집니다. 바닥은 미리 인식시키세요. 녹화 재생 중이면 저장된 지도 정렬을 우선 사용합니다.</string>
+  <string name="map_open">지도/경로</string>
+  <string name="map_dataset_label">지도 선택</string>
+  <string-array name="map_datasets">
+    <item>문화관 1~5층</item>
+    <item>개발용 테스트 지도</item>
+  </string-array>
+  <string name="map_plan_yaw_label">센서 + 반시계 85.5° 정렬 후 추가 회전각(°) · 기본 0°</string>
+  <string name="map_apply_preview">이 경로로 AR 미리보기</string>
+  <string name="map_munhwagwan_prompt">문이 여러 개면 가장 짧은 출입구 조합을 선택합니다. 거리와 통행 상태는 도면 기준이며 휠체어 접근성은 미확인입니다.</string>
+  <string name="map_munhwagwan_cross_floor">문화관 층간 연결 8개는 미확인 후보이며 층고·계단 거리가 없습니다. 같은 층의 출발지와 목적지를 선택하세요.</string>
+  <string name="map_plan_alignment_instruction">표시된 출발 진입점에서 시작하세요. AR 화면의 방향 보정에서 도면 위쪽의 실제 방향을 설정합니다(자북과 다를 수 있음). 추가 회전각은 저장된 기준에 적용됩니다. 인식된 수평면 위에 표시하며 바닥인지 현장에서 확인하세요.</string>
+  <string name="map_loading">지도를 읽는 중…</string>
+  <string name="map_load_failed">지도를 읽을 수 없습니다.</string>
+  <string name="map_summary_format">Map: %1$s\nFloors: %2$d · Nodes: %3$d\nEdges: %4$d · POIs: %5$d\nWarnings: %6$d</string>
+  <string name="map_start_label">출발지</string>
+  <string name="map_destination_label">목적지</string>
+  <string name="map_wheelchair">휠체어 접근성이 확인된 경로</string>
+  <string name="map_yaw_label">지도 북쪽의 추가 회전각(°) · 0=보정된 기준, +90=왼쪽</string>
+  <string name="map_find_route">길찾기 (A*)</string>
+  <string name="map_select_prompt">출발지와 목적지를 선택하고 길찾기를 누르세요.</string>
+  <string name="map_apply_ar">이 경로로 AR 안내</string>
+  <string name="map_return_ar">AR 화면으로 돌아가기</string>
+  <string name="map_multifloor_notice">층간 경로와 좌표 변환 확인 완료.\n현재 AR 보행 안내는 동일 층 경로만 지원합니다. 자동 층 인식은 구현하지 않았습니다.</string>
+  <string name="map_same_poi">출발지와 목적지가 같습니다.</string>
+  <string name="map_alignment_instruction">출발 POI의 실제 위치에서 시작하세요. AR 방향 보정으로 지도 북쪽의 실제 방향을 설정합니다. 추가 회전각은 저장된 기준에 적용됩니다. 인식된 수평면이 바닥인지 확인하세요. QR 인식은 아직 지원하지 않습니다.</string>
+  <string translatable="false" name="depth_use_explanation">When Depth is enabled on supported devices, virtual objects adapt to the environment by blending in with the real world.</string>
+  <string translatable="false" name="button_text_enable_depth">Enable</string>
+  <string translatable="false" name="button_text_disable_depth">Disable</string>
+  <string translatable="false" name="options_title_with_depth">Your device supports depth</string>
+  <string translatable="false" name="options_title_without_depth">Your device does not support depth</string>
+  <string translatable="false" name="done">Done</string>
+  <string-array translatable="false" name="depth_options_array">
+    <item>Enable depth</item>
+    <item>Show depth map</item>
+  </string-array>
+  <string translatable="false" name="options_title_instant_placement">Instant Placement options</string>
+  <string-array translatable="false" name="instant_placement_options_array">
+    <item>Enable Instant Placement</item>
+  </string-array>
+
+</resources>

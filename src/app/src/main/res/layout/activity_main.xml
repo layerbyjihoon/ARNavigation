@@ -1,0 +1,124 @@
+<!--
+   Copyright 2016 Google LLC
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.google.ar.core.examples.java.helloar.HelloArActivity">
+
+  <android.opengl.GLSurfaceView
+      android:id="@+id/surfaceview"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:layout_gravity="top"/>
+
+  <TextView
+      android:id="@+id/debug_text"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_alignParentTop="true"
+      android:layout_margin="16dp"
+      android:background="#BF161C26"
+      android:padding="16dp"
+      android:text="@string/navigation_initial"
+      android:textColor="#FFFFFF"
+      android:textSize="16sp"
+      android:fontFamily="monospace" />
+
+  <Button
+      android:id="@+id/calibrate_button"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_below="@id/debug_text"
+      android:layout_alignParentEnd="true"
+      android:layout_marginEnd="16dp"
+      android:text="@string/navigation_calibrate" />
+
+  <LinearLayout
+      android:id="@+id/dataset_controls"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_below="@id/calibrate_button"
+      android:layout_alignParentEnd="true"
+      android:layout_marginEnd="16dp"
+      android:padding="6dp"
+      android:background="#BF161C26"
+      android:orientation="vertical">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/ar_developer_label"
+        android:textColor="#DDDDDD"
+        android:textSize="11sp" />
+    <TextView
+        android:id="@+id/dataset_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/ar_live_mode"
+        android:textColor="#FFFFFF"
+        android:textSize="13sp" />
+    <TextView android:id="@+id/recording_start_point" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:maxWidth="280dp"
+        android:textColor="#FFFFFF" android:textSize="12sp" android:visibility="gone" />
+    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:orientation="horizontal">
+      <Button android:id="@+id/record_ar_button" android:layout_width="wrap_content"
+          android:layout_height="wrap_content" android:textSize="12sp"
+          android:text="@string/ar_record_start" />
+      <Button android:id="@+id/recordings_button" android:layout_width="wrap_content"
+          android:layout_height="wrap_content" android:textSize="12sp"
+          android:text="@string/ar_recordings" />
+    </LinearLayout>
+    <Button android:id="@+id/stop_playback_button" android:layout_width="wrap_content"
+        android:layout_height="wrap_content" android:visibility="gone"
+        android:text="@string/ar_playback_stop" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_alignParentBottom="true"
+      android:layout_marginStart="24dp"
+      android:layout_marginEnd="24dp"
+      android:layout_marginBottom="40dp"
+      android:gravity="center"
+      android:orientation="horizontal">
+
+    <Button
+        android:id="@+id/map_route_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/map_open" />
+
+    <Button
+        android:id="@+id/reset_nav_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:layout_marginEnd="12dp"
+        android:text="@string/navigation_reset" />
+
+    <Button
+        android:id="@+id/start_nav_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:text="@string/navigation_start" />
+  </LinearLayout>
+
+</RelativeLayout>

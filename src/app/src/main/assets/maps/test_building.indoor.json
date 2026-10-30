@@ -1,0 +1,345 @@
+{
+  "schema": "IndoorNavGraph",
+  "version": "1.0",
+  "metadata": {
+    "id": "test-building-a",
+    "name": "Test Building A",
+    "description": "Measured-meter example; manual AR alignment is required.",
+    "createdAt": "2026-10-06T12:00:00+09:00",
+    "updatedAt": "2026-10-06T12:00:00+09:00",
+    "author": "ARNav Mobile",
+    "source": "manually-authored test graph"
+  },
+  "coordinateSystem": {
+    "type": "LOCAL_METERS",
+    "unit": "meter",
+    "axis": {
+      "x": "EAST",
+      "y": "UP",
+      "z": "NORTH"
+    }
+  },
+  "floors": [
+    {
+      "id": "F1",
+      "name": "1F",
+      "level": 1,
+      "elevation": 0
+    },
+    {
+      "id": "F2",
+      "name": "2F",
+      "level": 2,
+      "elevation": 3.8
+    }
+  ],
+  "nodes": [
+    {
+      "id": "START",
+      "floorId": "F1",
+      "type": "ENTRANCE",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "properties": {
+        "name": "START"
+      }
+    },
+    {
+      "id": "N1",
+      "floorId": "F1",
+      "type": "WAYPOINT",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 2
+      },
+      "properties": {
+        "name": "N1"
+      }
+    },
+    {
+      "id": "J1",
+      "floorId": "F1",
+      "type": "JUNCTION",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 4
+      },
+      "properties": {
+        "name": "1층 중앙 복도"
+      }
+    },
+    {
+      "id": "ROOM_A",
+      "floorId": "F1",
+      "type": "ROOM",
+      "position": {
+        "x": 2,
+        "y": 0,
+        "z": 4
+      },
+      "properties": {
+        "name": "ROOM_A"
+      }
+    },
+    {
+      "id": "STAIR_F1",
+      "floorId": "F1",
+      "type": "STAIR",
+      "position": {
+        "x": 0,
+        "y": 0,
+        "z": 6
+      },
+      "properties": {
+        "name": "STAIR_F1"
+      }
+    },
+    {
+      "id": "STAIR_F2",
+      "floorId": "F2",
+      "type": "STAIR",
+      "position": {
+        "x": 0,
+        "y": 3.8,
+        "z": 6
+      },
+      "properties": {
+        "name": "STAIR_F2"
+      }
+    },
+    {
+      "id": "J2",
+      "floorId": "F2",
+      "type": "JUNCTION",
+      "position": {
+        "x": 0,
+        "y": 3.8,
+        "z": 8
+      },
+      "properties": {
+        "name": "J2"
+      }
+    },
+    {
+      "id": "ROOM_B",
+      "floorId": "F2",
+      "type": "ROOM",
+      "position": {
+        "x": 2,
+        "y": 3.8,
+        "z": 8
+      },
+      "properties": {
+        "name": "ROOM_B"
+      }
+    },
+    {
+      "id": "LIFT_F1",
+      "floorId": "F1",
+      "type": "ELEVATOR",
+      "position": {
+        "x": 2,
+        "y": 0,
+        "z": 6
+      },
+      "properties": {
+        "name": "LIFT_F1"
+      }
+    },
+    {
+      "id": "LIFT_F2",
+      "floorId": "F2",
+      "type": "ELEVATOR",
+      "position": {
+        "x": 2,
+        "y": 3.8,
+        "z": 6
+      },
+      "properties": {
+        "name": "LIFT_F2"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "E01",
+      "from": "START",
+      "to": "N1",
+      "type": "CORRIDOR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": true
+      }
+    },
+    {
+      "id": "E02",
+      "from": "N1",
+      "to": "J1",
+      "type": "CORRIDOR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": true
+      }
+    },
+    {
+      "id": "E03",
+      "from": "J1",
+      "to": "ROOM_A",
+      "type": "DOOR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": true
+      }
+    },
+    {
+      "id": "E04",
+      "from": "J1",
+      "to": "STAIR_F1",
+      "type": "CORRIDOR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": true
+      }
+    },
+    {
+      "id": "E05",
+      "from": "STAIR_F1",
+      "to": "STAIR_F2",
+      "type": "STAIR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": false
+      }
+    },
+    {
+      "id": "E06",
+      "from": "STAIR_F2",
+      "to": "J2",
+      "type": "CORRIDOR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": true
+      }
+    },
+    {
+      "id": "E07",
+      "from": "J2",
+      "to": "ROOM_B",
+      "type": "DOOR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": true
+      }
+    },
+    {
+      "id": "E08",
+      "from": "J1",
+      "to": "LIFT_F1",
+      "type": "CORRIDOR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": true
+      },
+      "geometry": [
+        {
+          "x": 0,
+          "y": 0,
+          "z": 4
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "z": 4
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "z": 6
+        }
+      ]
+    },
+    {
+      "id": "E09",
+      "from": "LIFT_F1",
+      "to": "LIFT_F2",
+      "type": "ELEVATOR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": true
+      },
+      "cost": {
+        "distance": 8,
+        "time": 15
+      }
+    },
+    {
+      "id": "E10",
+      "from": "LIFT_F2",
+      "to": "J2",
+      "type": "CORRIDOR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": true
+      }
+    },
+    {
+      "id": "E11",
+      "from": "ROOM_A",
+      "to": "LIFT_F1",
+      "type": "DOOR",
+      "bidirectional": false,
+      "accessibility": {
+        "wheelchair": true
+      }
+    }
+  ],
+  "pois": [
+    {
+      "id": "POI_START",
+      "name": "시작점",
+      "category": "INFORMATION",
+      "nodeId": "START",
+      "floorId": "F1"
+    },
+    {
+      "id": "POI_ROOM_A",
+      "name": "101호 (Room A)",
+      "category": "ROOM",
+      "nodeId": "ROOM_A",
+      "floorId": "F1"
+    },
+    {
+      "id": "POI_ROOM_B",
+      "name": "201호 (Room B)",
+      "category": "ROOM",
+      "nodeId": "ROOM_B",
+      "floorId": "F2"
+    },
+    {
+      "id": "POI_EXIT",
+      "name": "1층 출입구",
+      "category": "EXIT",
+      "nodeId": "START",
+      "floorId": "F1"
+    }
+  ],
+  "anchors": [
+    {
+      "id": "A_START",
+      "type": "QR",
+      "value": "BUILDING_A_START",
+      "floorId": "F1",
+      "position": {
+        "x": 0,
+        "y": 1.4,
+        "z": 0
+      },
+      "heading": 0
+    }
+  ]
+}

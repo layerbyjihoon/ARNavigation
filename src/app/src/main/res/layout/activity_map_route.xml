@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/map_root"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:fillViewport="true" android:background="#101923">
+  <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:orientation="vertical" android:padding="20dp">
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/map_dataset_label" android:textColor="#FFFFFF" android:labelFor="@id/map_dataset"/>
+    <Spinner android:id="@+id/map_dataset" android:layout_width="match_parent"
+        android:layout_height="48dp" android:background="#EAF3F7" android:layout_marginBottom="12dp"/>
+    <TextView android:id="@+id/map_summary" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="@string/map_loading"
+        android:textColor="#FFFFFF" android:textSize="19sp" android:paddingBottom="16dp"/>
+    <TextView android:id="@+id/map_notice" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:textColor="#FFE0A3" android:paddingBottom="12dp"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/map_start_label" android:textColor="#FFFFFF" android:labelFor="@id/start_poi"/>
+    <Spinner android:id="@+id/start_poi" android:layout_width="match_parent"
+        android:layout_height="48dp" android:background="#EAF3F7"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="@string/map_destination_label" android:textColor="#FFFFFF"
+        android:layout_marginTop="12dp" android:labelFor="@id/destination_poi"/>
+    <Spinner android:id="@+id/destination_poi" android:layout_width="match_parent"
+        android:layout_height="48dp" android:background="#EAF3F7"/>
+    <CheckBox android:id="@+id/wheelchair_route" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="@string/map_wheelchair"
+        android:textColor="#FFFFFF" android:buttonTint="#00D9F0"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:id="@+id/map_yaw_caption" android:text="@string/map_yaw_label"
+        android:textColor="#FFFFFF" android:labelFor="@id/map_yaw"/>
+    <EditText android:id="@+id/map_yaw" android:layout_width="match_parent"
+        android:layout_height="48dp" android:inputType="numberDecimal|numberSigned"
+        android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#D0DAE0"
+        android:importantForAutofill="no" />
+    <Button android:id="@+id/find_route" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="@string/map_find_route"/>
+    <TextView android:id="@+id/route_result" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:textColor="#E6F6FF"
+        android:textSize="15sp" android:padding="12dp" android:textIsSelectable="true"/>
+    <Button android:id="@+id/apply_ar_route" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="@string/map_apply_ar"/>
+    <Button android:id="@+id/return_ar" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="@string/map_return_ar"/>
+  </LinearLayout>
+</ScrollView>
