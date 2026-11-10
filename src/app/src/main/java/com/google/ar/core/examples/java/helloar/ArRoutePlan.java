@@ -9,11 +9,13 @@ final class ArRoutePlan {
   final String referenceId;
   final Double entryYawDegrees;
   final String entryDirectionLabel;
+  final String startLocation;
   final List<Waypoint> waypoints;
   private ArRoutePlan(String name, List<Waypoint> waypoints, String referenceId,
-      Double entryYawDegrees, String entryDirectionLabel) {
+      Double entryYawDegrees, String entryDirectionLabel, String startLocation) {
     this.entryYawDegrees = entryYawDegrees;
     this.entryDirectionLabel = entryDirectionLabel;
+    this.startLocation = startLocation;
     this.referenceId = referenceId == null ? "legacy" : referenceId;
     this.name = name; this.waypoints = Collections.unmodifiableList(waypoints);
   }
@@ -21,10 +23,10 @@ final class ArRoutePlan {
     return decode(name, points, "legacy");
   }
   static ArRoutePlan decode(String name, float[] points, String referenceId) {
-    return decode(name, points, referenceId, null, null);
+    return decode(name, points, referenceId, null, null, null);
   }
   static ArRoutePlan decode(String name, float[] points, String referenceId,
-      Double entryYawDegrees, String entryDirectionLabel) {
+      Double entryYawDegrees, String entryDirectionLabel, String startLocation) {
     if (entryYawDegrees != null && (!Double.isFinite(entryYawDegrees) || Math.abs(entryYawDegrees) > 180))
       throw new IllegalArgumentException("Invalid entry direction");
     if (points == null || points.length < 6 || points.length % 3 != 0 || points.length > 3075)
@@ -38,6 +40,7 @@ final class ArRoutePlan {
     for (int i = 3; i < points.length; i += 3)
       waypoints.add(new Waypoint(points[i], points[i+1], points[i+2]));
     return new ArRoutePlan(name == null ? "지도 경로" : name, waypoints, referenceId,
-        entryYawDegrees, entryDirectionLabel == null ? "문·진입점 → 복도" : entryDirectionLabel);
+        entryYawDegrees, entryDirectionLabel == null ? "문·진입점 → 복도" : entryDirectionLabel,
+        startLocation);
   }
 }

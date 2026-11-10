@@ -18,13 +18,14 @@ import java.util.concurrent.Executors;
 public final class MapRouteActivity extends AppCompatActivity {
   public static final String EXTRA_POINTS = "map_route_points", EXTRA_NAME = "map_route_name";
   public static final String EXTRA_REFERENCE = "map_reference_id";
+  public static final String EXTRA_START_LOCATION = "map_start_location";
   public static final String EXTRA_ENTRY_YAW = "route_entry_yaw", EXTRA_ENTRY_DIRECTION = "route_entry_direction";
   public static final String TEST_MAP = "maps/test_building.indoor.json";
   public static final String MUNHWAGWAN_MAP = "maps/munhwagwan.indoor.json";
   public static final String EXTRA_MAP_INDEX = "map_index";
   private static final String[] MAP_ASSETS = {MUNHWAGWAN_MAP, TEST_MAP};
   private final ExecutorService worker = Executors.newSingleThreadExecutor();
-  private TextView summary, output, notice;
+  private TextView summary, output, notice, routeSummary;
   private Spinner maps, start, destination;
   private CheckBox wheelchair;
   private EditText yaw;
@@ -57,6 +58,14 @@ public final class MapRouteActivity extends AppCompatActivity {
     content.requestApplyInsets();
     summary = findViewById(R.id.map_summary); output = findViewById(R.id.route_result);
     notice = findViewById(R.id.map_notice); maps = findViewById(R.id.map_dataset);
+    routeSummary = findViewById(R.id.route_summary);
+    View details = findViewById(R.id.map_details_panel);
+    Button detailsToggle = findViewById(R.id.map_details_toggle);
+    detailsToggle.setOnClickListener(v -> {
+      boolean open = details.getVisibility() != View.VISIBLE;
+      details.setVisibility(open ? View.VISIBLE : View.GONE);
+      detailsToggle.setText(open ? R.string.nav_details_close : R.string.nav_details_open);
+    });
     start = findViewById(R.id.start_poi); destination = findViewById(R.id.destination_poi);
     wheelchair = findViewById(R.id.wheelchair_route); yaw = findViewById(R.id.map_yaw);
     find = findViewById(R.id.find_route); apply = findViewById(R.id.apply_ar_route);
@@ -68,15 +77,17 @@ public final class MapRouteActivity extends AppCompatActivity {
         getPreferences(MODE_PRIVATE).getInt("map", 0));
     selectedMap = Math.max(0, Math.min(selectedMap, MAP_ASSETS.length - 1));
     yaw.setText(savedYaw); wheelchair.setChecked(savedWheelchair);
-    find.setEnabled(false); apply.setEnabled(false);
+    find.setEnabled(false); setPreviewAvailable(false);
     find.setOnClickListener(v -> findRoute());
     apply.setOnClickListener(v -> {
       findRoute(); // POI, policy or yaw may have changed since the previous calculation.
       if (selectedRoute != null && selectedPoints != null) {
         Poi from = (Poi) start.getSelectedItem(), to = (Poi) destination.getSelectedItem();
+        MapNode first = selectedRoute.nodes.get(0);
         Intent result = new Intent().putExtra(EXTRA_POINTS, selectedPoints)
             .putExtra(EXTRA_REFERENCE, MAP_ASSETS[selectedMap])
-            .putExtra(EXTRA_NAME, from.name + " [" + endpointLabel(selectedRoute.nodes.get(0))
+            .putExtra(EXTRA_START_LOCATION, startLocation(from, first))
+            .putExtra(EXTRA_NAME, from.name + " [" + endpointLabel(first)
                 + "] → " + to.name + " ["
                 + endpointLabel(selectedRoute.nodes.get(selectedRoute.nodes.size()-1)) + "]");
         if (selectedEntryDirection != null) result
@@ -108,8 +119,9 @@ public final class MapRouteActivity extends AppCompatActivity {
     final int generation = ++loadGeneration;
     final String asset = MAP_ASSETS[selectedMap];
     loaded = null; selectedRoute = null; selectedPoints = null;
-    find.setEnabled(false); apply.setEnabled(false); start.setEnabled(false); destination.setEnabled(false);
+    find.setEnabled(false); setPreviewAvailable(false); start.setEnabled(false); destination.setEnabled(false);
     summary.setText(R.string.map_loading); notice.setText(""); output.setText("");
+    routeSummary.setText(R.string.map_loading);
     ((TextView)findViewById(R.id.map_yaw_caption)).setText(selectedMap == 0
         ? R.string.map_plan_yaw_label : R.string.map_yaw_label);
     apply.setText(selectedMap == 0 ? R.string.map_apply_preview : R.string.map_apply_ar);
@@ -119,7 +131,9 @@ public final class MapRouteActivity extends AppCompatActivity {
         if (isFinishing() || isDestroyed() || generation != loadGeneration) return;
         loaded = result;
         if (!result.isSuccess()) {
-          summary.setText(R.string.map_load_failed); output.setText(issues(result.validation)); return;
+          summary.setText(R.string.map_load_failed); output.setText(issues(result.validation));
+          routeSummary.setText(R.string.map_load_failed);
+          return;
         }
         IndoorMap map = result.map;
         summary.setText(getString(R.string.map_summary_format, map.metadata.name, map.floors.size(),
@@ -135,6 +149,7 @@ public final class MapRouteActivity extends AppCompatActivity {
           find.setEnabled(true);
           start.setEnabled(true); destination.setEnabled(true);
         }
+        routeSummary.setText(R.string.map_select_prompt);
         output.setText(getString(R.string.map_select_prompt) + (selectedMap == 0
             ? "\n" + getString(R.string.map_munhwagwan_prompt) : issues(result.validation)));
       });
@@ -142,15 +157,21 @@ public final class MapRouteActivity extends AppCompatActivity {
   }
 
   private void findRoute() {
-    selectedRoute = null; selectedPoints = null; selectedEntryDirection = null; apply.setEnabled(false);
+    selectedRoute = null; selectedPoints = null; selectedEntryDirection = null; setPreviewAvailable(false);
     if (loaded == null || !loaded.isSuccess() || start.getSelectedItem() == null) return;
     Poi from = (Poi) start.getSelectedItem(), to = (Poi) destination.getSelectedItem();
     if (selectedMap == 0 && !from.floorId.equals(to.floorId)) {
-      output.setText(R.string.map_munhwagwan_cross_floor); return;
+      output.setText(R.string.map_munhwagwan_cross_floor);
+      routeSummary.setText(R.string.nav_route_choose_same_floor);
+      return;
     }
     RouteResult result = new AStarRouteEngine(loaded.graph).findRoute(from, to,
         wheelchair.isChecked() ? RouteOptions.WHEELCHAIR : RouteOptions.DEFAULT);
-    if (!result.isSuccess()) { output.setText(result.message); return; }
+    if (!result.isSuccess()) {
+      output.setText(result.message);
+      routeSummary.setText(result.message);
+      return;
+    }
     selectedRoute = result.route;
     StringBuilder text = new StringBuilder(String.format(Locale.getDefault(),
         "%s → %s\n총 거리: %.2f m · 구간: %d\n", from.name, to.name,
@@ -185,16 +206,23 @@ public final class MapRouteActivity extends AppCompatActivity {
       MapPosition last = ar.get(ar.size()-1);
       text.append(String.format(Locale.getDefault(),
           "\n변환: meter → AR 원점 기준\n목표 AR (%.2f, %.2f, %.2f) m\n", last.x, last.y, last.z));
-      if (result.route.isMultiFloor()) text.append(getString(R.string.map_multifloor_notice));
-      else if (result.route.segments.isEmpty()) text.append(getString(R.string.map_same_poi));
-      else {
+      if (result.route.isMultiFloor()) {
+        text.append(getString(R.string.map_multifloor_notice));
+        routeSummary.setText(R.string.nav_route_choose_same_floor);
+      } else if (result.route.segments.isEmpty()) {
+        text.append(getString(R.string.map_same_poi));
+        routeSummary.setText(R.string.map_same_poi);
+      } else {
         float[] points = new float[ar.size()*3];
         for (int i = 0; i < ar.size(); i++) {
           points[i*3] = (float) ar.get(i).x; points[i*3+1] = (float) ar.get(i).y;
           points[i*3+2] = (float) ar.get(i).z;
         }
         ArRoutePlan.decode("", points);
-        selectedPoints = points; apply.setEnabled(true);
+        selectedPoints = points; setPreviewAvailable(true);
+        routeSummary.setText(getString(selectedMap == 0
+                ? R.string.nav_route_ready_plan : R.string.nav_route_ready,
+            from.name, to.name, result.route.totalDistance, startLocation(from, firstNode)));
         if (selectedEntryDirection != null) text.append("\n출발 기준: ")
             .append(selectedEntryDirection.description()).append("\n");
         if (MapOrientation.usesSensor(MAP_ASSETS[selectedMap]))
@@ -206,13 +234,32 @@ public final class MapRouteActivity extends AppCompatActivity {
       }
     } catch (IllegalArgumentException e) {
       text.append("\nAR 변환을 적용할 수 없습니다: ").append(e.getMessage());
+      routeSummary.setText(R.string.nav_route_unavailable);
     }
     output.setText(text.toString());
+  }
+
+  private void setPreviewAvailable(boolean available) {
+    apply.setEnabled(available);
+    apply.setVisibility(available ? View.VISIBLE : View.GONE);
   }
 
   private static String endpointLabel(MapNode node) {
     Object label = node.properties.get("label");
     return label instanceof String ? (String)label : node.id;
+  }
+
+  private String startLocation(Poi from, MapNode node) {
+    Object label = node.properties.get("label");
+    String entry = label instanceof String && !((String) label).trim().isEmpty()
+        ? (String) label : from.name;
+    for (Floor floor : loaded.map.floors) {
+      if (floor.id.equals(node.floorId)) {
+        return entry.startsWith(floor.name + " ") ? entry
+            : getString(R.string.nav_location_with_floor, floor.name, entry);
+      }
+    }
+    return entry;
   }
 
   private static String issues(MapValidationResult validation) {

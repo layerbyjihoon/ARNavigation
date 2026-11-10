@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <color name="nav_background">#F7FAF8</color>
+  <color name="nav_surface">#FFFFFF</color>
+  <color name="nav_ink">#152C27</color>
+  <color name="nav_muted">#4B615B</color>
+  <color name="nav_border">#D9E5DD</color>
+  <color name="nav_accent">#176C58</color>
+  <color name="nav_soft">#EEF4F0</color>
+  <color name="nav_ar_surface">#F2172C27</color>
+  <color name="nav_ar_text">#D4E8DD</color>
+
+  <style name="NavRouteThemeBase" parent="Theme.AppCompat.Light.NoActionBar">
+    <item name="android:windowBackground">@color/nav_background</item>
+    <item name="android:statusBarColor">@color/nav_background</item>
+    <item name="android:navigationBarColor">@color/nav_ink</item>
+    <item name="android:windowLightStatusBar">true</item>
+    <item name="colorAccent">@color/nav_accent</item>
+  </style>
+  <style name="NavRouteTheme" parent="NavRouteThemeBase" />
+
+  <style name="NavButton" parent="@android:style/Widget.Material.Button">
+    <item name="android:minHeight">48dp</item>
+    <item name="android:minWidth">0dp</item>
+    <item name="android:paddingStart">12dp</item>
+    <item name="android:paddingEnd">12dp</item>
+    <item name="android:paddingTop">8dp</item>
+    <item name="android:paddingBottom">8dp</item>
+    <item name="android:textSize">15sp</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:textAllCaps">false</item>
+    <item name="android:stateListAnimator">@null</item>
+  </style>
+  <style name="NavButton.Primary">
+    <item name="android:background">@drawable/nav_button_primary</item>
+    <item name="android:textColor">@android:color/white</item>
+  </style>
+  <style name="NavButton.Secondary">
+    <item name="android:background">@drawable/nav_button_secondary</item>
+    <item name="android:textColor">@color/nav_ink</item>
+  </style>
+  <style name="NavFieldLabel">
+    <item name="android:textColor">@color/nav_ink</item>
+    <item name="android:textSize">14sp</item>
+    <item name="android:textStyle">bold</item>
+    <item name="android:layout_marginBottom">6dp</item>
+  </style>
+</resources>

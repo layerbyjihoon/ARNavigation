@@ -78,8 +78,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private static final long DEBUG_UPDATE_INTERVAL_MS = 200;
 
   // Only these requests cross from the UI thread to the GL render thread.
-  private volatile boolean startNavigationRequested;
-  private volatile boolean recaptureEntryRequested;
+  private final AtomicReference<Boolean> startFromUi = new AtomicReference<>();
   private volatile boolean resetNavigationRequested;
   private final AtomicReference<ArRoutePlan> pendingMapRoute = new AtomicReference<>();
   private static final int MAP_ROUTE_REQUEST = 1001;
@@ -110,12 +109,19 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private boolean routeUseManualAlignment;
   private Double referenceBearing;
   private String alignmentStatus;
+  private String startLocation;
   private Anchor originAnchor;
+  private boolean startNavigationRequested;
   private boolean navigationStarted;
   private boolean navigationCompleted;
+  private boolean returnToStartRequired;
   private int currentWaypointIndex;
   private long lastDebugUpdateTime;
   private TextView debugText;
+  private TextView navigationStatus;
+  private TextView navigationStartLocation;
+  private Button navigationStartButton;
+  private boolean confirmStartOnUi;
 
   private List<Waypoint> route = Arrays.asList(
       new Waypoint(0.0f, -0.5f, -2.0f),
@@ -159,6 +165,15 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     setContentView(R.layout.activity_main);
     surfaceView = findViewById(R.id.surfaceview);
     debugText = findViewById(R.id.debug_text);
+    navigationStatus = findViewById(R.id.navigation_status);
+    navigationStartLocation = findViewById(R.id.navigation_start_location);
+    View toolsPanel = findViewById(R.id.ar_tools_panel);
+    Button toolsToggle = findViewById(R.id.ar_tools_toggle);
+    toolsToggle.setOnClickListener(v -> {
+      boolean open = toolsPanel.getVisibility() != View.VISIBLE;
+      toolsPanel.setVisibility(open ? View.VISIBLE : View.GONE);
+      toolsToggle.setText(open ? R.string.nav_tools_close : R.string.nav_tools_open);
+    });
     headingSensor = new HeadingSensor(this);
     try {
       recordingStore = new ArRecordingStore(getFilesDir());
@@ -180,11 +195,19 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     alignmentPreferences = getSharedPreferences("map_alignment", MODE_PRIVATE);
     loadReferenceBearing();
     findViewById(R.id.calibrate_button).setOnClickListener(v -> showAlignmentDialog());
-    Button startButton = findViewById(R.id.start_nav_button);
+    navigationStartButton = findViewById(R.id.start_nav_button);
     Button resetButton = findViewById(R.id.reset_nav_button);
-    startButton.setOnClickListener(v -> {
-      recaptureEntryRequested = true;
-      startNavigationRequested = true;
+    navigationStartButton.setOnClickListener(v -> {
+      if (confirmStartOnUi) {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.nav_restart_title)
+            .setMessage(R.string.nav_restart_message)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.nav_restart_confirm, (dialog, which) -> startFromUi.set(true))
+            .show();
+      } else {
+        startFromUi.set(false);
+      }
     });
     resetButton.setOnClickListener(v -> resetNavigationRequested = true);
     findViewById(R.id.map_route_button).setOnClickListener(v ->
@@ -207,7 +230,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
             data.getStringExtra(MapRouteActivity.EXTRA_REFERENCE),
             data.hasExtra(MapRouteActivity.EXTRA_ENTRY_YAW)
                 ? data.getDoubleExtra(MapRouteActivity.EXTRA_ENTRY_YAW, Double.NaN) : null,
-            data.getStringExtra(MapRouteActivity.EXTRA_ENTRY_DIRECTION)));
+            data.getStringExtra(MapRouteActivity.EXTRA_ENTRY_DIRECTION),
+            data.getStringExtra(MapRouteActivity.EXTRA_START_LOCATION)));
       } catch (IllegalArgumentException e) {
         Toast.makeText(this, "지도 경로를 적용할 수 없습니다: " + e.getMessage(), Toast.LENGTH_LONG).show();
       }
@@ -511,15 +535,22 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   private void processNavigationRequests(Frame frame) {
     Camera camera = frame.getCamera();
-    if (recaptureEntryRequested) {
-      recaptureEntryRequested = false;
+    Boolean confirmed = startFromUi.getAndSet(null);
+    if (confirmed != null && !navigationStarted && !startNavigationRequested
+        && (confirmed || (!returnToStartRequired && !navigationCompleted))) {
       detachRouteEntryAnchor();
+      alignmentStatus = null;
+      returnToStartRequired |= navigationCompleted;
+      navigationCompleted = false;
+      startNavigationRequested = true;
     }
     ArRoutePlan plan = pendingMapRoute.getAndSet(null);
     if (plan != null) {
       resetNavigation();
       startNavigationRequested = false;
       route = plan.waypoints;
+      startLocation = plan.startLocation;
+      returnToStartRequired = false;
       routeEntryYawDegrees = plan.entryYawDegrees;
       routeEntryDirectionLabel = plan.entryDirectionLabel;
       routeUseManualAlignment = false;
@@ -530,7 +561,6 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
         loadReferenceBearing();
       }
       uiAlignmentKey = alignmentKey;
-      alignmentStatus = null;
       calibrateRequested = false;
       pendingBearing.set(null);
       routeLineGeometry = new RouteLineGeometry(route);
@@ -614,7 +644,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
           if (north == null) {
             alignmentStatus = datasets != null && datasets.mode() == ArDatasetController.Mode.PLAYBACK
                 ? "녹화된 방위 데이터를 기다리는 중입니다. 데이터가 없으면 방향 보정으로 기준을 지정하세요."
-                : "방위 센서가 불안정합니다. 금속·자석에서 떨어져 폰을 천천히 8자로 움직여 주세요. 문화관은 자북 기준 반시계 85.5°를 적용합니다.";
+                : "방향을 잡고 있어요. 금속이나 자석에서 떨어져 폰을 천천히 8자로 움직여 주세요.";
             return;
           }
           routeEntryAnchor = session.createAnchor(yawPose(camera.getPose().tx(), camera.getPose().ty(),
@@ -688,6 +718,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       detachRouteEntryAnchor();
       currentWaypointIndex = 0;
       navigationStarted = true;
+      returnToStartRequired = false;
       alignmentStatus = null;
       navigationCompleted = false;
       startNavigationRequested = false;
@@ -703,8 +734,10 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private void resetNavigation() {
     detachOriginAnchor();
     detachRouteEntryAnchor();
+    returnToStartRequired |= navigationStarted || navigationCompleted;
     navigationStarted = false;
     navigationCompleted = false;
+    alignmentStatus = null;
     currentWaypointIndex = 0;
     routeLineGeometry.invalidate();
     lastDebugUpdateTime = 0;
@@ -735,34 +768,57 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   }
 
   private void updateNavigation(Camera camera) {
-    if (camera.getTrackingState() != TrackingState.TRACKING) {
-      postDebugText(getString(R.string.navigation_tracking,
-          camera.getTrackingState().name(), camera.getTrackingFailureReason().name()));
+    boolean tracking = camera.getTrackingState() == TrackingState.TRACKING;
+    if (navigationStarted && (originAnchor == null
+        || originAnchor.getTrackingState() == TrackingState.STOPPED)) {
+      resetNavigation();
+    }
+    if (returnToStartRequired && !startNavigationRequested) {
+      postDebugText(getString(R.string.navigation_origin_lost),
+          getString(R.string.nav_status_restart), tracking);
       return;
     }
     if (navigationCompleted) {
-      postDebugText(getString(R.string.navigation_arrived, route.size()));
+      postDebugText(getString(R.string.navigation_arrived, route.size()),
+          getString(R.string.nav_status_arrived), tracking);
+      return;
+    }
+    if (!tracking) {
+      postDebugText(getString(R.string.navigation_tracking,
+          camera.getTrackingState().name(), camera.getTrackingFailureReason().name()),
+          getString(navigationStarted ? R.string.nav_status_recovering : R.string.nav_status_tracking),
+          false);
       return;
     }
     if (!navigationStarted) {
+      if (SystemClock.elapsedRealtime() - lastDebugUpdateTime < DEBUG_UPDATE_INTERVAL_MS) return;
+      boolean alignWithCorridor = selectedMapRouteName != null && routeEntryYawDegrees != null
+          && !routeUseManualAlignment && !MapOrientation.usesSensor(alignmentKey);
+      boolean canStart = !startNavigationRequested
+          && (selectedMapRouteName == null || findFloor(camera.getPose()) != null);
+      String status = alignmentStatus;
+      if (selectedMapRouteName != null && !startNavigationRequested && !canStart) {
+        status = getString(R.string.nav_status_find_floor);
+      } else if (status == null) {
+        if (startNavigationRequested) status = getString(R.string.nav_status_preparing);
+        else if (selectedMapRouteName == null) status = getString(R.string.nav_status_choose_route);
+        else status = getString(alignWithCorridor
+            ? R.string.nav_status_ready_aligned : R.string.nav_status_ready);
+      }
       postDebugText(alignmentStatus != null ? alignmentStatus
           : selectedMapRouteName != null && MapOrientation.usesSensor(alignmentKey) && !routeUseManualAlignment
               ? getString(R.string.navigation_ready_sensor, selectedMapRouteName)
           : selectedMapRouteName != null && routeEntryYawDegrees != null && !routeUseManualAlignment
               ? getString(R.string.navigation_ready_entry, selectedMapRouteName, routeEntryDirectionLabel)
           : selectedMapRouteName == null ? getString(R.string.navigation_ready)
-          : getString(R.string.navigation_ready_map, selectedMapRouteName));
-      return;
-    }
-    if (originAnchor == null || originAnchor.getTrackingState() == TrackingState.STOPPED) {
-      resetNavigation();
-      postDebugText(getString(R.string.navigation_origin_lost));
+          : getString(R.string.navigation_ready_map, selectedMapRouteName), status, canStart);
       return;
     }
 
     Pose relativePose = getRelativeCameraPose(camera);
     if (relativePose == null) {
-      postDebugText(getString(R.string.navigation_origin_paused));
+      postDebugText(getString(R.string.navigation_origin_paused),
+          getString(R.string.nav_status_recovering), false);
       return;
     }
     float distance = route.get(currentWaypointIndex)
@@ -775,7 +831,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
           currentWaypointIndex, relativePose.tx(), relativePose.tz(), distance));
       if (navigationCompleted) {
         detachOriginAnchor();
-        postDebugText(getString(R.string.navigation_arrived, route.size()));
+        postDebugText(getString(R.string.navigation_arrived, route.size()),
+            getString(R.string.nav_status_arrived), true);
         Log.i(TAG, "Navigation arrived: all " + route.size() + " waypoints reached");
         return;
       }
@@ -808,18 +865,51 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     if (now - lastDebugUpdateTime < DEBUG_UPDATE_INTERVAL_MS) {
       return;
     }
+    RouteTurn turn = RouteTurn.next(route, waypointIndex, x, z);
+    String status = getString(R.string.nav_status_active, distance);
+    if (turn != null) {
+      int directionText;
+      switch (turn.direction) {
+        case LEFT: directionText = R.string.nav_turn_left; break;
+        case RIGHT: directionText = R.string.nav_turn_right; break;
+        default: directionText = R.string.nav_turn_back; break;
+      }
+      String direction = getString(directionText);
+      status = turn.distance <= ARRIVAL_DISTANCE ? getString(R.string.nav_turn_here, direction)
+          : getString(R.string.nav_turn_ahead, turn.distance, direction);
+    }
     postDebugText(String.format(Locale.getDefault(),
-        getString(R.string.navigation_debug), x, y, z, waypointIndex + 1, route.size(), distance));
+        getString(R.string.navigation_debug), x, y, z, waypointIndex + 1, route.size(), distance),
+        status, false);
   }
 
-  private void postDebugText(String text) {
+  private void postDebugText(String text, String status, boolean canStart) {
     long now = SystemClock.elapsedRealtime();
     if (now - lastDebugUpdateTime < DEBUG_UPDATE_INTERVAL_MS) {
       return;
     }
     lastDebugUpdateTime = now;
-    // Capture the text on the render thread; the UI never reads mutable navigation state.
-    debugText.post(() -> debugText.setText(text));
+    String location = startLocation == null ? "" : getString(R.string.nav_ar_start_location, startLocation);
+    boolean confirmStart = returnToStartRequired || navigationCompleted;
+    int action = navigationStarted ? R.string.nav_start_active
+        : startNavigationRequested ? R.string.nav_start_preparing
+        : confirmStart ? R.string.nav_start_confirm_location
+        : selectedMapRouteName == null ? R.string.nav_start_sample : R.string.navigation_start;
+    // Capture the state on the render thread; the UI never reads mutable navigation state.
+    debugText.post(() -> {
+      debugText.setText(text);
+      if (!status.contentEquals(navigationStatus.getText())) navigationStatus.setText(status);
+      if (!location.contentEquals(navigationStartLocation.getText())) {
+        navigationStartLocation.setText(location);
+        navigationStartLocation.setVisibility(location.isEmpty() ? View.GONE : View.VISIBLE);
+      }
+      confirmStartOnUi = confirmStart;
+      String actionText = getString(action);
+      if (!actionText.contentEquals(navigationStartButton.getText())) {
+        navigationStartButton.setText(actionText);
+      }
+      navigationStartButton.setEnabled(canStart);
+    });
   }
 
   private void updateDatasetControls() {
@@ -832,6 +922,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     findViewById(R.id.recordings_button).setEnabled(datasets != null);
     findViewById(R.id.stop_playback_button).setVisibility(playback ? View.VISIBLE : View.GONE);
     TextView status = findViewById(R.id.dataset_status);
+    status.setVisibility(playback || mode == ArDatasetController.Mode.RECORDING
+        ? View.VISIBLE : View.GONE);
     status.setText(playback ? (datasets.finished() ? R.string.ar_playback_finished : R.string.ar_playback_mode)
         : mode == ArDatasetController.Mode.RECORDING ? R.string.ar_recording : R.string.ar_live_mode);
     status.setTextColor(playback || mode == ArDatasetController.Mode.RECORDING ? 0xFFFFCC66 : 0xFFFFFFFF);
@@ -901,7 +993,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private void releaseArSession() {
     pendingRecording.set(null);
     datasetAlignmentOverride = null;
-    recaptureEntryRequested = false;
+    startFromUi.set(null);
     routeUseManualAlignment = false;
     if (datasets != null) datasets.clearMapReference();
     startNavigationRequested = false;
@@ -910,7 +1002,6 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     pendingBearing.set(null);
     resetNavigation();
     detachDirectionAnchor();
-    alignmentStatus = null;
     if (session != null) { session.close(); session = null; }
     hasSetTextureNames = false;
   }

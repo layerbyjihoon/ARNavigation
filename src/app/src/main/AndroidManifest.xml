@@ -48,7 +48,7 @@
       </intent-filter>
     </activity>
     <activity android:name=".MapRouteActivity" android:exported="false"
-        android:screenOrientation="portrait" android:theme="@style/Theme.AppCompat.NoActionBar" />
+        android:screenOrientation="portrait" android:theme="@style/NavRouteTheme" />
     <!-- Indicates whether "Google Play Services for AR" (ARCore) is "required" or "optional". -->
     <meta-data android:name="com.google.ar.core" android:value="required" />
   </application>

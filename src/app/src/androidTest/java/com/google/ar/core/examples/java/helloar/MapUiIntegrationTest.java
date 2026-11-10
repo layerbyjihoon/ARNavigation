@@ -129,6 +129,7 @@ public final class MapUiIntegrationTest {
           Waypoint last = (Waypoint)route.get(2);
           assertEquals(-4.226,last.x,1e-6); assertEquals(0,last.z,1e-6); assertEquals(-0.5,last.y,1e-6);
           assertTrue(((String)field(ar,"selectedMapRouteName")).contains("102호"));
+          assertEquals("1층 101호 진입 1", field(ar,"startLocation"));
           assertEquals(0,(Double)field(ar,"routeEntryYawDegrees"),1e-6);
           assertTrue(((String)field(ar,"routeEntryDirectionLabel")).contains("F1_C004"));
           assertFalse((Boolean)field(ar,"routeUseManualAlignment"));

@@ -14,111 +14,91 @@
    limitations under the License.
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.google.ar.core.examples.java.helloar.HelloArActivity">
+    android:fitsSystemWindows="true">
 
   <android.opengl.GLSurfaceView
       android:id="@+id/surfaceview"
-      android:layout_width="fill_parent"
-      android:layout_height="fill_parent"
-      android:layout_gravity="top"/>
-
-  <TextView
-      android:id="@+id/debug_text"
       android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:layout_alignParentTop="true"
-      android:layout_margin="16dp"
-      android:background="#BF161C26"
-      android:padding="16dp"
-      android:text="@string/navigation_initial"
-      android:textColor="#FFFFFF"
-      android:textSize="16sp"
-      android:fontFamily="monospace" />
+      android:layout_height="match_parent" />
 
-  <Button
-      android:id="@+id/calibrate_button"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_below="@id/debug_text"
-      android:layout_alignParentEnd="true"
-      android:layout_marginEnd="16dp"
-      android:text="@string/navigation_calibrate" />
-
-  <LinearLayout
-      android:id="@+id/dataset_controls"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_below="@id/calibrate_button"
-      android:layout_alignParentEnd="true"
-      android:layout_marginEnd="16dp"
-      android:padding="6dp"
-      android:background="#BF161C26"
-      android:orientation="vertical">
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/ar_developer_label"
-        android:textColor="#DDDDDD"
-        android:textSize="11sp" />
-    <TextView
-        android:id="@+id/dataset_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/ar_live_mode"
-        android:textColor="#FFFFFF"
-        android:textSize="13sp" />
-    <TextView android:id="@+id/recording_start_point" android:layout_width="wrap_content"
-        android:layout_height="wrap_content" android:maxWidth="280dp"
-        android:textColor="#FFFFFF" android:textSize="12sp" android:visibility="gone" />
-    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:orientation="horizontal">
-      <Button android:id="@+id/record_ar_button" android:layout_width="wrap_content"
-          android:layout_height="wrap_content" android:textSize="12sp"
-          android:text="@string/ar_record_start" />
-      <Button android:id="@+id/recordings_button" android:layout_width="wrap_content"
-          android:layout_height="wrap_content" android:textSize="12sp"
-          android:text="@string/ar_recordings" />
+  <LinearLayout android:id="@+id/ar_header"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:layout_alignParentTop="true" android:layout_margin="16dp"
+      android:background="@drawable/nav_ar_panel" android:orientation="vertical"
+      android:padding="14dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:orientation="horizontal">
+      <TextView android:layout_width="0dp" android:layout_weight="1"
+          android:layout_height="wrap_content" android:text="@string/nav_ar_title"
+          android:textColor="@android:color/white" android:textSize="22sp" android:textStyle="bold" />
+      <Button android:id="@+id/ar_tools_toggle" style="@style/NavButton.Secondary"
+          android:layout_width="wrap_content" android:layout_height="wrap_content"
+          android:layout_marginStart="8dp" android:text="@string/nav_tools_open" />
     </LinearLayout>
-    <Button android:id="@+id/stop_playback_button" android:layout_width="wrap_content"
-        android:layout_height="wrap_content" android:visibility="gone"
-        android:text="@string/ar_playback_stop" />
+    <TextView android:id="@+id/navigation_start_location"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:textColor="@android:color/white"
+        android:textSize="15sp" android:textStyle="bold" android:visibility="gone" />
+    <TextView android:id="@+id/navigation_status"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:text="@string/nav_status_tracking"
+        android:textColor="@color/nav_ar_text" android:textSize="14sp" />
+    <TextView android:id="@+id/dataset_status"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:text="@string/ar_live_mode"
+        android:textColor="@android:color/white" android:textSize="13sp" android:visibility="gone" />
   </LinearLayout>
 
-  <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:layout_alignParentBottom="true"
-      android:layout_marginStart="24dp"
-      android:layout_marginEnd="24dp"
-      android:layout_marginBottom="40dp"
-      android:gravity="center"
-      android:orientation="horizontal">
-
-    <Button
-        android:id="@+id/map_route_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:layout_marginEnd="8dp"
-        android:text="@string/map_open" />
-
-    <Button
-        android:id="@+id/reset_nav_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:layout_marginEnd="12dp"
-        android:text="@string/navigation_reset" />
-
-    <Button
-        android:id="@+id/start_nav_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minHeight="48dp"
-        android:text="@string/navigation_start" />
+  <LinearLayout android:id="@+id/ar_actions"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:layout_alignParentBottom="true" android:layout_margin="16dp"
+      android:background="@drawable/nav_panel" android:orientation="horizontal" android:padding="10dp">
+    <Button android:id="@+id/map_route_button" style="@style/NavButton.Secondary"
+        android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp" android:text="@string/map_open" />
+    <Button android:id="@+id/start_nav_button" style="@style/NavButton.Primary"
+        android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+        android:enabled="false" android:text="@string/nav_start_sample" />
   </LinearLayout>
 
+  <ScrollView android:id="@+id/ar_tools_panel"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:layout_below="@id/ar_header" android:layout_above="@id/ar_actions"
+      android:layout_marginStart="16dp" android:layout_marginEnd="16dp" android:layout_marginBottom="8dp"
+      android:visibility="gone">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:background="@drawable/nav_ar_panel" android:orientation="vertical" android:padding="14dp">
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:text="@string/ar_developer_label" android:textColor="@android:color/white"
+          android:textSize="16sp" android:textStyle="bold" />
+      <Button android:id="@+id/calibrate_button" style="@style/NavButton.Secondary"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="10dp" android:text="@string/navigation_calibrate" />
+      <Button android:id="@+id/reset_nav_button" style="@style/NavButton.Secondary"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="8dp" android:text="@string/navigation_reset" />
+      <LinearLayout android:id="@+id/dataset_controls"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="8dp" android:orientation="vertical">
+        <TextView android:id="@+id/recording_start_point" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:textColor="@color/nav_ar_text"
+            android:textSize="13sp" android:visibility="gone" />
+        <Button android:id="@+id/record_ar_button" style="@style/NavButton.Secondary"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/ar_record_start" />
+        <Button android:id="@+id/recordings_button" style="@style/NavButton.Secondary"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:text="@string/ar_recordings" />
+        <Button android:id="@+id/stop_playback_button" style="@style/NavButton.Secondary"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:visibility="gone" android:text="@string/ar_playback_stop" />
+      </LinearLayout>
+      <TextView android:id="@+id/debug_text" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:layout_marginTop="12dp"
+          android:text="@string/navigation_initial" android:textColor="@color/nav_ar_text"
+          android:textSize="12sp" android:fontFamily="monospace" />
+    </LinearLayout>
+  </ScrollView>
 </RelativeLayout>

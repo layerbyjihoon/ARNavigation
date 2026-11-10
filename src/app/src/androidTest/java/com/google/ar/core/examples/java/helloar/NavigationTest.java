@@ -87,6 +87,7 @@ public class NavigationTest {
     assertEquals(0, getField("currentWaypointIndex"));
     assertEquals(false, getField("navigationStarted"));
     assertEquals(false, getField("navigationCompleted"));
+    assertEquals(true, getField("returnToStartRequired"));
     setField("navigationStarted", true);
     assertTrue(activity.advanceWaypointIfArrived(Pose.makeTranslation(0f, 0f, -2f)));
   }

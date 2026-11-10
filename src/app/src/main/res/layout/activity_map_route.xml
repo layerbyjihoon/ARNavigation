@@ -2,45 +2,84 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/map_root"
     android:layout_width="match_parent" android:layout_height="match_parent"
-    android:fillViewport="true" android:background="#101923">
+    android:fillViewport="true">
   <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-      android:orientation="vertical" android:padding="20dp">
+      android:orientation="vertical" android:padding="18dp">
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/map_dataset_label" android:textColor="#FFFFFF" android:labelFor="@id/map_dataset"/>
-    <Spinner android:id="@+id/map_dataset" android:layout_width="match_parent"
-        android:layout_height="48dp" android:background="#EAF3F7" android:layout_marginBottom="12dp"/>
-    <TextView android:id="@+id/map_summary" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:text="@string/map_loading"
-        android:textColor="#FFFFFF" android:textSize="19sp" android:paddingBottom="16dp"/>
-    <TextView android:id="@+id/map_notice" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:textColor="#FFE0A3" android:paddingBottom="12dp"/>
+        android:text="@string/nav_route_title" android:textColor="@color/nav_ink"
+        android:textSize="26sp" android:textStyle="bold" />
     <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/map_start_label" android:textColor="#FFFFFF" android:labelFor="@id/start_poi"/>
-    <Spinner android:id="@+id/start_poi" android:layout_width="match_parent"
-        android:layout_height="48dp" android:background="#EAF3F7"/>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="@string/map_destination_label" android:textColor="#FFFFFF"
-        android:layout_marginTop="12dp" android:labelFor="@id/destination_poi"/>
-    <Spinner android:id="@+id/destination_poi" android:layout_width="match_parent"
-        android:layout_height="48dp" android:background="#EAF3F7"/>
-    <CheckBox android:id="@+id/wheelchair_route" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:text="@string/map_wheelchair"
-        android:textColor="#FFFFFF" android:buttonTint="#00D9F0"/>
-    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:id="@+id/map_yaw_caption" android:text="@string/map_yaw_label"
-        android:textColor="#FFFFFF" android:labelFor="@id/map_yaw"/>
-    <EditText android:id="@+id/map_yaw" android:layout_width="match_parent"
-        android:layout_height="48dp" android:inputType="numberDecimal|numberSigned"
-        android:singleLine="true" android:textColor="#FFFFFF" android:textColorHint="#D0DAE0"
-        android:importantForAutofill="no" />
-    <Button android:id="@+id/find_route" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:text="@string/map_find_route"/>
-    <TextView android:id="@+id/route_result" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:textColor="#E6F6FF"
-        android:textSize="15sp" android:padding="12dp" android:textIsSelectable="true"/>
-    <Button android:id="@+id/apply_ar_route" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:text="@string/map_apply_ar"/>
-    <Button android:id="@+id/return_ar" android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:text="@string/map_return_ar"/>
+        android:layout_marginTop="4dp" android:layout_marginBottom="16dp"
+        android:text="@string/nav_route_intro" android:textColor="@color/nav_muted" android:textSize="14sp" />
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:background="@drawable/nav_panel" android:orientation="vertical" android:padding="14dp">
+      <TextView style="@style/NavFieldLabel" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:text="@string/map_dataset_label"
+          android:labelFor="@id/map_dataset" />
+      <Spinner android:id="@+id/map_dataset" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:minHeight="48dp"
+          android:background="@drawable/nav_selector" android:popupBackground="@color/nav_surface" />
+
+      <TextView style="@style/NavFieldLabel" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:layout_marginTop="12dp"
+          android:text="@string/map_start_label" android:labelFor="@id/start_poi" />
+      <Spinner android:id="@+id/start_poi" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:minHeight="48dp"
+          android:background="@drawable/nav_selector" android:popupBackground="@color/nav_surface" />
+
+      <TextView style="@style/NavFieldLabel" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:layout_marginTop="12dp"
+          android:text="@string/map_destination_label" android:labelFor="@id/destination_poi" />
+      <Spinner android:id="@+id/destination_poi" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:minHeight="48dp"
+          android:background="@drawable/nav_selector" android:popupBackground="@color/nav_surface" />
+
+      <CheckBox android:id="@+id/wheelchair_route" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:minHeight="48dp" android:layout_marginTop="4dp"
+          android:text="@string/map_wheelchair" android:textColor="@color/nav_muted"
+          android:buttonTint="@color/nav_accent" />
+    </LinearLayout>
+
+    <Button android:id="@+id/find_route" style="@style/NavButton.Primary"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" android:text="@string/map_find_route" />
+
+    <TextView android:id="@+id/route_summary" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginTop="12dp"
+        android:background="@drawable/nav_panel" android:padding="12dp"
+        android:text="@string/map_loading" android:textColor="@color/nav_ink"
+        android:textSize="14sp" android:accessibilityLiveRegion="polite" />
+    <Button android:id="@+id/apply_ar_route" style="@style/NavButton.Primary"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:text="@string/map_apply_ar" />
+
+    <Button android:id="@+id/map_details_toggle" style="@style/NavButton.Secondary"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="14dp" android:text="@string/nav_details_open" />
+    <LinearLayout android:id="@+id/map_details_panel" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:layout_marginTop="8dp"
+        android:background="@drawable/nav_panel" android:orientation="vertical"
+        android:padding="14dp" android:visibility="gone">
+      <TextView android:id="@+id/map_yaw_caption" style="@style/NavFieldLabel"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:text="@string/map_yaw_label" android:labelFor="@id/map_yaw" />
+      <EditText android:id="@+id/map_yaw" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:minHeight="48dp"
+          android:inputType="numberDecimal|numberSigned" android:singleLine="true"
+          android:textColor="@color/nav_ink" android:importantForAutofill="no" />
+      <TextView android:id="@+id/map_summary" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:layout_marginTop="12dp"
+          android:text="@string/map_loading" android:textColor="@color/nav_ink" android:textSize="14sp" />
+      <TextView android:id="@+id/map_notice" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:layout_marginTop="8dp"
+          android:textColor="@color/nav_muted" android:textSize="13sp" />
+      <TextView android:id="@+id/route_result" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:layout_marginTop="8dp"
+          android:textColor="@color/nav_ink" android:textSize="14sp" android:textIsSelectable="true" />
+    </LinearLayout>
+    <Button android:id="@+id/return_ar" style="@style/NavButton.Secondary"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:text="@string/map_return_ar" />
   </LinearLayout>
 </ScrollView>
