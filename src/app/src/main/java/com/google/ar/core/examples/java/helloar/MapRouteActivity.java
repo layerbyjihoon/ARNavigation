@@ -20,6 +20,10 @@ public final class MapRouteActivity extends AppCompatActivity {
   public static final String EXTRA_REFERENCE = "map_reference_id";
   public static final String EXTRA_START_LOCATION = "map_start_location";
   public static final String EXTRA_ENTRY_YAW = "route_entry_yaw", EXTRA_ENTRY_DIRECTION = "route_entry_direction";
+  static final String EXTRA_DESTINATION_POINTS = "destination_route_points";
+  static final String EXTRA_DESTINATION_ENTRY_YAW = "destination_route_entry_yaw";
+  static final String EXTRA_FLOOR_HEIGHT_CHANGE = "route_floor_height_change";
+  static final String EXTRA_STAIR_EXIT = "route_stair_exit";
   public static final String TEST_MAP = "maps/test_building.indoor.json";
   public static final String MUNHWAGWAN_MAP = "maps/munhwagwan.indoor.json";
   public static final String EXTRA_MAP_INDEX = "map_index";
@@ -34,6 +38,8 @@ public final class MapRouteActivity extends AppCompatActivity {
   private NavigationRoute selectedRoute;
   private float[] selectedPoints;
   private EntryDirection selectedEntryDirection;
+  private MunhwagwanStairRoute selectedStairRoute;
+  private float[] selectedDestinationPoints;
   private int savedStart, savedDestination = 1;
   private boolean savedWheelchair;
   private String savedYaw = "0";
@@ -84,15 +90,22 @@ public final class MapRouteActivity extends AppCompatActivity {
       if (selectedRoute != null && selectedPoints != null) {
         Poi from = (Poi) start.getSelectedItem(), to = (Poi) destination.getSelectedItem();
         MapNode first = selectedRoute.nodes.get(0);
+        NavigationRoute finalLeg = selectedStairRoute == null ? selectedRoute : selectedStairRoute.destination;
+        MapNode last = finalLeg.nodes.get(finalLeg.nodes.size() - 1);
         Intent result = new Intent().putExtra(EXTRA_POINTS, selectedPoints)
             .putExtra(EXTRA_REFERENCE, MAP_ASSETS[selectedMap])
             .putExtra(EXTRA_START_LOCATION, startLocation(from, first))
             .putExtra(EXTRA_NAME, from.name + " [" + endpointLabel(first)
-                + "] → " + to.name + " ["
-                + endpointLabel(selectedRoute.nodes.get(selectedRoute.nodes.size()-1)) + "]");
+                + "] → " + to.name + " [" + endpointLabel(last) + "]");
         if (selectedEntryDirection != null) result
             .putExtra(EXTRA_ENTRY_YAW, selectedEntryDirection.canonicalYawDegrees)
             .putExtra(EXTRA_ENTRY_DIRECTION, selectedEntryDirection.description());
+        if (selectedStairRoute != null) result
+            .putExtra(EXTRA_DESTINATION_POINTS, selectedDestinationPoints)
+            .putExtra(EXTRA_DESTINATION_ENTRY_YAW, selectedStairRoute.exitDirection.canonicalYawDegrees)
+            .putExtra(EXTRA_STAIR_EXIT, getString(R.string.nav_stair_exit,
+                selectedStairRoute.destinationFloor, selectedStairRoute.stairName))
+            .putExtra(EXTRA_FLOOR_HEIGHT_CHANGE, selectedStairRoute.heightChange);
         setResult(RESULT_OK, result);
         finish();
       }
@@ -158,11 +171,11 @@ public final class MapRouteActivity extends AppCompatActivity {
 
   private void findRoute() {
     selectedRoute = null; selectedPoints = null; selectedEntryDirection = null; setPreviewAvailable(false);
+    selectedStairRoute = null; selectedDestinationPoints = null;
     if (loaded == null || !loaded.isSuccess() || start.getSelectedItem() == null) return;
     Poi from = (Poi) start.getSelectedItem(), to = (Poi) destination.getSelectedItem();
     if (selectedMap == 0 && !from.floorId.equals(to.floorId)) {
-      output.setText(R.string.map_munhwagwan_cross_floor);
-      routeSummary.setText(R.string.nav_route_choose_same_floor);
+      findStairRoute(from, to);
       return;
     }
     RouteResult result = new AStarRouteEngine(loaded.graph).findRoute(from, to,
@@ -199,10 +212,7 @@ public final class MapRouteActivity extends AppCompatActivity {
     }
     try {
       double angle = Double.parseDouble(yaw.getText().toString().trim());
-      MapCoordinateTransformer transformer = new LocalMapCoordinateTransformer(
-          loaded.map.coordinateSystem, result.route.nodes.get(0).position,
-          new MapPosition(0, -0.5, 0), angle);
-      List<MapPosition> ar = RouteCoordinateAdapter.toAr(result.route, transformer);
+      List<MapPosition> ar = toAr(result.route, angle);
       MapPosition last = ar.get(ar.size()-1);
       text.append(String.format(Locale.getDefault(),
           "\n변환: meter → AR 원점 기준\n목표 AR (%.2f, %.2f, %.2f) m\n", last.x, last.y, last.z));
@@ -213,13 +223,8 @@ public final class MapRouteActivity extends AppCompatActivity {
         text.append(getString(R.string.map_same_poi));
         routeSummary.setText(R.string.map_same_poi);
       } else {
-        float[] points = new float[ar.size()*3];
-        for (int i = 0; i < ar.size(); i++) {
-          points[i*3] = (float) ar.get(i).x; points[i*3+1] = (float) ar.get(i).y;
-          points[i*3+2] = (float) ar.get(i).z;
-        }
-        ArRoutePlan.decode("", points);
-        selectedPoints = points; setPreviewAvailable(true);
+        selectedPoints = previewPoints(ar);
+        setPreviewAvailable(true);
         routeSummary.setText(getString(selectedMap == 0
                 ? R.string.nav_route_ready_plan : R.string.nav_route_ready,
             from.name, to.name, result.route.totalDistance, startLocation(from, firstNode)));
@@ -237,6 +242,59 @@ public final class MapRouteActivity extends AppCompatActivity {
       routeSummary.setText(R.string.nav_route_unavailable);
     }
     output.setText(text.toString());
+  }
+
+  private void findStairRoute(Poi from, Poi to) {
+    if (wheelchair.isChecked()) {
+      output.setText(R.string.nav_stair_route_inaccessible);
+      routeSummary.setText(R.string.nav_stair_route_inaccessible);
+      return;
+    }
+    MunhwagwanStairRoute stair = MunhwagwanStairRoute.find(loaded, from, to);
+    if (stair == null) {
+      int message = MunhwagwanStairRoute.heightChange(loaded.map, from.floorId, to.floorId) == null
+          ? R.string.nav_stair_route_missing_height : R.string.nav_route_unavailable;
+      output.setText(message);
+      routeSummary.setText(message);
+      return;
+    }
+    try {
+      double angle = Double.parseDouble(yaw.getText().toString().trim());
+      float[] approach = previewPoints(toAr(stair.approach, angle));
+      // The second leg is aligned by facing the exit corridor, independently of the first leg.
+      float[] onward = previewPoints(toAr(stair.destination, 0));
+      EntryDirection direction = EntryDirection.resolve(loaded.map, stair.approach.nodes.get(0));
+      selectedPoints = approach;
+      selectedDestinationPoints = onward;
+      selectedRoute = stair.approach;
+      selectedStairRoute = stair;
+      selectedEntryDirection = direction;
+      setPreviewAvailable(true);
+      routeSummary.setText(getString(R.string.nav_stair_route_summary, from.name, stair.stairName,
+          to.name, startLocation(from, stair.approach.nodes.get(0))));
+      output.setText(getString(R.string.nav_stair_route_detail, stair.stairName, stair.destinationFloor,
+          Math.abs(stair.heightChange)));
+    } catch (IllegalArgumentException e) {
+      routeSummary.setText(R.string.nav_route_unavailable);
+      output.setText(getString(R.string.nav_route_unavailable) + "\n" + e.getMessage());
+    }
+  }
+
+  private List<MapPosition> toAr(NavigationRoute route, double angle) {
+    return RouteCoordinateAdapter.toAr(route, new LocalMapCoordinateTransformer(
+        loaded.map.coordinateSystem, route.nodes.get(0).position,
+        new MapPosition(0, -0.5, 0), angle));
+  }
+
+  private static float[] previewPoints(List<MapPosition> ar) {
+    float[] points = new float[ar.size() * 3];
+    for (int i = 0; i < ar.size(); i++) {
+      points[i * 3] = (float) ar.get(i).x;
+      points[i * 3 + 1] = (float) ar.get(i).y;
+      points[i * 3 + 2] = (float) ar.get(i).z;
+    }
+    ArRoutePlan.decode("", points);
+    return points;
   }
 
   private void setPreviewAvailable(boolean available) {

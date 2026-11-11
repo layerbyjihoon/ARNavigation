@@ -75,6 +75,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private static final String TAG = HelloArActivity.class.getSimpleName();
 
   private static final float ARRIVAL_DISTANCE = 0.8f;
+  private static final float FLOOR_ORIGIN_OFFSET = 0.52f;
   private static final long DEBUG_UPDATE_INTERVAL_MS = 200;
 
   // Only these requests cross from the UI thread to the GL render thread.
@@ -114,6 +115,10 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private boolean startNavigationRequested;
   private boolean navigationStarted;
   private boolean navigationCompleted;
+  private ArRoutePlan destinationLeg;
+  private FloorChangeDetector floorChangeDetector;
+  private boolean waitingForDestinationFloor;
+  private boolean alignFromStairExit;
   private boolean returnToStartRequired;
   private int currentWaypointIndex;
   private long lastDebugUpdateTime;
@@ -225,13 +230,23 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     super.onActivityResult(requestCode, resultCode, data);
     if (requestCode == MAP_ROUTE_REQUEST && resultCode == RESULT_OK && data != null) {
       try {
-        pendingMapRoute.set(ArRoutePlan.decode(data.getStringExtra(MapRouteActivity.EXTRA_NAME),
+        ArRoutePlan plan = ArRoutePlan.decode(data.getStringExtra(MapRouteActivity.EXTRA_NAME),
             data.getFloatArrayExtra(MapRouteActivity.EXTRA_POINTS),
             data.getStringExtra(MapRouteActivity.EXTRA_REFERENCE),
             data.hasExtra(MapRouteActivity.EXTRA_ENTRY_YAW)
                 ? data.getDoubleExtra(MapRouteActivity.EXTRA_ENTRY_YAW, Double.NaN) : null,
             data.getStringExtra(MapRouteActivity.EXTRA_ENTRY_DIRECTION),
-            data.getStringExtra(MapRouteActivity.EXTRA_START_LOCATION)));
+            data.getStringExtra(MapRouteActivity.EXTRA_START_LOCATION));
+        if (data.hasExtra(MapRouteActivity.EXTRA_DESTINATION_POINTS)) {
+          ArRoutePlan destination = ArRoutePlan.decode(plan.name,
+              data.getFloatArrayExtra(MapRouteActivity.EXTRA_DESTINATION_POINTS), plan.referenceId,
+              data.getDoubleExtra(MapRouteActivity.EXTRA_DESTINATION_ENTRY_YAW, Double.NaN),
+              getString(R.string.nav_stair_face_corridor),
+              data.getStringExtra(MapRouteActivity.EXTRA_STAIR_EXIT));
+          plan = plan.withDestinationLeg(destination,
+              data.getDoubleExtra(MapRouteActivity.EXTRA_FLOOR_HEIGHT_CHANGE, Double.NaN));
+        }
+        pendingMapRoute.set(plan);
       } catch (IllegalArgumentException e) {
         Toast.makeText(this, "지도 경로를 적용할 수 없습니다: " + e.getMessage(), Toast.LENGTH_LONG).show();
       }
@@ -536,41 +551,25 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private void processNavigationRequests(Frame frame) {
     Camera camera = frame.getCamera();
     Boolean confirmed = startFromUi.getAndSet(null);
-    if (confirmed != null && !navigationStarted && !startNavigationRequested
+    ArRoutePlan plan = pendingMapRoute.getAndSet(null);
+    if (resetNavigationRequested) {
+      resetNavigationRequested = false;
+      startNavigationRequested = false;
+      confirmed = null;
+      resetNavigation();
+      Log.i(TAG, "Navigation reset");
+    }
+    if (plan != null) {
+      applyMapRoute(plan);
+    } else if (confirmed != null && waitingForDestinationFloor) {
+      if (!confirmed) continueFromStairExit(camera);
+    } else if (confirmed != null && !navigationStarted && !startNavigationRequested
         && (confirmed || (!returnToStartRequired && !navigationCompleted))) {
       detachRouteEntryAnchor();
       alignmentStatus = null;
       returnToStartRequired |= navigationCompleted;
       navigationCompleted = false;
       startNavigationRequested = true;
-    }
-    ArRoutePlan plan = pendingMapRoute.getAndSet(null);
-    if (plan != null) {
-      resetNavigation();
-      startNavigationRequested = false;
-      route = plan.waypoints;
-      startLocation = plan.startLocation;
-      returnToStartRequired = false;
-      routeEntryYawDegrees = plan.entryYawDegrees;
-      routeEntryDirectionLabel = plan.entryDirectionLabel;
-      routeUseManualAlignment = false;
-      selectedMapRouteName = plan.name;
-      if (!alignmentKey.equals(plan.referenceId)) {
-        detachDirectionAnchor();
-        alignmentKey = plan.referenceId;
-        loadReferenceBearing();
-      }
-      uiAlignmentKey = alignmentKey;
-      calibrateRequested = false;
-      pendingBearing.set(null);
-      routeLineGeometry = new RouteLineGeometry(route);
-      Log.i(TAG, "Map route applied: " + plan.name + ", waypoints=" + route.size());
-    }
-    if (resetNavigationRequested) {
-      resetNavigationRequested = false;
-      startNavigationRequested = false;
-      resetNavigation();
-      Log.i(TAG, "Navigation reset");
     }
 
     Double bearing = pendingBearing.getAndSet(null);
@@ -628,7 +627,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     }
     try {
       Double yaw = null;
-      if (datasets != null && !routeUseManualAlignment && !alignmentKey.equals(datasetAlignmentOverride)) {
+      if (!alignFromStairExit && datasets != null
+          && !routeUseManualAlignment && !alignmentKey.equals(datasetAlignmentOverride)) {
         Pose recordedReference = datasets.mapReferenceFor(alignmentKey);
         if (recordedReference != null) {
           float[] axis = recordedReference.getZAxis();
@@ -638,7 +638,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
           return;
         }
       }
-      if (yaw == null && MapOrientation.usesSensor(alignmentKey) && !routeUseManualAlignment) {
+      if (yaw == null && usesSensorAlignment() && !routeUseManualAlignment) {
         if (routeEntryAnchor == null) {
           Double north = northYaw(frame);
           if (north == null) {
@@ -659,7 +659,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
         yaw = Math.atan2(axis[0], axis[2]);
       }
       if (yaw == null && routeEntryYawDegrees != null && !routeUseManualAlignment
-          && !MapOrientation.usesSensor(alignmentKey)) {
+          && !usesSensorAlignment()) {
         if (routeEntryAnchor == null) {
           float[] cameraMatrix = new float[16];
           camera.getDisplayOrientedPose().toMatrix(cameraMatrix, 0);
@@ -670,7 +670,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
                 camera.getPose().tz(), mapYaw));
           } catch (IllegalArgumentException e) {
             startNavigationRequested = false;
-            alignmentStatus = "출발 문에서 표시된 복도 쪽을 바라보고 카메라를 수평에 가깝게 든 뒤 길안내 시작을 다시 누르세요.";
+            alignmentStatus = alignFromStairExit ? getString(R.string.nav_stair_align_again)
+                : "출발 문에서 표시된 복도 쪽을 바라보고 카메라를 수평에 가깝게 든 뒤 길안내 시작을 다시 누르세요.";
             return;
           }
         }
@@ -710,33 +711,88 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
         return;
       }
       // Existing route vertices are at y=-0.5; place the ribbon 2cm above the floor.
-      Pose origin = yawPose(camera.getPose().tx(), floorY + 0.52f,
+      Pose origin = yawPose(camera.getPose().tx(), floorY + FLOOR_ORIGIN_OFFSET,
           camera.getPose().tz(), yaw);
-      Anchor newOrigin = session.createAnchor(origin);
-      detachOriginAnchor();
-      originAnchor = newOrigin;
-      detachRouteEntryAnchor();
-      currentWaypointIndex = 0;
-      navigationStarted = true;
-      returnToStartRequired = false;
-      alignmentStatus = null;
-      navigationCompleted = false;
-      startNavigationRequested = false;
-      routeLineGeometry.invalidate();
-      lastDebugUpdateTime = 0;
-      Log.i(TAG, "Navigation started: origin=(0,0,0), target=WP1");
+      startWithOrigin(session.createAnchor(origin));
     } catch (NotTrackingException e) {
       // Tracking may change while ARCore processes the request. Retry next frame.
       Log.w(TAG, "Waiting for tracking before creating the origin", e);
     }
   }
 
+  private void startWithOrigin(Anchor newOrigin) {
+    detachOriginAnchor();
+    originAnchor = newOrigin;
+    detachRouteEntryAnchor();
+    currentWaypointIndex = 0;
+    navigationStarted = true;
+    returnToStartRequired = false;
+    alignmentStatus = null;
+    navigationCompleted = false;
+    startNavigationRequested = false;
+    routeLineGeometry.invalidate();
+    lastDebugUpdateTime = 0;
+    Log.i(TAG, "Navigation started: origin=(0,0,0), target=WP1");
+  }
+
+  private void continueFromStairExit(Camera camera) {
+    Float floorY = observeDestinationFloor(camera, SystemClock.elapsedRealtime());
+    if (floorY == null) return;
+    float[] matrix = new float[16];
+    camera.getDisplayOrientedPose().toMatrix(matrix, 0);
+    try {
+      double yaw = MapAlignment.referenceYawForEntry(
+          MapAlignment.forwardYaw(matrix), destinationLeg.entryYawDegrees);
+      Pose pose = camera.getPose();
+      Anchor newOrigin = session.createAnchor(
+          yawPose(pose.tx(), floorY + FLOOR_ORIGIN_OFFSET, pose.tz(), yaw));
+      applyMapRoute(destinationLeg);
+      alignFromStairExit = true;
+      startWithOrigin(newOrigin);
+    } catch (IllegalArgumentException e) {
+      alignmentStatus = getString(R.string.nav_stair_align_again);
+    } catch (NotTrackingException e) {
+      floorChangeDetector.reset();
+    }
+  }
+
+  private void applyMapRoute(ArRoutePlan plan) {
+    resetNavigation();
+    startNavigationRequested = false;
+    route = plan.waypoints;
+    startLocation = plan.startLocation;
+    returnToStartRequired = false;
+    routeEntryYawDegrees = plan.entryYawDegrees;
+    routeEntryDirectionLabel = plan.entryDirectionLabel;
+    routeUseManualAlignment = false;
+    alignFromStairExit = false;
+    selectedMapRouteName = plan.name;
+    destinationLeg = plan.destinationLeg;
+    floorChangeDetector = destinationLeg == null ? null : new FloorChangeDetector(plan.floorHeightChange);
+    if (!alignmentKey.equals(plan.referenceId)) {
+      detachDirectionAnchor();
+      alignmentKey = plan.referenceId;
+      loadReferenceBearing();
+    }
+    uiAlignmentKey = alignmentKey;
+    calibrateRequested = false;
+    pendingBearing.set(null);
+    routeLineGeometry = new RouteLineGeometry(route);
+    Log.i(TAG, "Map route applied: " + plan.name + ", waypoints=" + route.size());
+  }
+
+  private boolean usesSensorAlignment() {
+    return !alignFromStairExit && MapOrientation.usesSensor(alignmentKey);
+  }
+
   private void resetNavigation() {
     detachOriginAnchor();
     detachRouteEntryAnchor();
-    returnToStartRequired |= navigationStarted || navigationCompleted;
+    returnToStartRequired |= navigationStarted || navigationCompleted || waitingForDestinationFloor;
     navigationStarted = false;
     navigationCompleted = false;
+    waitingForDestinationFloor = false;
+    if (floorChangeDetector != null) floorChangeDetector.reset();
     alignmentStatus = null;
     currentWaypointIndex = 0;
     routeLineGeometry.invalidate();
@@ -769,9 +825,13 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   private void updateNavigation(Camera camera) {
     boolean tracking = camera.getTrackingState() == TrackingState.TRACKING;
-    if (navigationStarted && (originAnchor == null
+    if ((navigationStarted || waitingForDestinationFloor) && (originAnchor == null
         || originAnchor.getTrackingState() == TrackingState.STOPPED)) {
       resetNavigation();
+    }
+    if (waitingForDestinationFloor) {
+      updateStairTransition(camera);
+      return;
     }
     if (returnToStartRequired && !startNavigationRequested) {
       postDebugText(getString(R.string.navigation_origin_lost),
@@ -793,7 +853,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     if (!navigationStarted) {
       if (SystemClock.elapsedRealtime() - lastDebugUpdateTime < DEBUG_UPDATE_INTERVAL_MS) return;
       boolean alignWithCorridor = selectedMapRouteName != null && routeEntryYawDegrees != null
-          && !routeUseManualAlignment && !MapOrientation.usesSensor(alignmentKey);
+          && !routeUseManualAlignment && !usesSensorAlignment();
       boolean canStart = !startNavigationRequested
           && (selectedMapRouteName == null || findFloor(camera.getPose()) != null);
       String status = alignmentStatus;
@@ -802,11 +862,12 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       } else if (status == null) {
         if (startNavigationRequested) status = getString(R.string.nav_status_preparing);
         else if (selectedMapRouteName == null) status = getString(R.string.nav_status_choose_route);
+        else if (alignWithCorridor && alignFromStairExit) status = getString(R.string.nav_stair_face_corridor);
         else status = getString(alignWithCorridor
             ? R.string.nav_status_ready_aligned : R.string.nav_status_ready);
       }
       postDebugText(alignmentStatus != null ? alignmentStatus
-          : selectedMapRouteName != null && MapOrientation.usesSensor(alignmentKey) && !routeUseManualAlignment
+          : selectedMapRouteName != null && usesSensorAlignment() && !routeUseManualAlignment
               ? getString(R.string.navigation_ready_sensor, selectedMapRouteName)
           : selectedMapRouteName != null && routeEntryYawDegrees != null && !routeUseManualAlignment
               ? getString(R.string.navigation_ready_entry, selectedMapRouteName, routeEntryDirectionLabel)
@@ -829,6 +890,10 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       Log.i(TAG, String.format(Locale.US,
           "Waypoint %d reached: x=%.2f z=%.2f distance=%.2f",
           currentWaypointIndex, relativePose.tx(), relativePose.tz(), distance));
+      if (waitingForDestinationFloor) {
+        updateStairTransition(camera);
+        return;
+      }
       if (navigationCompleted) {
         detachOriginAnchor();
         postDebugText(getString(R.string.navigation_arrived, route.size()),
@@ -855,9 +920,39 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     currentWaypointIndex++;
     if (currentWaypointIndex == route.size()) {
       navigationStarted = false;
-      navigationCompleted = true;
+      waitingForDestinationFloor = destinationLeg != null;
+      navigationCompleted = !waitingForDestinationFloor;
     }
     return true;
+  }
+
+  private boolean isTrackingStairHeight(Camera camera) {
+    return originAnchor != null && originAnchor.getTrackingState() == TrackingState.TRACKING
+        && camera.getTrackingState() == TrackingState.TRACKING;
+  }
+
+  private Float observeDestinationFloor(Camera camera, long now) {
+    if (!isTrackingStairHeight(camera)) {
+      floorChangeDetector.reset();
+      return null;
+    }
+    double startFloorY = (double) originAnchor.getPose().ty() - FLOOR_ORIGIN_OFFSET;
+    Float floorY = findFloor(camera.getPose(), startFloorY + floorChangeDetector.expectedChange);
+    double heightChange = floorY == null ? Double.NaN : floorY - startFloorY;
+    return floorChangeDetector.observe(now, heightChange) ? floorY : null;
+  }
+
+  private void updateStairTransition(Camera camera) {
+    boolean tracking = isTrackingStairHeight(camera);
+    if (!tracking) floorChangeDetector.reset();
+    long now = SystemClock.elapsedRealtime();
+    if (now - lastDebugUpdateTime < DEBUG_UPDATE_INTERVAL_MS) return;
+    boolean detected = tracking && observeDestinationFloor(camera, now) != null;
+    if (!detected) alignmentStatus = null;
+    String status = getString(detected ? R.string.nav_stair_detected
+        : tracking ? R.string.nav_stair_approach : R.string.nav_stair_tracking, destinationLeg.startLocation);
+    if (alignmentStatus != null) status = alignmentStatus;
+    postDebugText(status, status, detected);
   }
 
   private void updateDebugText(float x, float y, float z, float distance, int waypointIndex) {
@@ -889,9 +984,11 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       return;
     }
     lastDebugUpdateTime = now;
-    String location = startLocation == null ? "" : getString(R.string.nav_ar_start_location, startLocation);
+    String location = waitingForDestinationFloor ? destinationLeg.startLocation
+        : startLocation == null ? "" : getString(R.string.nav_ar_start_location, startLocation);
     boolean confirmStart = returnToStartRequired || navigationCompleted;
     int action = navigationStarted ? R.string.nav_start_active
+        : waitingForDestinationFloor ? R.string.nav_stair_continue
         : startNavigationRequested ? R.string.nav_start_preparing
         : confirmStart ? R.string.nav_start_confirm_location
         : selectedMapRouteName == null ? R.string.nav_start_sample : R.string.navigation_start;
@@ -1071,7 +1168,12 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   }
 
   private Float findFloor(Pose camera) {
+    return findFloor(camera, null);
+  }
+
+  private Float findFloor(Pose camera, Double targetHeight) {
     Float height = null;
+    double bestScore = Double.POSITIVE_INFINITY;
     for (Plane plane : session.getAllTrackables(Plane.class)) {
       if (plane.getTrackingState() != TrackingState.TRACKING || plane.getSubsumedBy() != null
           || plane.getType() != Plane.Type.HORIZONTAL_UPWARD_FACING) continue;
@@ -1084,8 +1186,14 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
           new float[] {camera.tx(), y, camera.tz()});
       float distance = FloorPlaneGeometry.distanceToPolygon(
           plane.getPolygon(), localCamera[0], localCamera[2]);
-      if (FloorPlaneGeometry.isNearbyFloor(below, distance)
-          && (height == null || y < height)) height = y;
+      if (!FloorPlaneGeometry.isNearbyFloor(below, distance)) continue;
+      // shortcut: require the exit surface within 1 m, tune from real stair recordings.
+      if (targetHeight != null && distance > 1.0f) continue;
+      double score = targetHeight == null ? y : Math.abs(y - targetHeight);
+      if (score < bestScore) {
+        height = y;
+        bestScore = score;
+      }
     }
     return height;
   }

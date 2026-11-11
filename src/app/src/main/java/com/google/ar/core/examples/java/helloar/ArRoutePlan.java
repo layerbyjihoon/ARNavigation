@@ -11,11 +11,16 @@ final class ArRoutePlan {
   final String entryDirectionLabel;
   final String startLocation;
   final List<Waypoint> waypoints;
+  final ArRoutePlan destinationLeg;
+  final double floorHeightChange;
   private ArRoutePlan(String name, List<Waypoint> waypoints, String referenceId,
-      Double entryYawDegrees, String entryDirectionLabel, String startLocation) {
+      Double entryYawDegrees, String entryDirectionLabel, String startLocation,
+      ArRoutePlan destinationLeg, double floorHeightChange) {
     this.entryYawDegrees = entryYawDegrees;
     this.entryDirectionLabel = entryDirectionLabel;
     this.startLocation = startLocation;
+    this.destinationLeg = destinationLeg;
+    this.floorHeightChange = floorHeightChange;
     this.referenceId = referenceId == null ? "legacy" : referenceId;
     this.name = name; this.waypoints = Collections.unmodifiableList(waypoints);
   }
@@ -41,6 +46,15 @@ final class ArRoutePlan {
       waypoints.add(new Waypoint(points[i], points[i+1], points[i+2]));
     return new ArRoutePlan(name == null ? "지도 경로" : name, waypoints, referenceId,
         entryYawDegrees, entryDirectionLabel == null ? "문·진입점 → 복도" : entryDirectionLabel,
-        startLocation);
+        startLocation, null, 0);
+  }
+
+  ArRoutePlan withDestinationLeg(ArRoutePlan destination, double heightChange) {
+    if (destination == null || destination.entryYawDegrees == null || destination.startLocation == null
+        || !Double.isFinite(heightChange) || heightChange == 0) {
+      throw new IllegalArgumentException("Invalid stair handoff");
+    }
+    return new ArRoutePlan(name, waypoints, referenceId, entryYawDegrees, entryDirectionLabel,
+        startLocation, destination, heightChange);
   }
 }

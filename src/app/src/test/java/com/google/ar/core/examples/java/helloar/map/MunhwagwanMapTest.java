@@ -32,22 +32,42 @@ public final class MunhwagwanMapTest {
     RouteResult result = new AStarRouteEngine(loaded.graph).findRoute(poi(from),poi(to),RouteOptions.DEFAULT);
     assertTrue(result.message, result.isSuccess()); return result.route;
   }
-  @Test public void preservesDatasetAndUsesOnlyEligibleSameFloorEdges() {
+  @Test public void preservesDatasetAndConnectsBothStairsOnEveryFloor() {
     assertEquals(5,loaded.map.floors.size()); assertEquals(206,loaded.map.nodes.size());
-    assertEquals(201,loaded.map.edges.size()); assertEquals(65,loaded.map.pois.size());
+    assertEquals(209,loaded.map.edges.size()); assertEquals(65,loaded.map.pois.size());
     assertEquals(201,loaded.validation.warningCount()); // accessibility remains unknown, not true/false
-    assertEquals(8,json.getAsJsonObject("sourceData").getAsJsonArray("excludedEdges").size());
+    assertEquals(0,json.getAsJsonObject("sourceData").getAsJsonArray("excludedEdges").size());
     assertEquals(64,json.getAsJsonObject("sourceData").getAsJsonArray("rooms").size());
-    for (Floor f:loaded.map.floors) assertNull(f.elevation);
+    for (Floor floor : loaded.map.floors) {
+      if ("F1".equals(floor.id)) {
+        assertEquals(0.0, floor.elevation, 0);
+        assertNull(floor.riseFromPreviousFloor);
+      } else {
+        assertNull(floor.elevation);
+        assertTrue(floor.riseFromPreviousFloor > 0);
+      }
+    }
     for (MapNode n:loaded.map.nodes) {
       assertEquals(0,n.position.y,0);
       assertEquals(false,n.properties.get("field_verified"));
       assertNull(n.properties.get("z_m"));
     }
-    for (MapEdge e:loaded.map.edges) {
-      assertEquals(loaded.graph.nodes.get(e.from).floorId,loaded.graph.nodes.get(e.to).floorId);
-      assertTrue(e.cost.distance>0); assertNull(e.accessibility.wheelchair);
+    int stairCount = 0;
+    for (MapEdge e : loaded.map.edges) {
+      MapNode from = loaded.graph.nodes.get(e.from), to = loaded.graph.nodes.get(e.to);
+      if (e.type == EdgeType.STAIR) {
+        assertNotEquals(from.floorId, to.floorId);
+        assertTrue(e.bidirectional);
+        assertEquals(Boolean.FALSE, e.accessibility.wheelchair);
+        assertNull(e.cost.distance);
+        stairCount++;
+      } else {
+        assertEquals(from.floorId, to.floorId);
+        assertTrue(e.cost.distance > 0);
+        assertNull(e.accessibility.wheelchair);
+      }
     }
+    assertEquals(8, stairCount);
   }
   @Test public void choosesBestEntranceOnBothEndsAndKeepsRoomIdsAsStrings() {
     NavigationRoute selected=route("105","106");
@@ -65,9 +85,19 @@ public final class MunhwagwanMapTest {
     assertTrue(selected.nodes.stream().anyMatch(n->n.id.equals("F4_INT406_1")));
     assertTrue(selected.nodes.stream().anyMatch(n->n.id.equals("F4_INT406_2")));
   }
-  @Test public void missingStairsAndUnknownAccessibilityNeverBecomeRoutable() {
+  @Test public void stairsConnectAllFiveFloorsInBothDirectionsAndExcludeWheelchairRoutes() {
+    for (NavigationRoute selected : Arrays.asList(route("101", "501"), route("501", "101"))) {
+      int stairCount = 0;
+      for (RouteSegment segment : selected.segments) {
+        if (!segment.isFloorTransition()) continue;
+        assertEquals(EdgeType.STAIR, segment.edge.type);
+        assertEquals(stairCost(segment.floorId, segment.toFloorId), segment.distance, 1e-9);
+        stairCount++;
+      }
+      assertEquals(4, stairCount);
+    }
     AStarRouteEngine engine = new AStarRouteEngine(loaded.graph);
-    assertEquals(RouteResult.Status.NO_ROUTE,engine.findRoute(poi("101"),poi("201"),RouteOptions.DEFAULT).status);
+    assertEquals(RouteResult.Status.NO_ROUTE,engine.findRoute(poi("101"),poi("501"),RouteOptions.WHEELCHAIR).status);
     assertEquals(RouteResult.Status.NO_ROUTE,engine.findRoute(poi("101"),poi("102"),RouteOptions.WHEELCHAIR).status);
   }
   @Test public void drawingAxesMapToArWithoutFlippingPlanYOrInventingFloorHeight() {
@@ -98,6 +128,12 @@ public final class MunhwagwanMapTest {
     first.add("nodeIds",wrongType); assertFalse(parse(json).isSuccess());
     first.remove("nodeIds"); assertTrue(parse(json).isSuccess());
   }
+  private double stairCost(String fromFloor, String toFloor) {
+    int upper = Math.max(Integer.parseInt(fromFloor.substring(1)),
+        Integer.parseInt(toFloor.substring(1)));
+    return json.getAsJsonArray("floors").get(upper - 1).getAsJsonObject()
+        .get("riseFromPreviousFloor").getAsDouble();
+  }
   @Test public void allRoomPairsMatchAnIndependentFloydWarshallOracle() {
     List<MapNode> nodes=loaded.map.nodes;
     Map<String,Integer> index=new HashMap<>();
@@ -105,8 +141,10 @@ public final class MunhwagwanMapTest {
     for (int i=0;i<n;i++) { index.put(nodes.get(i).id,i); Arrays.fill(distance[i],Double.POSITIVE_INFINITY); distance[i][i]=0; }
     for (MapEdge e:loaded.map.edges) {
       int a=index.get(e.from), b=index.get(e.to);
-      distance[a][b]=Math.min(distance[a][b],e.cost.distance);
-      if (e.bidirectional) distance[b][a]=Math.min(distance[b][a],e.cost.distance);
+      double cost = e.type == EdgeType.STAIR
+          ? stairCost(nodes.get(a).floorId, nodes.get(b).floorId) : e.cost.distance;
+      distance[a][b]=Math.min(distance[a][b],cost);
+      if (e.bidirectional) distance[b][a]=Math.min(distance[b][a],cost);
     }
     for (int k=0;k<n;k++) for(int i=0;i<n;i++) for(int j=0;j<n;j++)
       distance[i][j]=Math.min(distance[i][j],distance[i][k]+distance[k][j]);

@@ -82,7 +82,8 @@ public final class IndoorMapRepository implements IndoorMapImporter {
       try { level = f.get("level").getAsBigDecimal().intValueExact(); }
       catch (ArithmeticException ex) { throw bad("floors[].level", "Expected a 32-bit integer"); }
       floors.add(new Floor(string(f, "id", "floors[]"), optionalString(f, "name"), level,
-          optionalNumber(f, "elevation", "floors[]")));
+          optionalNumber(f, "elevation", "floors[]"),
+          optionalNumber(f, "riseFromPreviousFloor", "floors[]")));
     }
     List<MapNode> nodes = new ArrayList<>();
     for (JsonElement e : array(root, "nodes", "$", true)) {

@@ -78,6 +78,21 @@ public class NavigationTest {
   }
 
   @Test
+  public void lastWaypointBeforeStairsWaitsForTargetFloor() throws Exception {
+    ArRoutePlan destination = ArRoutePlan.decode("101호",
+        new float[] {0f, -0.5f, 0f, 0f, -0.5f, -2f},
+        "test", 0.0, "복도", "1층 계단 A 출구");
+    setField("destinationLeg", destination);
+    setField("navigationStarted", true);
+    setField("currentWaypointIndex", 2);
+    Pose stair = Pose.makeTranslation(2f, 0f, -4f);
+    assertTrue(activity.advanceWaypointIfArrived(stair));
+    assertEquals(true, getField("waitingForDestinationFloor"));
+    assertEquals(false, getField("navigationCompleted"));
+    assertFalse(activity.advanceWaypointIfArrived(stair));
+  }
+
+  @Test
   public void routeRestartResetsProgress() throws Exception {
     setField("navigationStarted", true);
     activity.advanceWaypointIfArrived(Pose.makeTranslation(0f, 0f, -2f));

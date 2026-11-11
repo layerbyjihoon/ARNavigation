@@ -24,7 +24,10 @@ import org.junit.Test;
 /** Packaging, real POI UI, multilevel routing, and the map-to-existing-AR handoff on a phone. */
 public final class MapUiIntegrationTest {
   private final Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
-  @Test public void munhwagwanScreenLoadsAllRoomsChoosesEntranceAndExplainsUnavailableStairs() {
+  @Test public void munhwagwanScreenLoadsAllRoomsAndOffersStairsInBothDirections() {
+    MapLoadResult loaded = new IndoorMapRepository().loadFromAsset(
+        instrumentation.getTargetContext().getAssets()::open, MapRouteActivity.MUNHWAGWAN_MAP);
+    assertTrue(loaded.validation.issues.toString(), loaded.isSuccess());
     MapRouteActivity map = (MapRouteActivity) instrumentation.startActivitySync(new Intent(
         instrumentation.getTargetContext(),MapRouteActivity.class)
         .putExtra(MapRouteActivity.EXTRA_MAP_INDEX,0).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -48,8 +51,21 @@ public final class MapUiIntegrationTest {
         } catch (Exception e) { throw new AssertionError(e); }
         assertTrue(map.findViewById(R.id.apply_ar_route).isEnabled());
         selectPoi(to,"201"); map.findViewById(R.id.find_route).performClick();
+        assertTrue(map.findViewById(R.id.apply_ar_route).isEnabled());
+        TextView routeResult = map.findViewById(R.id.route_result);
+        assertTrue(routeResult.getText().toString().contains("2층 이동"));
+        selectPoi(from,"501"); selectPoi(to,"101");
+        map.findViewById(R.id.find_route).performClick();
+        assertTrue(map.findViewById(R.id.apply_ar_route).isEnabled());
+        assertTrue(routeResult.getText().toString().contains("1층 이동"));
+        try {
+          MunhwagwanStairRoute stairs = (MunhwagwanStairRoute) field(map, "selectedStairRoute");
+          assertTrue(stairs.heightChange < 0);
+        } catch (Exception e) { throw new AssertionError(e); }
+        ((CheckBox)map.findViewById(R.id.wheelchair_route)).setChecked(true);
+        map.findViewById(R.id.find_route).performClick();
         assertFalse(map.findViewById(R.id.apply_ar_route).isEnabled());
-        assertTrue(((TextView)map.findViewById(R.id.route_result)).getText().toString().contains("층간 연결 8개"));
+        assertTrue(routeResult.getText().toString().contains("이 경로에는 계단"));
       });
     } finally { instrumentation.runOnMainSync(map::finish); }
   }

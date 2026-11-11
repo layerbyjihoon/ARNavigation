@@ -25,6 +25,10 @@ public final class IndoorMapValidator {
     for (Floor floor : map.floors) {
       unique(floors, floor.id, "floors");
       finite(floor.elevation, "floor " + floor.id + ".elevation");
+      if (floor.riseFromPreviousFloor != null
+          && (!Double.isFinite(floor.riseFromPreviousFloor) || floor.riseFromPreviousFloor <= 0)) {
+        error("floor " + floor.id + ".riseFromPreviousFloor", "Expected a positive height in meters");
+      }
     }
     Map<String, MapNode> nodes = new HashMap<>();
     if (map.nodes.isEmpty()) error("nodes", "At least one node is required");

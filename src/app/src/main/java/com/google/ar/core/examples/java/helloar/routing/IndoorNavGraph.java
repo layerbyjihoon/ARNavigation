@@ -17,12 +17,22 @@ public final class IndoorNavGraph {
     Map<String, MapNode> index = new LinkedHashMap<>();
     Map<String, List<GraphEdge>> outgoing = new LinkedHashMap<>();
     for (MapNode node : map.nodes) { index.put(node.id, node); outgoing.put(node.id, new ArrayList<>()); }
+    Map<String, Floor> floors = new HashMap<>();
+    for (Floor floor : map.floors) floors.put(floor.id, floor);
     double lowerBound = 1;
     for (MapEdge edge : map.edges) {
       MapNode from = index.get(edge.from), to = index.get(edge.to);
       List<MapPosition> geometry = edge.geometry.isEmpty()
           ? Arrays.asList(from.position, to.position) : edge.geometry;
       double distance = edge.cost.distance == null ? polylineLength(geometry) : edge.cost.distance;
+      if (edge.type == EdgeType.STAIR && edge.cost.distance == null && !from.floorId.equals(to.floorId)) {
+        Floor fromFloor = floors.get(from.floorId), toFloor = floors.get(to.floorId);
+        Floor upper = fromFloor.level > toFloor.level ? fromFloor : toFloor;
+        // shortcut: use the vertical distance as a lower bound until stair lengths are surveyed.
+        if (Math.abs((long) fromFloor.level - toFloor.level) == 1 && upper.riseFromPreviousFloor != null) {
+          distance = Math.hypot(distance, upper.riseFromPreviousFloor);
+        }
+      }
       outgoing.get(edge.from).add(new GraphEdge(edge, from, to, geometry, distance));
       if (edge.bidirectional) {
         List<MapPosition> reversed = new ArrayList<>(geometry);

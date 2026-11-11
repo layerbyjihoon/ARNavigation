@@ -4,7 +4,7 @@
   "metadata": {
     "id": "munhwagwan-navigation-2026-10-07",
     "name": "숭실대학교 문화관",
-    "description": "도면 기반 · 현장 미검증 구간 포함. 실측 거리 0개 / 도면 거리 201개. 같은 층 경로만 사용. 층고·AR 정렬 미확정.",
+    "description": "도면 기반 · 현장 미검증 구간 포함. 실측 거리 0개 / 도면 거리 201개. 계단 A·B의 층간 연결은 현장 검증 전입니다.",
     "source": "ARNavigation/graph.json"
   },
   "coordinateSystem": {
@@ -24,31 +24,36 @@
       "id": "F1",
       "name": "1층",
       "level": 1,
-      "heightReference": "unknown"
+      "elevation": 0.0,
+      "heightReference": "F1_finished_floor"
     },
     {
       "id": "F2",
       "name": "2층",
       "level": 2,
-      "heightReference": "unknown"
+      "heightReference": "previous_finished_floor",
+      "riseFromPreviousFloor": 3.5
     },
     {
       "id": "F3",
       "name": "3층",
       "level": 3,
-      "heightReference": "unknown"
+      "heightReference": "previous_finished_floor",
+      "riseFromPreviousFloor": 3.5
     },
     {
       "id": "F4",
       "name": "4층",
       "level": 4,
-      "heightReference": "unknown"
+      "heightReference": "previous_finished_floor",
+      "riseFromPreviousFloor": 3.5
     },
     {
       "id": "F5",
       "name": "5층",
       "level": 5,
-      "heightReference": "unknown"
+      "heightReference": "previous_finished_floor",
+      "riseFromPreviousFloor": 3.5
     }
   ],
   "nodes": [
@@ -9816,6 +9821,190 @@
         "field_verified": false,
         "note": "406호 내부 경유. 통행 가능 여부 확인 필요."
       }
+    },
+    {
+      "id": "E202",
+      "from": "F1_STAIR_A",
+      "to": "F2_STAIR_A",
+      "type": "STAIR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": false
+      },
+      "sourceEdge": {
+        "id": "E202",
+        "from": "F1_STAIR_A",
+        "to": "F2_STAIR_A",
+        "type": "stairs",
+        "bidirectional": true,
+        "distance_m": null,
+        "plan_distance_m": null,
+        "status": "plan_aligned_stair_candidate",
+        "include_in_draft_route": false,
+        "field_verified": false,
+        "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+      }
+    },
+    {
+      "id": "E203",
+      "from": "F1_STAIR_B",
+      "to": "F2_STAIR_B",
+      "type": "STAIR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": false
+      },
+      "sourceEdge": {
+        "id": "E203",
+        "from": "F1_STAIR_B",
+        "to": "F2_STAIR_B",
+        "type": "stairs",
+        "bidirectional": true,
+        "distance_m": null,
+        "plan_distance_m": null,
+        "status": "plan_aligned_stair_candidate",
+        "include_in_draft_route": false,
+        "field_verified": false,
+        "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+      }
+    },
+    {
+      "id": "E204",
+      "from": "F2_STAIR_A",
+      "to": "F3_STAIR_A",
+      "type": "STAIR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": false
+      },
+      "sourceEdge": {
+        "id": "E204",
+        "from": "F2_STAIR_A",
+        "to": "F3_STAIR_A",
+        "type": "stairs",
+        "bidirectional": true,
+        "distance_m": null,
+        "plan_distance_m": null,
+        "status": "plan_aligned_stair_candidate",
+        "include_in_draft_route": false,
+        "field_verified": false,
+        "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+      }
+    },
+    {
+      "id": "E205",
+      "from": "F2_STAIR_B",
+      "to": "F3_STAIR_B",
+      "type": "STAIR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": false
+      },
+      "sourceEdge": {
+        "id": "E205",
+        "from": "F2_STAIR_B",
+        "to": "F3_STAIR_B",
+        "type": "stairs",
+        "bidirectional": true,
+        "distance_m": null,
+        "plan_distance_m": null,
+        "status": "plan_aligned_stair_candidate",
+        "include_in_draft_route": false,
+        "field_verified": false,
+        "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+      }
+    },
+    {
+      "id": "E206",
+      "from": "F3_STAIR_A",
+      "to": "F4_STAIR_A",
+      "type": "STAIR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": false
+      },
+      "sourceEdge": {
+        "id": "E206",
+        "from": "F3_STAIR_A",
+        "to": "F4_STAIR_A",
+        "type": "stairs",
+        "bidirectional": true,
+        "distance_m": null,
+        "plan_distance_m": null,
+        "status": "plan_aligned_stair_candidate",
+        "include_in_draft_route": false,
+        "field_verified": false,
+        "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+      }
+    },
+    {
+      "id": "E207",
+      "from": "F3_STAIR_B",
+      "to": "F4_STAIR_B",
+      "type": "STAIR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": false
+      },
+      "sourceEdge": {
+        "id": "E207",
+        "from": "F3_STAIR_B",
+        "to": "F4_STAIR_B",
+        "type": "stairs",
+        "bidirectional": true,
+        "distance_m": null,
+        "plan_distance_m": null,
+        "status": "plan_aligned_stair_candidate",
+        "include_in_draft_route": false,
+        "field_verified": false,
+        "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+      }
+    },
+    {
+      "id": "E208",
+      "from": "F4_STAIR_A",
+      "to": "F5_STAIR_A",
+      "type": "STAIR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": false
+      },
+      "sourceEdge": {
+        "id": "E208",
+        "from": "F4_STAIR_A",
+        "to": "F5_STAIR_A",
+        "type": "stairs",
+        "bidirectional": true,
+        "distance_m": null,
+        "plan_distance_m": null,
+        "status": "plan_aligned_stair_candidate",
+        "include_in_draft_route": false,
+        "field_verified": false,
+        "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+      }
+    },
+    {
+      "id": "E209",
+      "from": "F4_STAIR_B",
+      "to": "F5_STAIR_B",
+      "type": "STAIR",
+      "bidirectional": true,
+      "accessibility": {
+        "wheelchair": false
+      },
+      "sourceEdge": {
+        "id": "E209",
+        "from": "F4_STAIR_B",
+        "to": "F5_STAIR_B",
+        "type": "stairs",
+        "bidirectional": true,
+        "distance_m": null,
+        "plan_distance_m": null,
+        "status": "plan_aligned_stair_candidate",
+        "include_in_draft_route": false,
+        "field_verified": false,
+        "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
+      }
     }
   ],
   "pois": [
@@ -12760,136 +12949,7 @@
         "outline_status": "approximate_display_only"
       }
     ],
-    "excludedEdges": [
-      {
-        "reason": "disabled_in_source",
-        "edge": {
-          "id": "E202",
-          "from": "F1_STAIR_A",
-          "to": "F2_STAIR_A",
-          "type": "stairs",
-          "bidirectional": true,
-          "distance_m": null,
-          "plan_distance_m": null,
-          "status": "plan_aligned_stair_candidate",
-          "include_in_draft_route": false,
-          "field_verified": false,
-          "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
-        }
-      },
-      {
-        "reason": "disabled_in_source",
-        "edge": {
-          "id": "E203",
-          "from": "F1_STAIR_B",
-          "to": "F2_STAIR_B",
-          "type": "stairs",
-          "bidirectional": true,
-          "distance_m": null,
-          "plan_distance_m": null,
-          "status": "plan_aligned_stair_candidate",
-          "include_in_draft_route": false,
-          "field_verified": false,
-          "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
-        }
-      },
-      {
-        "reason": "disabled_in_source",
-        "edge": {
-          "id": "E204",
-          "from": "F2_STAIR_A",
-          "to": "F3_STAIR_A",
-          "type": "stairs",
-          "bidirectional": true,
-          "distance_m": null,
-          "plan_distance_m": null,
-          "status": "plan_aligned_stair_candidate",
-          "include_in_draft_route": false,
-          "field_verified": false,
-          "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
-        }
-      },
-      {
-        "reason": "disabled_in_source",
-        "edge": {
-          "id": "E205",
-          "from": "F2_STAIR_B",
-          "to": "F3_STAIR_B",
-          "type": "stairs",
-          "bidirectional": true,
-          "distance_m": null,
-          "plan_distance_m": null,
-          "status": "plan_aligned_stair_candidate",
-          "include_in_draft_route": false,
-          "field_verified": false,
-          "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
-        }
-      },
-      {
-        "reason": "disabled_in_source",
-        "edge": {
-          "id": "E206",
-          "from": "F3_STAIR_A",
-          "to": "F4_STAIR_A",
-          "type": "stairs",
-          "bidirectional": true,
-          "distance_m": null,
-          "plan_distance_m": null,
-          "status": "plan_aligned_stair_candidate",
-          "include_in_draft_route": false,
-          "field_verified": false,
-          "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
-        }
-      },
-      {
-        "reason": "disabled_in_source",
-        "edge": {
-          "id": "E207",
-          "from": "F3_STAIR_B",
-          "to": "F4_STAIR_B",
-          "type": "stairs",
-          "bidirectional": true,
-          "distance_m": null,
-          "plan_distance_m": null,
-          "status": "plan_aligned_stair_candidate",
-          "include_in_draft_route": false,
-          "field_verified": false,
-          "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
-        }
-      },
-      {
-        "reason": "disabled_in_source",
-        "edge": {
-          "id": "E208",
-          "from": "F4_STAIR_A",
-          "to": "F5_STAIR_A",
-          "type": "stairs",
-          "bidirectional": true,
-          "distance_m": null,
-          "plan_distance_m": null,
-          "status": "plan_aligned_stair_candidate",
-          "include_in_draft_route": false,
-          "field_verified": false,
-          "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
-        }
-      },
-      {
-        "reason": "disabled_in_source",
-        "edge": {
-          "id": "E209",
-          "from": "F4_STAIR_B",
-          "to": "F5_STAIR_B",
-          "type": "stairs",
-          "bidirectional": true,
-          "distance_m": null,
-          "plan_distance_m": null,
-          "status": "plan_aligned_stair_candidate",
-          "include_in_draft_route": false,
-          "field_verified": false,
-          "note": "같은 위치의 주계단 대응 후보. 시연에서만 사용; 현장 연속성 확인 전 기본 제외."
-        }
-      }
-    ],
+    "excludedEdges": [],
     "conversion": {
       "height": "y=0 is a per-floor working plane, not surveyed elevation",
       "axis": "(x_m,y_m) -> (x,0,z); no screen-y inversion",
