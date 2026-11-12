@@ -57,7 +57,7 @@ final class ArDatasetController {
         if (frame == null || frame.getCamera().getTrackingState() != TrackingState.TRACKING)
           throw new IOException("위치 추적이 안정된 뒤 다시 녹화를 시작하세요.");
         Double yaw = configuredSensorYaw(startPoint.mapAsset, frame);
-        if (yaw == null) throw new IOException("방위 센서가 불안정합니다. 주변 금속·자석에서 떨어져 폰을 천천히 8자로 움직인 뒤 다시 시작하세요.");
+        if (yaw == null) throw new IOException("방위 센서 데이터가 아직 준비되지 않았습니다. 폰을 잠시 안정적으로 든 뒤 다시 시작하세요.");
         reference = session.createAnchor(referencePose(frame.getCamera().getPose(), yaw));
       } else if (startPoint != null && startPoint.direction != null) {
         if (frame == null || frame.getCamera().getTrackingState() != TrackingState.TRACKING)

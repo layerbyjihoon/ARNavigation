@@ -49,6 +49,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.24.3'
     // ARCore (Google Play Services for AR) library.
     implementation 'com.google.ar:core:1.56.0'
     implementation 'com.google.code.gson:gson:2.13.2'

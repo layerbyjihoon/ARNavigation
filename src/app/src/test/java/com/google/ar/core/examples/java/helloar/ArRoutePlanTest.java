@@ -3,6 +3,12 @@ package com.google.ar.core.examples.java.helloar;
 import static org.junit.Assert.*;
 import org.junit.Test;
 public final class ArRoutePlanTest {
+  @Test public void bearingRouteUsesExactlyThePolylineSentToRendererIncludingLegacySemanticPayload(){
+    String semantic="{\"floorId\":\"F1\",\"landmarks\":[{\"id\":\"door\",\"type\":\"DOOR\",\"x\":1,\"z\":-2,\"planReference\":true}]}";
+    ArRoutePlan plan=ArRoutePlan.decode("test",new float[]{0,-.5f,0,0,-.5f,-4,2,-.5f,-4},"map",null,null,null,semantic);
+    assertEquals(3,plan.semanticMap.route.size());assertEquals(2,plan.semanticMap.route.get(2).x,0);
+    assertEquals(-4,plan.semanticMap.route.get(2).z,0);assertTrue(plan.semanticMap.landmarks.get(0).usable());
+  }
   @Test public void mapPolylineBecomesExistingWaypointRoute() {
     ArRoutePlan plan=ArRoutePlan.decode("START → Room A",
         new float[]{0,-.5f,0, 0,-.5f,-2, 0,-.5f,-4, 2,-.5f,-4});

@@ -15,6 +15,13 @@
    limitations under the License.
 -->
 <resources>
+  <string name="semantic_enable">SegFormer 구조물 인식</string>
+  <string name="semantic_correction">검증된 구조물로 경로 보정</string>
+  <string name="semantic_loading">모델 로딩 중…</string>
+  <string name="semantic_mask">분할 마스크 보기</string>
+  <string name="semantic_landmarks">구조물 후보·3D 위치 보기</string>
+  <string name="semantic_status">매칭·보정 상태 보기</string>
+  <string name="semantic_compare">보정 전 경로 함께 보기 (회색)</string>
   <string name="ar_developer_label">개발/테스트</string>
   <string name="ar_record_start">AR 녹화 시작</string>
   <string name="ar_record_stop">녹화 종료</string>

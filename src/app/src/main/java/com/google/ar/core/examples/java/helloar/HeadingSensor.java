@@ -43,9 +43,7 @@ final class HeadingSensor implements SensorEventListener {
   }
   @Override public synchronized void onSensorChanged(SensorEvent event) {
     accuracy = event.accuracy;
-    if (accuracy < SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM
-        || (event.values.length >= 5 && (event.values[4] < 0
-            || event.values[4] > Math.toRadians(20)))) {
+    if (!HeadingSampleQuality.isUsable(accuracy, event.values)) {
       samples.clear(); return;
     }
     float[] matrix = new float[9];

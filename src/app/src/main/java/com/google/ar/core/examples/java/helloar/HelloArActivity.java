@@ -17,6 +17,10 @@
 package com.google.ar.core.examples.java.helloar;
 
 import android.content.Intent;
+import android.widget.CheckBox;
+import com.google.ar.core.examples.java.helloar.segmentation.SegmentationController;
+import com.google.ar.core.examples.java.helloar.localization.*;
+import com.google.ar.core.examples.java.helloar.debug.SegmentationDebugOverlay;
 import android.content.SharedPreferences;
 import android.text.InputType;
 import android.widget.EditText;
@@ -97,6 +101,12 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private boolean activityResumed;
   private final AtomicBoolean sessionFailurePosted = new AtomicBoolean();
   private HeadingSensor headingSensor;
+  private SegmentationController segmentation;
+  private SegmentationDebugOverlay semanticOverlay;
+  private final RouteAlignmentManager semanticAlignment=new RouteAlignmentManager();
+  private volatile boolean semanticCorrectionEnabled=true,compareSemanticRoutes;
+  private long lastSemanticUi;
+  private boolean lastCorrectionAccepted;
   private SharedPreferences alignmentPreferences;
   private final AtomicReference<Double> pendingBearing = new AtomicReference<>();
   private volatile boolean calibrateRequested;
@@ -175,6 +185,16 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       toolsToggle.setText(open ? R.string.nav_tools_close : R.string.nav_tools_open);
     });
     headingSensor = new HeadingSensor(this);
+    segmentation=new SegmentationController(getAssets());
+    semanticOverlay=findViewById(R.id.semantic_overlay);
+    CheckBox runModel=findViewById(R.id.semantic_enable),correct=findViewById(R.id.semantic_correction);
+    CheckBox mask=findViewById(R.id.semantic_mask),landmarks=findViewById(R.id.semantic_landmarks),status=findViewById(R.id.semantic_status);
+    runModel.setOnCheckedChangeListener((button,checked)->segmentation.setEnabled(checked));
+    correct.setOnCheckedChangeListener((button,checked)->semanticCorrectionEnabled=checked);
+    android.widget.CompoundButton.OnCheckedChangeListener display=(button,checked)->
+        semanticOverlay.configure(mask.isChecked(),landmarks.isChecked(),status.isChecked());
+    mask.setOnCheckedChangeListener(display);landmarks.setOnCheckedChangeListener(display);status.setOnCheckedChangeListener(display);
+    ((CheckBox)findViewById(R.id.semantic_compare)).setOnCheckedChangeListener((button,checked)->compareSemanticRoutes=checked);
     try {
       recordingStore = new ArRecordingStore(getFilesDir());
       recordingStore.recoverInterrupted();
@@ -231,7 +251,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
             data.hasExtra(MapRouteActivity.EXTRA_ENTRY_YAW)
                 ? data.getDoubleExtra(MapRouteActivity.EXTRA_ENTRY_YAW, Double.NaN) : null,
             data.getStringExtra(MapRouteActivity.EXTRA_ENTRY_DIRECTION),
-            data.getStringExtra(MapRouteActivity.EXTRA_START_LOCATION)));
+            data.getStringExtra(MapRouteActivity.EXTRA_START_LOCATION),
+            data.getStringExtra(MapRouteActivity.EXTRA_SEMANTIC_MAP)));
       } catch (IllegalArgumentException e) {
         Toast.makeText(this, "지도 경로를 적용할 수 없습니다: " + e.getMessage(), Toast.LENGTH_LONG).show();
       }
@@ -240,6 +261,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   @Override
   protected void onDestroy() {
+    if(segmentation!=null)segmentation.close();
     if (session != null) {
       // onPause has already stopped the GL thread before Activity destruction.
       detachOriginAnchor();
@@ -352,6 +374,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   public void onPause() {
     super.onPause();
     activityResumed = false;
+    if(segmentation!=null)segmentation.invalidate();
     pendingRecording.set(null);
     if (recordingStartDialog != null) recordingStartDialog.dismiss();
     headingSensor.pause();
@@ -412,6 +435,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
           .setCullFace(false)
           .setDepthTest(true)
           .setDepthWrite(true);
+      routeShader.setFloat("u_Baseline",0f);
       // A recreated GL context has empty GPU buffers even if CPU geometry is cached.
       routeLineGeometry.invalidate();
       rendererReady = true;
@@ -476,6 +500,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     backgroundRenderer.updateDisplayGeometry(frame);
     processRecordingStart(frame);
     processNavigationRequests(frame);
+    processSemanticFrame(frame);
     updateNavigation(camera);
 
     // Keep the screen unlocked while tracking, but allow it to lock when tracking stops.
@@ -526,10 +551,17 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     }
 
     // Geometry stays relative to the anchor, never attached to the moving camera.
-    levelAnchorPose().toMatrix(modelMatrix, 0);
+    if(compareSemanticRoutes) {
+      levelAnchorPose().toMatrix(modelMatrix,0);
+      Matrix.multiplyMM(modelViewMatrix,0,viewMatrix,0,modelMatrix,0);
+      Matrix.multiplyMM(modelViewProjectionMatrix,0,projectionMatrix,0,modelViewMatrix,0);
+      routeShader.setFloat("u_Baseline",1f).setMat4("u_ModelViewProjection",modelViewProjectionMatrix);
+      render.draw(routeMesh,routeShader,virtualSceneFramebuffer);
+    }
+    correctedRoutePose().toMatrix(modelMatrix, 0);
     Matrix.multiplyMM(modelViewMatrix, 0, viewMatrix, 0, modelMatrix, 0);
     Matrix.multiplyMM(modelViewProjectionMatrix, 0, projectionMatrix, 0, modelViewMatrix, 0);
-    routeShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix);
+    routeShader.setFloat("u_Baseline",0f).setMat4("u_ModelViewProjection", modelViewProjectionMatrix);
     render.draw(routeMesh, routeShader, virtualSceneFramebuffer);
   }
 
@@ -549,6 +581,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       resetNavigation();
       startNavigationRequested = false;
       route = plan.waypoints;
+      segmentation.setMap(plan.semanticMap);
       startLocation = plan.startLocation;
       returnToStartRequired = false;
       routeEntryYawDegrees = plan.entryYawDegrees;
@@ -644,7 +677,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
           if (north == null) {
             alignmentStatus = datasets != null && datasets.mode() == ArDatasetController.Mode.PLAYBACK
                 ? "녹화된 방위 데이터를 기다리는 중입니다. 데이터가 없으면 방향 보정으로 기준을 지정하세요."
-                : "방향을 잡고 있어요. 금속이나 자석에서 떨어져 폰을 천천히 8자로 움직여 주세요.";
+                : "방위 센서 데이터를 기다리고 있어요. 폰을 잠시 안정적으로 들어 주세요. 계속 대기하면 방향 보정에서 기준을 지정할 수 있어요.";
             return;
           }
           routeEntryAnchor = session.createAnchor(yawPose(camera.getPose().tx(), camera.getPose().ty(),
@@ -732,6 +765,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   }
 
   private void resetNavigation() {
+    semanticAlignment.reset();
+    if(segmentation!=null)segmentation.invalidate();
     detachOriginAnchor();
     detachRouteEntryAnchor();
     returnToStartRequired |= navigationStarted || navigationCompleted;
@@ -764,7 +799,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
         || camera.getTrackingState() != TrackingState.TRACKING) {
       return null;
     }
-    return levelAnchorPose().inverse().compose(camera.getDisplayOrientedPose());
+    return correctedRoutePose().inverse().compose(camera.getDisplayOrientedPose());
   }
 
   private void updateNavigation(Camera camera) {
@@ -1102,12 +1137,54 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     return yawPose(pose.tx(), pose.ty(), pose.tz(), Math.atan2(forward[0], forward[2]));
   }
 
+  private Pose correctedRoutePose() {
+    Rigid2D transform=semanticAlignment.current();
+    return levelAnchorPose().compose(yawPose((float)transform.x,0,(float)transform.z,transform.yaw));
+  }
+
+  private void processSemanticFrame(Frame frame) {
+    boolean tracking=frame.getCamera().getTrackingState()==TrackingState.TRACKING;
+    boolean anchored=navigationStarted&&originAnchor!=null&&originAnchor.getTrackingState()==TrackingState.TRACKING;
+    SegmentationController.Completed completed=segmentation.takeCompleted();
+    if(completed!=null&&semanticCorrectionEnabled&&segmentation.isEnabled()&&tracking&&anchored)
+      lastCorrectionAccepted=semanticAlignment.accept(completed.match,frame.getTimestamp());
+    semanticAlignment.tick(frame.getTimestamp(),tracking&&anchored&&semanticCorrectionEnabled&&segmentation.isEnabled());
+    segmentation.onFrame(frame,anchored?levelAnchorPose():null,tracking&&anchored,semanticAlignment.current());
+    long now=SystemClock.elapsedRealtime();
+    if(now-lastSemanticUi<500)return;
+    lastSemanticUi=now;
+    SegmentationController.Completed latest=segmentation.latest();
+    Rigid2D applied=semanticAlignment.current();
+    SemanticLandmarkMap map=segmentation.map();
+    StringBuilder message=new StringBuilder(segmentation.state());
+    message.append("\n지도 기준점: ").append(map==null?0:map.verifiedCount()).append("개 실측 / ")
+        .append(map==null?0:map.usableCount()).append("개 도면 사용");
+    if(latest!=null) {
+      int doors=0,stairs=0,depth=0;
+      for(LandmarkObservation ob:latest.observations){if(ob.type.equals("DOOR"))doors++;if(ob.type.equals("STAIRS"))stairs++;if(ob.metricValid)depth++;}
+      message.append(String.format(Locale.US,"\n%.0f ms · door %d stairs %d · 3D %d",latest.segmentation.inferenceMillis,doors,stairs,depth));
+      message.append("\n").append(latest.match.status).append(" ").append(latest.match.reason);
+      message.append("\n누적 구조물 ").append(latest.accumulatedCount).append(" · 복도 방향 ").append(latest.corridorYaw==null?"대기":"합의");
+      message.append("\n확인 추적 ").append(latest.confirmedTracks).append(" · 경로 2D 추적 ").append(latest.bearingTracks);
+      message.append(String.format(Locale.US,"\ncandidates %d inliers %d residual %.3f %s",latest.match.candidates,latest.match.inliers,latest.match.residual,latest.match.residualUnit));
+      float[] pose=latest.segmentation.frame.cameraToWorld;
+      message.append(String.format(Locale.US,"\nAR camera %.2f %.2f %.2f",pose[12],pose[13],pose[14]));
+    }
+    message.append(String.format(Locale.US,"\n보정 전 (0,0,0°) → (%.2f,%.2f,%.1f°) 적용 %s",applied.x,applied.z,Math.toDegrees(applied.yaw),lastCorrectionAccepted));
+    String text=message.toString();
+    runOnUiThread(()->{
+      semanticOverlay.display(latest,text);
+      ((TextView)findViewById(R.id.semantic_model_state)).setText(segmentation.state());
+    });
+  }
+
   /** Configures the session with feature settings. */
   private void configureSession() {
     Config config = session.getConfig();
     config.setPlaneFindingMode(Config.PlaneFindingMode.HORIZONTAL);
     config.setLightEstimationMode(Config.LightEstimationMode.DISABLED);
-    config.setDepthMode(Config.DepthMode.DISABLED);
+    config.setDepthMode(session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)
+        ? Config.DepthMode.AUTOMATIC : Config.DepthMode.DISABLED);
     config.setInstantPlacementMode(Config.InstantPlacementMode.DISABLED);
     session.configure(config);
   }

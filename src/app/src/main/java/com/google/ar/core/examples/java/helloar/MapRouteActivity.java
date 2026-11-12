@@ -13,11 +13,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import com.google.gson.Gson;
+import com.google.ar.core.examples.java.helloar.localization.SemanticLandmarkMap;
 
 /** Repository owns loading, engine owns routing, adapter owns coordinates; this is a test UI. */
 public final class MapRouteActivity extends AppCompatActivity {
   public static final String EXTRA_POINTS = "map_route_points", EXTRA_NAME = "map_route_name";
   public static final String EXTRA_REFERENCE = "map_reference_id";
+  public static final String EXTRA_SEMANTIC_MAP = "semantic_route_map";
   public static final String EXTRA_START_LOCATION = "map_start_location";
   public static final String EXTRA_ENTRY_YAW = "route_entry_yaw", EXTRA_ENTRY_DIRECTION = "route_entry_direction";
   public static final String TEST_MAP = "maps/test_building.indoor.json";
@@ -34,6 +37,7 @@ public final class MapRouteActivity extends AppCompatActivity {
   private NavigationRoute selectedRoute;
   private float[] selectedPoints;
   private EntryDirection selectedEntryDirection;
+  private SemanticLandmarkMap selectedSemanticMap;
   private int savedStart, savedDestination = 1;
   private boolean savedWheelchair;
   private String savedYaw = "0";
@@ -85,6 +89,7 @@ public final class MapRouteActivity extends AppCompatActivity {
         Poi from = (Poi) start.getSelectedItem(), to = (Poi) destination.getSelectedItem();
         MapNode first = selectedRoute.nodes.get(0);
         Intent result = new Intent().putExtra(EXTRA_POINTS, selectedPoints)
+            .putExtra(EXTRA_SEMANTIC_MAP,new Gson().toJson(selectedSemanticMap))
             .putExtra(EXTRA_REFERENCE, MAP_ASSETS[selectedMap])
             .putExtra(EXTRA_START_LOCATION, startLocation(from, first))
             .putExtra(EXTRA_NAME, from.name + " [" + endpointLabel(first)
@@ -203,6 +208,7 @@ public final class MapRouteActivity extends AppCompatActivity {
           loaded.map.coordinateSystem, result.route.nodes.get(0).position,
           new MapPosition(0, -0.5, 0), angle);
       List<MapPosition> ar = RouteCoordinateAdapter.toAr(result.route, transformer);
+      selectedSemanticMap=SemanticLandmarkMap.fromIndoorMap(loaded.map,firstNode.floorId,transformer).nearRoute(ar,3);
       MapPosition last = ar.get(ar.size()-1);
       text.append(String.format(Locale.getDefault(),
           "\n변환: meter → AR 원점 기준\n목표 AR (%.2f, %.2f, %.2f) m\n", last.x, last.y, last.z));
