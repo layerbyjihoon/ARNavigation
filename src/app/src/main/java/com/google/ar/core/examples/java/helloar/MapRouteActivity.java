@@ -23,6 +23,10 @@ public final class MapRouteActivity extends AppCompatActivity {
   public static final String EXTRA_SEMANTIC_MAP = "semantic_route_map";
   public static final String EXTRA_START_LOCATION = "map_start_location";
   public static final String EXTRA_ENTRY_YAW = "route_entry_yaw", EXTRA_ENTRY_DIRECTION = "route_entry_direction";
+  public static final String EXTRA_STAGE_LENGTHS = "map_route_stage_lengths";
+  public static final String EXTRA_FLOORS = "map_route_floors";
+  public static final String EXTRA_NEXT_FLOORS = "map_route_next_floors";
+  public static final String EXTRA_TRANSITIONS = "map_route_transitions";
   public static final String TEST_MAP = "maps/test_building.indoor.json";
   public static final String MUNHWAGWAN_MAP = "maps/munhwagwan.indoor.json";
   public static final String EXTRA_MAP_INDEX = "map_index";
@@ -36,11 +40,14 @@ public final class MapRouteActivity extends AppCompatActivity {
   private MapLoadResult loaded;
   private NavigationRoute selectedRoute;
   private float[] selectedPoints;
+  private int[] selectedStageLengths;
+  private String[] selectedFloors, selectedNextFloors, selectedTransitions;
   private EntryDirection selectedEntryDirection;
   private SemanticLandmarkMap selectedSemanticMap;
   private int savedStart, savedDestination = 1;
   private boolean savedWheelchair;
   private String savedYaw = "0";
+  private boolean useDefaultYaw;
   private int selectedMap, loadGeneration;
 
   @Override protected void onCreate(Bundle saved) {
@@ -77,6 +84,7 @@ public final class MapRouteActivity extends AppCompatActivity {
       savedStart = saved.getInt("start"); savedDestination = saved.getInt("destination", 1);
       savedWheelchair = saved.getBoolean("wheelchair"); savedYaw = saved.getString("yaw", "0");
     }
+    useDefaultYaw = saved == null;
     selectedMap = saved != null ? saved.getInt("map") : getIntent().getIntExtra(EXTRA_MAP_INDEX,
         getPreferences(MODE_PRIVATE).getInt("map", 0));
     selectedMap = Math.max(0, Math.min(selectedMap, MAP_ASSETS.length - 1));
@@ -89,7 +97,12 @@ public final class MapRouteActivity extends AppCompatActivity {
         Poi from = (Poi) start.getSelectedItem(), to = (Poi) destination.getSelectedItem();
         MapNode first = selectedRoute.nodes.get(0);
         Intent result = new Intent().putExtra(EXTRA_POINTS, selectedPoints)
-            .putExtra(EXTRA_SEMANTIC_MAP,new Gson().toJson(selectedSemanticMap))
+              .putExtra(EXTRA_SEMANTIC_MAP,
+                  selectedSemanticMap == null ? null : new Gson().toJson(selectedSemanticMap))
+            .putExtra(EXTRA_STAGE_LENGTHS, selectedStageLengths)
+            .putExtra(EXTRA_FLOORS, selectedFloors)
+            .putExtra(EXTRA_NEXT_FLOORS, selectedNextFloors)
+            .putExtra(EXTRA_TRANSITIONS, selectedTransitions)
             .putExtra(EXTRA_REFERENCE, MAP_ASSETS[selectedMap])
             .putExtra(EXTRA_START_LOCATION, startLocation(from, first))
             .putExtra(EXTRA_NAME, from.name + " [" + endpointLabel(first)
@@ -111,6 +124,7 @@ public final class MapRouteActivity extends AppCompatActivity {
       @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         if (position != selectedMap) {
           selectedMap = position; savedStart = 0; savedDestination = 1;
+          useDefaultYaw = true;
           getPreferences(MODE_PRIVATE).edit().putInt("map", position).apply();
           loadMap();
         }
@@ -122,6 +136,7 @@ public final class MapRouteActivity extends AppCompatActivity {
 
   private void loadMap() {
     final int generation = ++loadGeneration;
+    final int mapIndex = selectedMap;
     final String asset = MAP_ASSETS[selectedMap];
     loaded = null; selectedRoute = null; selectedPoints = null;
     find.setEnabled(false); setPreviewAvailable(false); start.setEnabled(false); destination.setEnabled(false);
@@ -132,17 +147,41 @@ public final class MapRouteActivity extends AppCompatActivity {
     apply.setText(selectedMap == 0 ? R.string.map_apply_preview : R.string.map_apply_ar);
     worker.execute(() -> {
       MapLoadResult result = new IndoorMapRepository().loadFromAsset(getAssets()::open, asset);
+      Double defaultAngle = null;
+      String angleError = null;
+      if (result.isSuccess() && mapIndex == 0) {
+        try { result = MunhwagwanDemoFloors.add(getAssets()::open, asset, result); }
+        catch (java.io.IOException | RuntimeException e) { angleError = e.getMessage(); }
+      }
+      if (result.isSuccess() && TEST_MAP.equals(asset)) {
+        try { defaultAngle = new BuildingAngleRepository().load(getAssets()::open, result.map.metadata.id); }
+        catch (java.io.IOException | RuntimeException e) { angleError = e.getMessage(); }
+      }
+      final MapLoadResult configuredMap = result;
+      final Double configuredAngle = defaultAngle;
+      final String configurationError = angleError;
       runOnUiThread(() -> {
         if (isFinishing() || isDestroyed() || generation != loadGeneration) return;
-        loaded = result;
-        if (!result.isSuccess()) {
-          summary.setText(R.string.map_load_failed); output.setText(issues(result.validation));
+        loaded = configuredMap;
+        if (!configuredMap.isSuccess()) {
+          summary.setText(R.string.map_load_failed); output.setText(issues(configuredMap.validation));
           routeSummary.setText(R.string.map_load_failed);
           return;
         }
-        IndoorMap map = result.map;
+        if (configurationError != null) {
+          summary.setText(R.string.map_load_failed);
+          output.setText(getString(R.string.map_angle_error, configurationError));
+          routeSummary.setText(R.string.map_load_failed);
+          return;
+        }
+        if (useDefaultYaw) {
+          yaw.setText(configuredAngle == null ? "0" : java.math.BigDecimal.valueOf(configuredAngle)
+              .stripTrailingZeros().toPlainString());
+          useDefaultYaw = false;
+        }
+        IndoorMap map = configuredMap.map;
         summary.setText(getString(R.string.map_summary_format, map.metadata.name, map.floors.size(),
-            map.nodes.size(), map.edges.size(), map.pois.size(), result.validation.warningCount()));
+            map.nodes.size(), map.edges.size(), map.pois.size(), configuredMap.validation.warningCount()));
         notice.setText(map.metadata.description == null ? "" : map.metadata.description);
         ArrayAdapter<Poi> adapter = new ArrayAdapter<>(this,
             R.layout.map_spinner_item, map.pois);
@@ -156,20 +195,17 @@ public final class MapRouteActivity extends AppCompatActivity {
         }
         routeSummary.setText(R.string.map_select_prompt);
         output.setText(getString(R.string.map_select_prompt) + (selectedMap == 0
-            ? "\n" + getString(R.string.map_munhwagwan_prompt) : issues(result.validation)));
+            ? "\n" + getString(R.string.map_munhwagwan_prompt) : issues(configuredMap.validation)));
       });
     });
   }
 
   private void findRoute() {
-    selectedRoute = null; selectedPoints = null; selectedEntryDirection = null; setPreviewAvailable(false);
+    selectedRoute = null; selectedPoints = null; selectedEntryDirection = null;
+    selectedStageLengths = null; selectedFloors = selectedNextFloors = selectedTransitions = null;
+    setPreviewAvailable(false);
     if (loaded == null || !loaded.isSuccess() || start.getSelectedItem() == null) return;
     Poi from = (Poi) start.getSelectedItem(), to = (Poi) destination.getSelectedItem();
-    if (selectedMap == 0 && !from.floorId.equals(to.floorId)) {
-      output.setText(R.string.map_munhwagwan_cross_floor);
-      routeSummary.setText(R.string.nav_route_choose_same_floor);
-      return;
-    }
     RouteResult result = new AStarRouteEngine(loaded.graph).findRoute(from, to,
         wheelchair.isChecked() ? RouteOptions.WHEELCHAIR : RouteOptions.DEFAULT);
     if (!result.isSuccess()) {
@@ -178,9 +214,12 @@ public final class MapRouteActivity extends AppCompatActivity {
       return;
     }
     selectedRoute = result.route;
+    boolean cultureFloorChange = selectedMap == 0 && result.route.isMultiFloor();
     StringBuilder text = new StringBuilder(String.format(Locale.getDefault(),
-        "%s → %s\n총 거리: %.2f m · 구간: %d\n", from.name, to.name,
+        "%s → %s\n%s: %.2f m · 구간: %d\n", from.name, to.name,
+        cultureFloorChange ? getString(R.string.map_horizontal_distance) : getString(R.string.map_total_distance),
         result.route.totalDistance, result.route.segments.size()));
+    if (cultureFloorChange) text.append(getString(R.string.map_munhwagwan_demo_stairs)).append("\n");
     MapNode firstNode = result.route.nodes.get(0);
     selectedEntryDirection = EntryDirection.resolve(loaded.map, firstNode);
     MapNode lastNode = result.route.nodes.get(result.route.nodes.size()-1);
@@ -212,20 +251,46 @@ public final class MapRouteActivity extends AppCompatActivity {
       MapPosition last = ar.get(ar.size()-1);
       text.append(String.format(Locale.getDefault(),
           "\n변환: meter → AR 원점 기준\n목표 AR (%.2f, %.2f, %.2f) m\n", last.x, last.y, last.z));
-      if (result.route.isMultiFloor()) {
-        text.append(getString(R.string.map_multifloor_notice));
-        routeSummary.setText(R.string.nav_route_choose_same_floor);
-      } else if (result.route.segments.isEmpty()) {
+      if (result.route.segments.isEmpty()) {
         text.append(getString(R.string.map_same_poi));
         routeSummary.setText(R.string.map_same_poi);
       } else {
-        float[] points = new float[ar.size()*3];
-        for (int i = 0; i < ar.size(); i++) {
-          points[i*3] = (float) ar.get(i).x; points[i*3+1] = (float) ar.get(i).y;
-          points[i*3+2] = (float) ar.get(i).z;
+        List<FloorRoutePlanner.Leg> legs = FloorRoutePlanner.split(result.route);
+        selectedStageLengths = new int[legs.size()];
+        selectedFloors = new String[legs.size()];
+        selectedNextFloors = new String[legs.size()];
+        selectedTransitions = new String[legs.size()];
+        java.util.List<float[]> stagePoints = new java.util.ArrayList<>();
+        int total = 0;
+        for (int i = 0; i < legs.size(); i++) {
+          FloorRoutePlanner.Leg leg = legs.get(i);
+          MapCoordinateTransformer legTransformer = new LocalMapCoordinateTransformer(
+              loaded.map.coordinateSystem, leg.points.get(0), new MapPosition(0, -0.5, 0), angle);
+          float[] points = new float[leg.points.size() * 3];
+          for (int j = 0; j < leg.points.size(); j++) {
+            MapPosition point = legTransformer.mapToAr(leg.points.get(j));
+            points[j*3] = (float) point.x; points[j*3+1] = (float) point.y;
+            points[j*3+2] = (float) point.z;
+          }
+          stagePoints.add(points); selectedStageLengths[i] = points.length; total += points.length;
+          selectedFloors[i] = leg.floorId; selectedNextFloors[i] = leg.nextFloorId;
+          selectedTransitions[i] = leg.transition == null ? null
+              : leg.transition == EdgeType.STAIR
+                  ? (leg.ascending ? "STAIR_UP" : "STAIR_DOWN") : leg.transition.name();
+          if (leg.transition != null) text.append("\n").append(leg.floorId)
+              .append(" → ").append(leg.transition).append(" → ").append(leg.nextFloorId);
         }
-        ArRoutePlan.decode("", points);
-        selectedPoints = points; setPreviewAvailable(true);
+        selectedPoints = new float[total];
+        int offset = 0;
+        for (float[] points : stagePoints) {
+          System.arraycopy(points, 0, selectedPoints, offset, points.length);
+          offset += points.length;
+        }
+        ArRoutePlan.decodeStages("", selectedPoints, selectedStageLengths,
+            selectedFloors, selectedNextFloors, selectedTransitions, MAP_ASSETS[selectedMap],
+            null, null, null);
+        setPreviewAvailable(true);
+        if (result.route.isMultiFloor()) text.append("\n").append(getString(R.string.map_multifloor_notice));
         routeSummary.setText(getString(selectedMap == 0
                 ? R.string.nav_route_ready_plan : R.string.nav_route_ready,
             from.name, to.name, result.route.totalDistance, startLocation(from, firstNode)));

@@ -29,8 +29,12 @@ final class RouteLineGeometry {
   private float lastProgress;
 
   RouteLineGeometry(List<Waypoint> route) {
+    this(route, new Waypoint(0f, route.isEmpty() ? -0.5f : route.get(0).y, 0f));
+  }
+
+  RouteLineGeometry(List<Waypoint> route, Waypoint startPoint) {
     this.route = new ArrayList<>(route);
-    start = new Waypoint(0f, route.isEmpty() ? -0.5f : route.get(0).y, 0f);
+    start = startPoint;
     int maxVertices = 0;
     Waypoint previous = start;
     for (Waypoint waypoint : route) {

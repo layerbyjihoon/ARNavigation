@@ -40,6 +40,14 @@ public final class RouteTurnTest {
     assertNull(RouteTurn.next(route, 1, 0, -2));
   }
 
+  @Test public void turnDistanceFollowsTheRouteDespiteLateralDrift() {
+    List<Waypoint> route = Arrays.asList(point(0, -4), point(2, -4));
+    assertEquals(3f, RouteTurn.next(route, 0, 0, -1).distance, 0.001f);
+    assertEquals(2f, RouteTurn.next(route, 0, 0.7f, -2).distance, 0.001f);
+    assertEquals(1f, RouteTurn.next(route, 0, -0.6f, -3).distance, 0.001f);
+    assertEquals(0f, RouteTurn.next(route, 0, 0.4f, -4.2f).distance, 0.001f);
+  }
+
   private static Waypoint point(float x, float z) {
     return new Waypoint(x, -0.5f, z);
   }

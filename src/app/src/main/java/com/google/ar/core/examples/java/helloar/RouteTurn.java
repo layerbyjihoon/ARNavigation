@@ -36,7 +36,7 @@ final class RouteTurn {
       }
     }
 
-    float distance = point.horizontalDistanceTo(x, z);
+    float distance = RouteProgress.distanceToNext(route, index, x, z);
     for (int i = index + 1; i < route.size(); i++) {
       Waypoint next = route.get(i);
       float length = next.horizontalDistanceTo(point.x, point.z);

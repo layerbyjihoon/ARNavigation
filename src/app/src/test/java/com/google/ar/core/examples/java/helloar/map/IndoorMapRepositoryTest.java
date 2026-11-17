@@ -40,7 +40,7 @@ public final class IndoorMapRepositoryTest {
   @Test public void parsesRealAssetAndBuildsImmutableAdjacency() {
     MapLoadResult map = valid();
     assertEquals(2, map.map.floors.size()); assertEquals(10, map.map.nodes.size());
-    assertEquals(11, map.map.edges.size()); assertEquals(4, map.map.pois.size());
+    assertEquals(12, map.map.edges.size()); assertEquals(4, map.map.pois.size());
     assertEquals(1, map.map.anchors.size()); assertEquals(0, map.validation.warningCount());
     assertEquals("QR", map.map.anchors.get(0).type.name());
     try { map.graph.adjacency.get("START").clear(); fail(); } catch (UnsupportedOperationException expected) {}
@@ -191,10 +191,19 @@ public final class IndoorMapRepositoryTest {
     assertEquals(Arrays.asList("START","N1","J1","ROOM_A"),ids(roomA)); assertEquals(6,roomA.totalDistance,1e-9);
     NavigationRoute roomB=engine.findRoute("START","ROOM_B",RouteOptions.DEFAULT).route;
     assertEquals(Arrays.asList("START","N1","J1","STAIR_F1","STAIR_F2","J2","ROOM_B"),ids(roomB));
-    assertEquals(13.8,roomB.totalDistance,1e-9);
+    assertEquals(19.02079728939615,roomB.totalDistance,1e-9);
     assertTrue(roomB.isMultiFloor()); assertEquals(6,roomB.segments.size());
     assertEquals("F1",roomB.segments.get(3).floorId); assertEquals("F2",roomB.segments.get(3).toFloorId);
     assertEquals(EdgeType.STAIR,roomB.segments.get(3).edge.type);
+    assertEquals(2, FloorRoutePlanner.split(roomB).size());
+    assertEquals("F2", FloorRoutePlanner.split(roomB).get(0).nextFloorId);
+    assertTrue(FloorRoutePlanner.split(roomB).get(0).points.stream().anyMatch(p -> p.y == 2.25));
+    assertEquals(4.5, FloorRoutePlanner.split(roomB).get(0).points.get(
+        FloorRoutePlanner.split(roomB).get(0).points.size() - 1).y, 0);
+    NavigationRoute down = engine.findRoute("ROOM_B", "START", RouteOptions.DEFAULT).route;
+    assertTrue(down.isMultiFloor());
+    assertEquals(2, FloorRoutePlanner.split(down).size());
+    assertFalse(FloorRoutePlanner.split(down).get(0).ascending);
   }
   @Test public void wheelchairPolicyUsesLiftAndExcludesStairsAndUnknownAccess() {
     MapLoadResult loaded=valid();
@@ -241,7 +250,7 @@ public final class IndoorMapRepositoryTest {
     List<MapPosition> ar=RouteCoordinateAdapter.toAr(route,new LocalMapCoordinateTransformer(
         loaded.map.coordinateSystem,route.nodes.get(0).position,new MapPosition(0,-0.5,0),0));
     MapPosition last=ar.get(ar.size()-1);
-    assertEquals(2,last.x,1e-9); assertEquals(3.3,last.y,1e-9); assertEquals(-8,last.z,1e-9);
+    assertEquals(2,last.x,1e-9); assertEquals(4.0,last.y,1e-9); assertEquals(-8,last.z,1e-9);
   }
   private static List<String> ids(NavigationRoute route) {
     List<String> ids=new ArrayList<>(); for(MapNode node:route.nodes) ids.add(node.id); return ids;

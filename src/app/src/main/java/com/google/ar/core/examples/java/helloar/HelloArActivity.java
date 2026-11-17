@@ -22,6 +22,9 @@ import com.google.ar.core.examples.java.helloar.segmentation.SegmentationControl
 import com.google.ar.core.examples.java.helloar.localization.*;
 import com.google.ar.core.examples.java.helloar.debug.SegmentationDebugOverlay;
 import android.content.SharedPreferences;
+import android.content.Context;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
 import android.text.InputType;
 import android.widget.EditText;
 import androidx.appcompat.app.AlertDialog;
@@ -69,6 +72,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 import android.view.View;
+import android.view.Surface;
+import com.google.ar.core.DepthPoint;
+import com.google.ar.core.HitResult;
+import java.util.ArrayList;
 
 /**
  * Indoor relative navigation prototype based on the official hello_ar_java renderer.
@@ -87,6 +94,31 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private final AtomicReference<ArRoutePlan> pendingMapRoute = new AtomicReference<>();
   private static final int MAP_ROUTE_REQUEST = 1001;
   private String selectedMapRouteName;
+  private ArRoutePlan activeMapPlan;
+  private int activeStageIndex;
+  private boolean waitingForFloorChange;
+  private StairVisionDetector stairVision;
+  private RouteLineGeometry observedStairLine;
+  private Waypoint observedStairMarker;
+  private StairFallbackPath fallbackStairPath;
+  private RouteLineGeometry fallbackStairLine;
+  private RouteLineGeometry stairApproachLine;
+  private int stairApproachWaypointCount;
+  private RouteLineGeometry lastRenderedLine;
+  private StairFloorTracker stairFloorTracker;
+  private volatile boolean stairMarkerMode;
+  private boolean stairMarkerPostedVisible;
+  private boolean floorEstimatePostedVisible;
+  private long lastStairMarkerPostAt;
+  private long lastFloorEstimatePostAt;
+  private long lastStairDepthScanAt;
+  private long lastStairStatusLogAt;
+  private long lastVisionDebugPostAt;
+  private int lastStairDepthPointCount;
+  private volatile boolean visionDebugEnabled;
+  private int surfaceWidth, surfaceHeight;
+  private int imageSensorOrientation = -1;
+  private float routeCameraHeight;
 
   // Navigation state and all ARCore pose/anchor operations belong to the GL thread.
   private ArRecordingStore recordingStore;
@@ -94,6 +126,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private AlertDialog recordingStartDialog;
   private static final class RecordingRequest {
     final RecordingStartPoint point;
+    final long createdAt = SystemClock.elapsedRealtime();
     RecordingRequest(RecordingStartPoint point) { this.point = point; }
   }
   private final AtomicReference<RecordingRequest> pendingRecording = new AtomicReference<>();
@@ -128,6 +161,9 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private int currentWaypointIndex;
   private long lastDebugUpdateTime;
   private TextView debugText;
+  private TextView visionDebugText;
+  private TextView stairArMarker;
+  private TextView stairFloorEstimate;
   private TextView navigationStatus;
   private TextView navigationStartLocation;
   private Button navigationStartButton;
@@ -175,6 +211,9 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     setContentView(R.layout.activity_main);
     surfaceView = findViewById(R.id.surfaceview);
     debugText = findViewById(R.id.debug_text);
+    visionDebugText = findViewById(R.id.vision_debug_status);
+    stairArMarker = findViewById(R.id.stair_ar_marker);
+    stairFloorEstimate = findViewById(R.id.stair_floor_estimate);
     navigationStatus = findViewById(R.id.navigation_status);
     navigationStartLocation = findViewById(R.id.navigation_start_location);
     View toolsPanel = findViewById(R.id.ar_tools_panel);
@@ -183,6 +222,28 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       boolean open = toolsPanel.getVisibility() != View.VISIBLE;
       toolsPanel.setVisibility(open ? View.VISIBLE : View.GONE);
       toolsToggle.setText(open ? R.string.nav_tools_close : R.string.nav_tools_open);
+    });
+    Button visionDebugButton = findViewById(R.id.vision_debug_button);
+    visionDebugButton.setOnClickListener(v -> {
+      visionDebugEnabled = !visionDebugEnabled;
+      visionDebugText.setVisibility(visionDebugEnabled ? View.VISIBLE : View.GONE);
+      visionDebugButton.setText(visionDebugEnabled
+          ? R.string.vision_debug_off : R.string.vision_debug_on);
+      if (visionDebugEnabled) visionDebugText.setText(R.string.vision_debug_wait);
+    });
+    Button stairDisplayToggle = findViewById(R.id.stair_display_toggle);
+    stairDisplayToggle.setOnClickListener(v -> {
+      stairMarkerMode = !stairMarkerMode;
+      stairDisplayToggle.setText(stairMarkerMode
+          ? R.string.stair_display_marker : R.string.stair_display_line);
+      if (!stairMarkerMode) stairArMarker.setVisibility(View.GONE);
+      surfaceView.queueEvent(() -> {
+        lastRenderedLine = null;
+        routeLineGeometry.invalidate();
+        if (stairApproachLine != null) stairApproachLine.invalidate();
+        if (fallbackStairLine != null) fallbackStairLine.invalidate();
+        if (observedStairLine != null) observedStairLine.invalidate();
+      });
     });
     headingSensor = new HeadingSensor(this);
     segmentation=new SegmentationController(getAssets());
@@ -245,8 +306,12 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     super.onActivityResult(requestCode, resultCode, data);
     if (requestCode == MAP_ROUTE_REQUEST && resultCode == RESULT_OK && data != null) {
       try {
-        pendingMapRoute.set(ArRoutePlan.decode(data.getStringExtra(MapRouteActivity.EXTRA_NAME),
+        pendingMapRoute.set(ArRoutePlan.decodeStages(data.getStringExtra(MapRouteActivity.EXTRA_NAME),
             data.getFloatArrayExtra(MapRouteActivity.EXTRA_POINTS),
+            data.getIntArrayExtra(MapRouteActivity.EXTRA_STAGE_LENGTHS),
+            data.getStringArrayExtra(MapRouteActivity.EXTRA_FLOORS),
+            data.getStringArrayExtra(MapRouteActivity.EXTRA_NEXT_FLOORS),
+            data.getStringArrayExtra(MapRouteActivity.EXTRA_TRANSITIONS),
             data.getStringExtra(MapRouteActivity.EXTRA_REFERENCE),
             data.hasExtra(MapRouteActivity.EXTRA_ENTRY_YAW)
                 ? data.getDoubleExtra(MapRouteActivity.EXTRA_ENTRY_YAW, Double.NaN) : null,
@@ -261,7 +326,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   @Override
   protected void onDestroy() {
-    if(segmentation!=null)segmentation.close();
+    if (segmentation != null) segmentation.close();
+    if (stairVision != null) { stairVision.close(); stairVision = null; }
     if (session != null) {
       // onPause has already stopped the GL thread before Activity destruction.
       detachOriginAnchor();
@@ -438,6 +504,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       routeShader.setFloat("u_Baseline",0f);
       // A recreated GL context has empty GPU buffers even if CPU geometry is cached.
       routeLineGeometry.invalidate();
+      lastRenderedLine = null;
       rendererReady = true;
     } catch (IOException e) {
       Log.e(TAG, "Failed to read a required asset file", e);
@@ -447,6 +514,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   @Override
   public void onSurfaceChanged(SampleRender render, int width, int height) {
+    surfaceWidth = width; surfaceHeight = height;
     displayRotationHelper.onSurfaceChanged(width, height);
     if (virtualSceneFramebuffer != null) {
       virtualSceneFramebuffer.resize(width, height);
@@ -502,6 +570,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     processNavigationRequests(frame);
     processSemanticFrame(frame);
     updateNavigation(camera);
+    processStairVision(frame, camera);
+    updateStairFloorEstimate(camera);
 
     // Keep the screen unlocked while tracking, but allow it to lock when tracking stops.
     trackingStateHelper.updateKeepScreenOnFlag(camera.getTrackingState());
@@ -516,6 +586,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
     // If not tracking, don't draw 3D objects.
     if (camera.getTrackingState() != TrackingState.TRACKING) {
+      hideStairMarker();
       return;
     }
 
@@ -534,19 +605,45 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   }
 
   private void drawNavigationRoute(SampleRender render, Camera camera) {
-    if (!navigationStarted || originAnchor == null
+    if ((!navigationStarted && !(waitingForFloorChange
+            && (observedStairLine != null || fallbackStairLine != null)))
+        || originAnchor == null
         || originAnchor.getTrackingState() != TrackingState.TRACKING) {
+      hideStairMarker();
       return;
     }
     Pose relativePose = getRelativeCameraPose(camera);
     if (relativePose == null) {
+      hideStairMarker();
       return;
     }
-    if (routeLineGeometry.update(currentWaypointIndex, relativePose.tx(), relativePose.tz())) {
-      routePositionBuffer.set(routeLineGeometry.getPositions());
-      routeColorBuffer.set(routeLineGeometry.getColors());
+    boolean markerModeAtStairs = stairMarkerMode && fallbackStairPath != null
+        && activeMapPlan != null && activeStageIndex < activeMapPlan.stages.size()
+        && activeMapPlan.stages.get(activeStageIndex).transition != null
+        && activeMapPlan.stages.get(activeStageIndex).transition.startsWith("STAIR");
+    if (markerModeAtStairs) updateStairMarker();
+    else hideStairMarker();
+    // A detected stair surface replaces the mapped tail immediately, not only after
+    // the entrance waypoint is marked complete.
+    if (markerModeAtStairs && currentWaypointIndex >= stairApproachWaypointCount) return;
+    RouteLineGeometry line = markerModeAtStairs
+        ? stairApproachLine == null ? routeLineGeometry : stairApproachLine
+        : observedStairLine != null ? observedStairLine
+        : fallbackStairLine != null ? fallbackStairLine : routeLineGeometry;
+    int index = line == routeLineGeometry ? currentWaypointIndex : 0;
+    if (markerModeAtStairs) index = currentWaypointIndex;
+    // The provisional path stays visible at its initial position while depth is missing.
+    float progressX = line == fallbackStairLine ? fallbackStairPath.start.x : relativePose.tx();
+    float progressZ = line == fallbackStairLine ? fallbackStairPath.start.z : relativePose.tz();
+    if (lastRenderedLine != line) {
+      line.invalidate();
+      lastRenderedLine = line;
     }
-    if (routeLineGeometry.getVertexCount() == 0) {
+    if (line.update(index, progressX, progressZ)) {
+      routePositionBuffer.set(line.getPositions());
+      routeColorBuffer.set(line.getColors());
+    }
+    if (line.getVertexCount() == 0) {
       return;
     }
 
@@ -565,6 +662,215 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     render.draw(routeMesh, routeShader, virtualSceneFramebuffer);
   }
 
+  private void updateStairMarker() {
+    Waypoint point = observedStairMarker;
+    if (point == null && fallbackStairPath != null && !fallbackStairPath.waypoints.isEmpty())
+      point = fallbackStairPath.markerPoint();
+    if (point == null || surfaceWidth <= 0 || surfaceHeight <= 0) {
+      hideStairMarker();
+      return;
+    }
+    long now = SystemClock.elapsedRealtime();
+    if (now - lastStairMarkerPostAt < 100) return;
+    lastStairMarkerPostAt = now;
+    float[] world = correctedRoutePose().transformPoint(
+        new float[] {point.x, point.y + 0.3f, point.z});
+    float[] view = new float[4], clip = new float[4];
+    Matrix.multiplyMV(view, 0, viewMatrix, 0,
+        new float[] {world[0], world[1], world[2], 1f}, 0);
+    Matrix.multiplyMV(clip, 0, projectionMatrix, 0, view, 0);
+    if (clip[3] <= 0.1f || Math.abs(clip[0] / clip[3]) > 1f
+        || Math.abs(clip[1] / clip[3]) > 1f) {
+      hideStairMarker();
+      return;
+    }
+    stairMarkerPostedVisible = true;
+    float screenX = (clip[0] / clip[3] + 1f) * surfaceWidth / 2f;
+    float screenY = (1f - clip[1] / clip[3]) * surfaceHeight / 2f;
+    ArRoutePlan.Stage stage = activeMapPlan.stages.get(activeStageIndex);
+    int label = "STAIR_UP".equals(stage.transition)
+        ? R.string.stair_marker_up : R.string.stair_marker_down;
+    stairArMarker.post(() -> {
+      stairArMarker.setText(label);
+      stairArMarker.setContentDescription(getString(label));
+      stairArMarker.setVisibility(View.VISIBLE);
+      stairArMarker.setX(Math.max(surfaceView.getLeft(),
+          Math.min(surfaceView.getRight() - stairArMarker.getWidth(),
+              surfaceView.getLeft() + screenX - stairArMarker.getWidth() / 2f)));
+      stairArMarker.setY(Math.max(surfaceView.getTop(),
+          Math.min(surfaceView.getBottom() - stairArMarker.getHeight(),
+              surfaceView.getTop() + screenY - stairArMarker.getHeight() - 16f)));
+    });
+  }
+
+  private void hideStairMarker() {
+    if (!stairMarkerPostedVisible) return;
+    stairMarkerPostedVisible = false;
+    stairArMarker.post(() -> stairArMarker.setVisibility(View.GONE));
+  }
+
+  private void updateStairFloorEstimate(Camera camera) {
+    if (stairFloorTracker == null || (!navigationStarted && !waitingForFloorChange)) {
+      if (floorEstimatePostedVisible) {
+        floorEstimatePostedVisible = false;
+        stairFloorEstimate.post(() -> stairFloorEstimate.setVisibility(View.GONE));
+      }
+      return;
+    }
+    if (camera.getTrackingState() != TrackingState.TRACKING) {
+      stairFloorTracker.trackingLost();
+      return;
+    }
+    long now = SystemClock.elapsedRealtime();
+    stairFloorTracker.update(camera.getPose().ty(), now);
+    if (now - lastFloorEstimatePostAt < 250) return;
+    lastFloorEstimatePostAt = now;
+    floorEstimatePostedVisible = true;
+    String from = StairFloorTracker.label(stairFloorTracker.startFloor);
+    String to = StairFloorTracker.label(stairFloorTracker.nextFloor);
+    float height = stairFloorTracker.verticalDeltaMeters();
+    String status = stairFloorTracker.phase() == StairFloorTracker.Phase.NEXT_FLOOR
+        ? getString(R.string.stair_floor_next, to, height)
+        : stairFloorTracker.phase() == StairFloorTracker.Phase.BETWEEN_FLOORS
+            ? getString(R.string.stair_floor_between, from, to, height)
+            : getString(R.string.stair_floor_start, from, height);
+    stairFloorEstimate.post(() -> {
+      stairFloorEstimate.setText(status);
+      stairFloorEstimate.setVisibility(View.VISIBLE);
+    });
+  }
+
+  private void processStairVision(Frame frame, Camera camera) {
+    updateVisionDebug(frame, camera);
+    if (camera.getTrackingState() != TrackingState.TRACKING || activeMapPlan == null
+        || activeStageIndex >= activeMapPlan.stages.size() || originAnchor == null
+        || originAnchor.getTrackingState() != TrackingState.TRACKING) return;
+    ArRoutePlan.Stage stage = activeMapPlan.stages.get(activeStageIndex);
+    if (stage.transition == null || !stage.transition.startsWith("STAIR")
+        || (!navigationStarted && !waitingForFloorChange)) return;
+    if (!waitingForFloorChange) {
+      Pose relative = getRelativeCameraPose(camera);
+      Waypoint entrance = StairFallbackPath.entrance(route);
+      if (relative == null || entrance.horizontalDistanceTo(relative.tx(), relative.tz()) > 3f)
+        return;
+    }
+    prepareStairFallback(stage);
+    if (stairVision == null) stairVision = new StairVisionDetector();
+    stairVision.submit(frame, imageRotationDegrees());
+    long now = SystemClock.elapsedRealtime();
+    if (!session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) {
+      if (now - lastStairStatusLogAt > 3000) {
+        Log.i(TAG, "Stair correction unavailable: depth unsupported");
+        lastStairStatusLogAt = now;
+      }
+      return;
+    }
+    if (now - lastStairDepthScanAt < 700) return;
+    lastStairDepthScanAt = now;
+    boolean visionDetected = stairVision.seesStairs();
+    boolean ascending = "STAIR_UP".equals(stage.transition);
+    List<Waypoint> observed = observedStairPoints(
+        frame, camera, ascending);
+    lastStairDepthPointCount = observed.size();
+    if (observed.isEmpty() || (!visionDetected && !StairDepthPath.strong(observed, ascending))) {
+      if (now - lastStairStatusLogAt > 3000) {
+        Log.i(TAG, "Stair correction waiting: vision=" + visionDetected
+            + ", depthPoints=" + observed.size());
+        lastStairStatusLogAt = now;
+      }
+      return;
+    }
+    observedStairLine = new RouteLineGeometry(observed.subList(1, observed.size()), observed.get(0));
+    observedStairMarker = observed.get(observed.size() / 2);
+    observedStairLine.invalidate();
+    Log.i(TAG, "Stair ribbon aligned to " + observed.size()
+        + " depth observations; vision=" + visionDetected);
+  }
+
+  private void updateVisionDebug(Frame frame, Camera camera) {
+    if (!visionDebugEnabled) return;
+    if (camera.getTrackingState() == TrackingState.TRACKING) {
+      if (stairVision == null) stairVision = new StairVisionDetector();
+      stairVision.submit(frame, imageRotationDegrees());
+    }
+    long now = SystemClock.elapsedRealtime();
+    if (now - lastVisionDebugPostAt < 300) return;
+    lastVisionDebugPostAt = now;
+    String model = stairVision == null ? "계단 모델: 결과 대기" : stairVision.debugSummary();
+    String depth = session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)
+        ? "깊이: 지원 · 유효 계단 점 " + lastStairDepthPointCount + "개"
+        : "깊이: 미지원";
+    String display = stairMarkerMode ? "표식" : "경로선";
+    String line = observedStairLine != null ? display + ": 깊이 보정 위치"
+        : fallbackStairLine != null ? display + ": 임시 위치"
+        : display + ": 계단 관측 전";
+    String status = (camera.getTrackingState() == TrackingState.TRACKING ? "" : "추적 대기\n")
+        + model + "\n" + depth + "\n" + line;
+    visionDebugText.post(() -> visionDebugText.setText(status));
+  }
+
+  private void prepareStairFallback(ArRoutePlan.Stage stage) {
+    if (fallbackStairLine != null) return;
+    fallbackStairPath = StairFallbackPath.from(route, "STAIR_UP".equals(stage.transition));
+    fallbackStairLine = new RouteLineGeometry(
+        fallbackStairPath.waypoints, fallbackStairPath.start);
+    stairApproachWaypointCount = route.size();
+    for (int i = 0; i < route.size(); i++) {
+      if (Math.abs(route.get(i).y - route.get(0).y) > 0.5f) {
+        stairApproachWaypointCount = i;
+        break;
+      }
+    }
+    stairApproachLine = stairApproachWaypointCount < route.size()
+        ? new RouteLineGeometry(route.subList(0, stairApproachWaypointCount)) : null;
+    Log.i(TAG, "Stair fallback ready: mappedHeight=" + fallbackStairPath.hasStairHeight
+        + ", points=" + fallbackStairPath.waypoints.size());
+  }
+
+  private List<Waypoint> observedStairPoints(Frame frame, Camera camera, boolean ascending) {
+    List<List<Waypoint>> profiles = new ArrayList<>();
+    if (surfaceWidth <= 0 || surfaceHeight <= 0) return java.util.Collections.emptyList();
+    Pose inverse = correctedRoutePose().inverse();
+    for (float xFraction : new float[] {0.8f, 0.65f, 0.5f, 0.35f, 0.2f}) {
+      List<Waypoint> points = new ArrayList<>();
+      for (float yFraction : new float[] {0.7f, 0.62f, 0.54f, 0.48f,
+          0.42f, 0.36f, 0.3f, 0.24f}) {
+        for (HitResult hit : frame.hitTest(surfaceWidth * xFraction, surfaceHeight * yFraction)) {
+          if (!(hit.getTrackable() instanceof DepthPoint)) continue;
+          Pose world = hit.getHitPose();
+          float dx = world.tx() - camera.getPose().tx();
+          float dy = world.ty() - camera.getPose().ty();
+          float dz = world.tz() - camera.getPose().tz();
+          float distance = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+          if (distance < 0.3f || distance > 6f) break;
+          Pose local = inverse.compose(world);
+          Waypoint point = new Waypoint(local.tx(), local.ty() + 0.02f, local.tz());
+          if (points.isEmpty() || point.horizontalDistanceTo(
+              points.get(points.size() - 1).x, points.get(points.size() - 1).z) > 0.08f)
+            points.add(point);
+          break;
+        }
+      }
+      profiles.add(points);
+    }
+    return StairDepthPath.bestPlausible(profiles, ascending);
+  }
+
+  private int imageRotationDegrees() {
+    try {
+      if (imageSensorOrientation < 0) {
+        CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+        Integer degrees = manager.getCameraCharacteristics(session.getCameraConfig().getCameraId())
+            .get(CameraCharacteristics.SENSOR_ORIENTATION);
+        imageSensorOrientation = degrees == null ? 0 : degrees;
+      }
+      int display = getWindowManager().getDefaultDisplay().getRotation() * 90;
+      return (imageSensorOrientation - display + 360) % 360;
+    } catch (Exception unavailable) {
+      return 0;
+    }
+  }
+
   private void processNavigationRequests(Frame frame) {
     Camera camera = frame.getCamera();
     Boolean confirmed = startFromUi.getAndSet(null);
@@ -580,6 +886,15 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     if (plan != null) {
       resetNavigation();
       startNavigationRequested = false;
+      activeMapPlan = plan;
+      activeStageIndex = 0;
+      waitingForFloorChange = false;
+      observedStairLine = null;
+      observedStairMarker = null;
+      fallbackStairPath = null;
+      fallbackStairLine = null;
+      stairApproachLine = null;
+      stairFloorTracker = null;
       route = plan.waypoints;
       segmentation.setMap(plan.semanticMap);
       startLocation = plan.startLocation;
@@ -603,6 +918,19 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       resetNavigationRequested = false;
       startNavigationRequested = false;
       resetNavigation();
+      waitingForFloorChange = false;
+      observedStairLine = null;
+      observedStairMarker = null;
+      fallbackStairPath = null;
+      fallbackStairLine = null;
+      stairApproachLine = null;
+      stairFloorTracker = null;
+      if (activeMapPlan != null) {
+        activeStageIndex = 0;
+        route = activeMapPlan.stages.get(0).waypoints;
+        routeLineGeometry = new RouteLineGeometry(route);
+        segmentation.setMap(activeMapPlan.semanticMap);
+      }
       Log.i(TAG, "Navigation reset");
     }
 
@@ -660,6 +988,23 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       return;
     }
     try {
+      if (waitingForFloorChange) {
+        observedStairLine = null;
+        observedStairMarker = null;
+        fallbackStairPath = null;
+        fallbackStairLine = null;
+        stairApproachLine = null;
+        stairFloorTracker = null;
+        activeStageIndex++;
+        route = activeMapPlan.stages.get(activeStageIndex).waypoints;
+        routeLineGeometry = new RouteLineGeometry(route);
+        // The semantic map uses the first floor's local origin and landmarks.
+        // Do not apply those corrections after re-anchoring on another floor.
+        segmentation.setMap(null);
+        waitingForFloorChange = false;
+        returnToStartRequired = false;
+        startLocation = activeMapPlan.stages.get(activeStageIndex).floorId + " 출구";
+      }
       Double yaw = null;
       if (datasets != null && !routeUseManualAlignment && !alignmentKey.equals(datasetAlignmentOverride)) {
         Pose recordedReference = datasets.mapReferenceFor(alignmentKey);
@@ -745,12 +1090,20 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       // Existing route vertices are at y=-0.5; place the ribbon 2cm above the floor.
       Pose origin = yawPose(camera.getPose().tx(), floorY + 0.52f,
           camera.getPose().tz(), yaw);
+      routeCameraHeight = camera.getPose().ty() - floorY;
       Anchor newOrigin = session.createAnchor(origin);
       detachOriginAnchor();
       originAnchor = newOrigin;
       detachRouteEntryAnchor();
       currentWaypointIndex = 0;
       navigationStarted = true;
+      if (activeMapPlan != null) {
+        ArRoutePlan.Stage stage = activeMapPlan.stages.get(activeStageIndex);
+        stairFloorTracker = stage.transition != null && stage.transition.startsWith("STAIR")
+            ? new StairFloorTracker(stage.floorId, stage.nextFloorId,
+                "STAIR_UP".equals(stage.transition), camera.getPose().ty(),
+                Math.abs(route.get(route.size() - 1).y - route.get(0).y)) : null;
+      }
       returnToStartRequired = false;
       alignmentStatus = null;
       navigationCompleted = false;
@@ -766,7 +1119,17 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   private void resetNavigation() {
     semanticAlignment.reset();
-    if(segmentation!=null)segmentation.invalidate();
+    if (segmentation != null) segmentation.invalidate();
+    observedStairLine = null;
+    observedStairMarker = null;
+    fallbackStairPath = null;
+    fallbackStairLine = null;
+    stairApproachLine = null;
+    stairFloorTracker = null;
+    lastRenderedLine = null;
+    lastStairDepthScanAt = 0;
+    lastStairStatusLogAt = 0;
+    lastStairDepthPointCount = 0;
     detachOriginAnchor();
     detachRouteEntryAnchor();
     returnToStartRequired |= navigationStarted || navigationCompleted;
@@ -814,8 +1177,28 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       return;
     }
     if (navigationCompleted) {
+      if (awaitNextFloor()) return;
       postDebugText(getString(R.string.navigation_arrived, route.size()),
           getString(R.string.nav_status_arrived), tracking);
+      return;
+    }
+    if (waitingForFloorChange) {
+      ArRoutePlan.Stage stage = activeMapPlan.stages.get(activeStageIndex);
+      postDebugText(stairMarkerMode && stage.transition != null
+              && stage.transition.startsWith("STAIR")
+              ? getString(R.string.navigation_stair_marker,
+                  getString("STAIR_UP".equals(stage.transition)
+                      ? R.string.stair_marker_up : R.string.stair_marker_down),
+                  stage.nextFloorId)
+          : observedStairLine == null && fallbackStairPath != null
+              ? getString(fallbackStairPath.hasStairHeight
+                  ? R.string.navigation_stair_scan_mapped
+                  : R.string.navigation_stair_scan, stage.nextFloorId)
+              : observedStairLine != null
+                  ? getString(R.string.navigation_stair_observed, stage.nextFloorId)
+              : getString(R.string.navigation_floor_change,
+                  transitionLabel(stage.transition), stage.nextFloorId),
+          getString(R.string.nav_status_next_floor, stage.nextFloorId), tracking);
       return;
     }
     if (!tracking) {
@@ -856,8 +1239,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
           getString(R.string.nav_status_recovering), false);
       return;
     }
-    float distance = route.get(currentWaypointIndex)
-        .horizontalDistanceTo(relativePose.tx(), relativePose.tz());
+    float distance = RouteProgress.distanceToNext(route, currentWaypointIndex,
+        relativePose.tx(), relativePose.tz());
 
     if (advanceWaypointIfArrived(relativePose)) {
       lastDebugUpdateTime = 0;
@@ -865,17 +1248,44 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
           "Waypoint %d reached: x=%.2f z=%.2f distance=%.2f",
           currentWaypointIndex, relativePose.tx(), relativePose.tz(), distance));
       if (navigationCompleted) {
+        if (awaitNextFloor()) return;
         detachOriginAnchor();
         postDebugText(getString(R.string.navigation_arrived, route.size()),
             getString(R.string.nav_status_arrived), true);
         Log.i(TAG, "Navigation arrived: all " + route.size() + " waypoints reached");
         return;
       }
-      distance = route.get(currentWaypointIndex)
-          .horizontalDistanceTo(relativePose.tx(), relativePose.tz());
+      distance = RouteProgress.distanceToNext(route, currentWaypointIndex,
+          relativePose.tx(), relativePose.tz());
     }
     updateDebugText(relativePose.tx(), relativePose.ty(), relativePose.tz(),
         distance, currentWaypointIndex);
+  }
+
+  private boolean awaitNextFloor() {
+    if (activeMapPlan == null || activeStageIndex + 1 >= activeMapPlan.stages.size()) return false;
+    ArRoutePlan.Stage stage = activeMapPlan.stages.get(activeStageIndex);
+    navigationCompleted = false;
+    waitingForFloorChange = true;
+    returnToStartRequired = false;
+    if (stage.transition != null && stage.transition.startsWith("STAIR")) {
+      prepareStairFallback(stage);
+    } else {
+      detachOriginAnchor();
+    }
+    postDebugText(getString(R.string.navigation_floor_change,
+        transitionLabel(stage.transition), stage.nextFloorId),
+        getString(R.string.nav_status_next_floor, stage.nextFloorId), true);
+    return true;
+  }
+
+  private static String transitionLabel(String transition) {
+    if ("STAIR_UP".equals(transition)) return "계단(올라감)";
+    if ("STAIR_DOWN".equals(transition)) return "계단(내려감)";
+    if ("ELEVATOR".equals(transition)) return "엘리베이터";
+    if ("ESCALATOR".equals(transition)) return "에스컬레이터";
+    if ("RAMP".equals(transition)) return "경사로";
+    return transition == null ? "층간 통로" : transition;
   }
 
   // Kept independent of the camera/UI so the real route progression can be tested.
@@ -884,7 +1294,18 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       return false;
     }
     Waypoint target = route.get(currentWaypointIndex);
-    if (target.horizontalDistanceTo(relativePose.tx(), relativePose.tz()) >= ARRIVAL_DISTANCE) {
+    float distance = target.horizontalDistanceTo(relativePose.tx(), relativePose.tz());
+    boolean stairHeightRequired = activeMapPlan != null
+        && activeMapPlan.stages.get(activeStageIndex).transition != null
+        && activeMapPlan.stages.get(activeStageIndex).transition.startsWith("STAIR")
+        && Math.abs(target.y - route.get(0).y) > 0.5f;
+    if (stairHeightRequired) {
+      float dy = target.y - (relativePose.ty() - routeCameraHeight);
+      distance = (float) Math.hypot(distance, dy);
+    }
+    boolean passed = !stairHeightRequired && RouteProgress.passedIntermediate(route,
+        currentWaypointIndex, relativePose.tx(), relativePose.tz());
+    if (distance >= ARRIVAL_DISTANCE && !passed) {
       return false;
     }
     currentWaypointIndex++;
@@ -925,9 +1346,10 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     }
     lastDebugUpdateTime = now;
     String location = startLocation == null ? "" : getString(R.string.nav_ar_start_location, startLocation);
-    boolean confirmStart = returnToStartRequired || navigationCompleted;
+    boolean confirmStart = !waitingForFloorChange && (returnToStartRequired || navigationCompleted);
     int action = navigationStarted ? R.string.nav_start_active
         : startNavigationRequested ? R.string.nav_start_preparing
+        : waitingForFloorChange ? R.string.navigation_next_floor
         : confirmStart ? R.string.nav_start_confirm_location
         : selectedMapRouteName == null ? R.string.nav_start_sample : R.string.navigation_start;
     // Capture the state on the render thread; the UI never reads mutable navigation state.
@@ -970,7 +1392,10 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   }
 
   private void toggleRecording() {
-    if (session == null || !activityResumed || datasets == null) return;
+    if (session == null || !activityResumed || datasets == null) {
+      Toast.makeText(this, "AR 세션이 준비된 뒤 녹화를 시작하세요.", Toast.LENGTH_LONG).show();
+      return;
+    }
     if (datasets.mode() == ArDatasetController.Mode.LIVE) {
       if (recordingStartDialog == null || !recordingStartDialog.isShowing())
         recordingStartDialog = RecordingStartDialog.show(this, uiAlignmentKey, this::startRecordingAt);
@@ -988,8 +1413,23 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   }
 
   private void processRecordingStart(Frame frame) {
-    RecordingRequest request = pendingRecording.getAndSet(null);
+    RecordingRequest request = pendingRecording.get();
     if (request == null || datasets == null || datasets.mode() != ArDatasetController.Mode.LIVE) return;
+    if (request.point != null && (request.point.direction != null
+        || MapOrientation.usesSensor(request.point.mapAsset))) {
+      boolean ready = frame.getCamera().getTrackingState() == TrackingState.TRACKING;
+      if (ready && MapOrientation.usesSensor(request.point.mapAsset))
+        ready = datasets.configuredSensorYaw(request.point.mapAsset, frame) != null;
+      if (!ready) {
+        if (SystemClock.elapsedRealtime() - request.createdAt > 20_000
+            && pendingRecording.compareAndSet(request, null))
+          runOnUiThread(() -> Toast.makeText(this,
+              "위치 추적과 방위 센서가 준비되지 않아 녹화를 시작하지 못했습니다.",
+              Toast.LENGTH_LONG).show());
+        return;
+      }
+    }
+    if (!pendingRecording.compareAndSet(request, null)) return;
     datasets.startRecording(session, request.point, frame);
     if (datasets.mode() == ArDatasetController.Mode.RECORDING && request.point != null
         && (request.point.direction != null || MapOrientation.usesSensor(request.point.mapAsset))) {

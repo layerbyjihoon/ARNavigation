@@ -40,4 +40,33 @@ public final class ArRoutePlanTest {
       try { ArRoutePlan.decode("bad",input); fail(); } catch(IllegalArgumentException expected) {}
     }
   }
+  @Test public void floorStagesKeepIndependentOriginsAndTransitions() {
+    ArRoutePlan plan = ArRoutePlan.decodeStages("1층 → 2층",
+        new float[]{0,-.5f,0, 0,-.5f,-2, 0,-.5f,0, 2,-.5f,0},
+        new int[]{6,6}, new String[]{"F1","F2"}, new String[]{"F2",null},
+        new String[]{"STAIR_UP",null}, "test-map", null, null, "1층 출발점");
+    assertEquals(2, plan.stages.size());
+    assertEquals("F2", plan.stages.get(0).nextFloorId);
+    assertEquals("STAIR_UP", plan.stages.get(0).transition);
+    assertEquals(2, plan.stages.get(1).waypoints.get(0).x, 0);
+    try {
+      ArRoutePlan.decodeStages("bad", new float[]{0,-.5f,0, 0,-.5f,-2, 0,-.5f,0, 2,-.5f,0},
+          new int[]{6,6}, new String[]{"F1","F2"}, new String[]{"F3",null},
+          new String[]{"STAIR_UP",null}, "test-map", null, null, null);
+      fail("Mismatched floor handoff must be rejected");
+    } catch (IllegalArgumentException expected) { }
+  }
+
+  @Test public void firstFloorSemanticRouteSurvivesMultiFloorHandoff() {
+    String semantic = "{\"floorId\":\"F1\",\"landmarks\":[{\"id\":\"door\",\"type\":\"DOOR\",\"x\":1,\"z\":-2,\"planReference\":true}]}";
+    ArRoutePlan plan = ArRoutePlan.decodeStages("F1 → F2",
+        new float[]{0,-.5f,0, 0,-.5f,-2, 0,-.5f,0, 2,-.5f,0},
+        new int[]{6,6}, new String[]{"F1","F2"}, new String[]{"F2",null},
+        new String[]{"STAIR_UP",null}, "test-map", null, null, null, semantic);
+    assertEquals(2, plan.stages.size());
+    assertEquals("F1", plan.semanticMap.floorId);
+    assertEquals(2, plan.semanticMap.route.size());
+    assertEquals(-2, plan.semanticMap.route.get(1).z, 0);
+    assertEquals(2, plan.stages.get(1).waypoints.get(0).x, 0);
+  }
 }

@@ -138,14 +138,22 @@ public final class ArDatasetIntegrationTest {
     } finally { cleanup(); }
   }
 
-  private void open() {
+  private void open() throws Exception {
     instrumentation.getUiAutomation().grantRuntimePermission(
         instrumentation.getTargetContext().getPackageName(), Manifest.permission.CAMERA);
     activity = (HelloArActivity) instrumentation.startActivitySync(new Intent(
         instrumentation.getTargetContext(), HelloArActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
     if (originalStartPreferences == null)
       originalStartPreferences = activity.getSharedPreferences("recording_start", 0).getAll();
-    SystemClock.sleep(2500);
+    long deadline = SystemClock.elapsedRealtime() + 20_000;
+    while (SystemClock.elapsedRealtime() < deadline) {
+      if (field(activity, "session") != null && (boolean) field(activity, "activityResumed")) {
+        SystemClock.sleep(2500);
+        return;
+      }
+      SystemClock.sleep(50);
+    }
+    fail("AR session did not become ready for recording test");
   }
   private ArDatasetController controller() throws Exception { return (ArDatasetController) field(activity, "datasets"); }
   private void click(int id) {

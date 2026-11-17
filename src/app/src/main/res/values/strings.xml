@@ -27,6 +27,17 @@
   <string name="ar_record_stop">녹화 종료</string>
   <string name="ar_recording">녹화 중 ●</string>
   <string name="ar_recordings">AR 녹화 데이터</string>
+  <string name="vision_debug_on">비전모델 디버그 켜기</string>
+  <string name="vision_debug_off">비전모델 디버그 끄기</string>
+  <string name="vision_debug_wait">모델 결과를 기다리는 중…</string>
+  <string name="stair_display_line">계단 표시: 경로선 · 탭하여 표식으로 전환</string>
+  <string name="stair_display_marker">계단 표시: 표식 · 탭하여 경로선으로 전환</string>
+  <string name="stair_marker_up">↑ 계단 올라감</string>
+  <string name="stair_marker_down">↓ 계단 내려감</string>
+  <string name="stair_floor_start">층 추정: %1$s · AR 높이 변화 %2$+.1f m</string>
+  <string name="stair_floor_between">층 추정: %1$s → %2$s 이동 중 · AR 높이 변화 %3$+.1f m</string>
+  <string name="stair_floor_next">층 추정: %1$s 도착 가능 · AR 높이 변화 %2$+.1f m · 출구에서 확인</string>
+  <string name="navigation_stair_marker">계단에 %1$s 표식을 표시합니다. AR 높이로 층 이동을 추정하므로 %2$s 출구에서 실제 층을 확인하고 ‘다음 층에서 시작’을 누르세요.</string>
   <string name="ar_live_mode">일반 AR 모드 · Live Camera</string>
   <string name="ar_playback_mode">AR 재생 모드 · Recorded ARCore Dataset</string>
   <string name="ar_playback_finished">AR 재생 모드 · 재생 완료</string>
@@ -34,6 +45,11 @@
   <string name="app_name">실내 AR 내비게이션</string>
   <string name="navigation_calibrate">방향 보정</string>
   <string name="navigation_start">안내 시작</string>
+  <string name="navigation_next_floor">다음 층에서 시작</string>
+  <string name="navigation_floor_change">%1$s를 이용해 %2$s로 이동하세요. AR 높이로 층을 추정하지만 실제 층은 출구에서 확인하세요. 바닥을 인식시키고 ‘다음 층에서 시작’을 누르세요.</string>
+  <string name="navigation_stair_scan">계단 형상이 지도에 없어 진입 방향을 연장한 짧은 임시선을 표시합니다. 실제 계단과 다를 수 있으니 계단 전체가 화면에 들어오도록 비춰 깊이 관측으로 보정하세요. %1$s 출구에서는 ‘다음 층에서 시작’을 누르세요.</string>
+  <string name="navigation_stair_scan_mapped">지도에 기록된 계단 경로선을 표시하고 있습니다. 계단 전체가 화면에 들어오도록 비추면 깊이 관측으로 보정하며, 깊이 정보가 끊기면 마지막 보정선을 유지합니다. %1$s 출구에서는 ‘다음 층에서 시작’을 누르세요.</string>
+  <string name="navigation_stair_observed">깊이 정보로 계단 AR 선을 보정했습니다. 깊이 정보가 끊겨도 마지막 보정선을 유지합니다. %1$s 출구에서 바닥을 다시 인식시키고 ‘다음 층에서 시작’을 누르세요.</string>
   <string name="navigation_reset">초기화</string>
   <string name="navigation_initial">위치 추적 중…\n주변 공간을 천천히 비춰주세요.</string>
   <string name="navigation_tracking">Tracking: %1$s (%2$s)\n위치 추적 중…\n주변 공간을 천천히 비춰주세요.</string>
@@ -56,10 +72,14 @@
   <string name="map_plan_yaw_label">센서 + 반시계 85.5° 정렬 후 추가 회전각(°) · 기본 0°</string>
   <string name="map_apply_preview">AR 미리보기</string>
   <string name="map_munhwagwan_prompt">문이 여러 개면 가장 짧은 출입구 조합을 선택합니다. 거리와 통행 상태는 도면 기준이며 휠체어 접근성은 미확인입니다.</string>
-  <string name="map_munhwagwan_cross_floor">문화관 층간 연결 8개는 미확인 후보이며 층고·계단 거리가 없습니다. 같은 층의 출발지와 목적지를 선택하세요.</string>
+  <string name="map_total_distance">총 거리</string>
+  <string name="map_horizontal_distance">도면상 수평 거리</string>
+  <string name="map_munhwagwan_demo_stairs">문화관 층간 계단은 현장 미검증 시연용 연결입니다. 표시 거리에 계단 이동 거리와 층고는 포함되지 않습니다. 계단은 직접 이동하고 다음 층 출구에서 안내를 다시 시작하세요.</string>
+  <string name="map_cross_floor_unavailable">다른 층으로 가는 경로는 탐색할 수 없습니다. 같은 층의 출발지와 목적지를 선택하세요.</string>
   <string name="map_plan_alignment_instruction">표시된 출발 진입점에서 시작하세요. AR 화면의 방향 보정에서 도면 위쪽의 실제 방향을 설정합니다(자북과 다를 수 있음). 추가 회전각은 저장된 기준에 적용됩니다. 인식된 수평면 위에 표시하며 바닥인지 현장에서 확인하세요.</string>
   <string name="map_loading">지도를 읽는 중…</string>
   <string name="map_load_failed">지도를 읽을 수 없습니다.</string>
+  <string name="map_angle_error">건물 각도 설정 오류: %1$s</string>
   <string name="map_summary_format">Map: %1$s\nFloors: %2$d · Nodes: %3$d\nEdges: %4$d · POIs: %5$d\nWarnings: %6$d</string>
   <string name="map_start_label">출발지</string>
   <string name="map_destination_label">목적지</string>
@@ -69,7 +89,8 @@
   <string name="map_select_prompt">출발지와 목적지를 선택하고 길찾기를 누르세요.</string>
   <string name="map_apply_ar">AR 안내 열기</string>
   <string name="map_return_ar">AR 화면으로 돌아가기</string>
-  <string name="map_multifloor_notice">층간 경로와 좌표 변환 확인 완료.\n현재 AR 보행 안내는 동일 층 경로만 지원합니다. 자동 층 인식은 구현하지 않았습니다.</string>
+  <string name="map_multifloor_notice">층간 경로를 층별로 안내합니다. 계단은 AR 경로선 또는 올라감/내려감 표식으로 표시할 수 있습니다. ARCore 높이로 다음 층을 추정하지만 실제 층은 출구에서 확인하고 안내를 다시 시작하세요.</string>
+  <string name="nav_status_next_floor">%1$s로 이동한 뒤 출구에서 다음 층 안내를 시작하세요.</string>
   <string name="map_same_poi">출발지와 목적지가 같습니다.</string>
   <string name="map_alignment_instruction">출발 POI의 실제 위치에서 시작하세요. AR 방향 보정으로 지도 북쪽의 실제 방향을 설정합니다. 추가 회전각은 저장된 기준에 적용됩니다. 인식된 수평면이 바닥인지 확인하세요. QR 인식은 아직 지원하지 않습니다.</string>
   <string translatable="false" name="depth_use_explanation">When Depth is enabled on supported devices, virtual objects adapt to the environment by blending in with the real world.</string>

@@ -30,7 +30,7 @@
       "id": "F2",
       "name": "2F",
       "level": 2,
-      "elevation": 3.8
+      "elevation": 4.5
     }
   ],
   "nodes": [
@@ -105,7 +105,7 @@
       "type": "STAIR",
       "position": {
         "x": 0,
-        "y": 3.8,
+        "y": 4.5,
         "z": 6
       },
       "properties": {
@@ -118,7 +118,7 @@
       "type": "JUNCTION",
       "position": {
         "x": 0,
-        "y": 3.8,
+        "y": 4.5,
         "z": 8
       },
       "properties": {
@@ -131,7 +131,7 @@
       "type": "ROOM",
       "position": {
         "x": 2,
-        "y": 3.8,
+        "y": 4.5,
         "z": 8
       },
       "properties": {
@@ -157,7 +157,7 @@
       "type": "ELEVATOR",
       "position": {
         "x": 2,
-        "y": 3.8,
+        "y": 4.5,
         "z": 6
       },
       "properties": {
@@ -211,10 +211,36 @@
       "from": "STAIR_F1",
       "to": "STAIR_F2",
       "type": "STAIR",
-      "bidirectional": true,
+      "bidirectional": false,
       "accessibility": {
         "wheelchair": false
-      }
+      },
+      "geometry": [
+        {"x": 0, "y": 0, "z": 6},
+        {"x": 0.5, "y": 0, "z": 6},
+        {"x": 0.5, "y": 2.25, "z": 8},
+        {"x": 1.5, "y": 2.25, "z": 8},
+        {"x": 1.5, "y": 4.5, "z": 6},
+        {"x": 0, "y": 4.5, "z": 6}
+      ]
+    },
+    {
+      "id": "E05_DOWN",
+      "from": "STAIR_F2",
+      "to": "STAIR_F1",
+      "type": "STAIR",
+      "bidirectional": false,
+      "accessibility": {
+        "wheelchair": false
+      },
+      "geometry": [
+        {"x": 0, "y": 4.5, "z": 6},
+        {"x": -0.5, "y": 4.5, "z": 6},
+        {"x": -0.5, "y": 2.25, "z": 8},
+        {"x": -1.5, "y": 2.25, "z": 8},
+        {"x": -1.5, "y": 0, "z": 6},
+        {"x": 0, "y": 0, "z": 6}
+      ]
     },
     {
       "id": "E06",

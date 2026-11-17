@@ -70,6 +70,28 @@ public final class MunhwagwanMapTest {
     assertEquals(RouteResult.Status.NO_ROUTE,engine.findRoute(poi("101"),poi("201"),RouteOptions.DEFAULT).status);
     assertEquals(RouteResult.Status.NO_ROUTE,engine.findRoute(poi("101"),poi("102"),RouteOptions.WHEELCHAIR).status);
   }
+  @Test public void demonstrationStairsConnectFloorsWithoutClaimingMeasuredDistance() throws Exception {
+    MapLoadResult demo = MunhwagwanDemoFloors.add(
+        path -> getClass().getClassLoader().getResourceAsStream("munhwagwan.indoor.json"),
+        "munhwagwan.indoor.json", loaded);
+    assertTrue(demo.validation.issues.toString(), demo.isSuccess());
+    assertEquals(209, demo.map.edges.size());
+    AStarRouteEngine engine = new AStarRouteEngine(demo.graph);
+    RouteResult up = engine.findRoute(poi("105"), poi("201"), RouteOptions.DEFAULT);
+    assertTrue(up.message, up.isSuccess());
+    assertTrue(up.route.isMultiFloor());
+    assertTrue(up.route.segments.stream().anyMatch(s -> s.edge.type == EdgeType.STAIR));
+    assertEquals(2, FloorRoutePlanner.split(up.route).size());
+    assertEquals("F2", FloorRoutePlanner.split(up.route).get(0).nextFloorId);
+    RouteResult top = engine.findRoute(poi("105"), poi("501"), RouteOptions.DEFAULT);
+    assertTrue(top.message, top.isSuccess());
+    assertEquals(5, FloorRoutePlanner.split(top.route).size());
+    RouteResult down = engine.findRoute(poi("201"), poi("105"), RouteOptions.DEFAULT);
+    assertTrue(down.message, down.isSuccess());
+    assertFalse(FloorRoutePlanner.split(down.route).get(0).ascending);
+    assertEquals(RouteResult.Status.NO_ROUTE,
+        engine.findRoute(poi("105"), poi("201"), RouteOptions.WHEELCHAIR).status);
+  }
   @Test public void drawingAxesMapToArWithoutFlippingPlanYOrInventingFloorHeight() {
     NavigationRoute selected=route("101","102");
     assertEquals(5.616,selected.totalDistance,1e-9);

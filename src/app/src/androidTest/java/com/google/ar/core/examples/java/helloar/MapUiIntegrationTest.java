@@ -24,7 +24,7 @@ import org.junit.Test;
 /** Packaging, real POI UI, multilevel routing, and the map-to-existing-AR handoff on a phone. */
 public final class MapUiIntegrationTest {
   private final Instrumentation instrumentation = InstrumentationRegistry.getInstrumentation();
-  @Test public void munhwagwanScreenLoadsAllRoomsChoosesEntranceAndExplainsUnavailableStairs() {
+  @Test public void munhwagwanScreenLoadsAllRoomsChoosesEntranceAndAllowsOtherFloors() {
     MapRouteActivity map = (MapRouteActivity) instrumentation.startActivitySync(new Intent(
         instrumentation.getTargetContext(),MapRouteActivity.class)
         .putExtra(MapRouteActivity.EXTRA_MAP_INDEX,0).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -48,8 +48,11 @@ public final class MapUiIntegrationTest {
         } catch (Exception e) { throw new AssertionError(e); }
         assertTrue(map.findViewById(R.id.apply_ar_route).isEnabled());
         selectPoi(to,"201"); map.findViewById(R.id.find_route).performClick();
-        assertFalse(map.findViewById(R.id.apply_ar_route).isEnabled());
-        assertTrue(((TextView)map.findViewById(R.id.route_result)).getText().toString().contains("층간 연결 8개"));
+        String floorRoute = ((TextView)map.findViewById(R.id.route_result)).getText().toString();
+        assertTrue(floorRoute, map.findViewById(R.id.apply_ar_route).isEnabled());
+        assertTrue(floorRoute, floorRoute.contains("STAIR"));
+        assertTrue(floorRoute, floorRoute.contains("F1 → F2"));
+        assertTrue(floorRoute, floorRoute.contains("계단 이동 거리와 층고는 포함되지"));
       });
     } finally { instrumentation.runOnMainSync(map::finish); }
   }
@@ -67,13 +70,13 @@ public final class MapUiIntegrationTest {
     assertEquals(2, loaded.map.floors.size()); assertEquals(10, loaded.map.nodes.size());
     AStarRouteEngine engine = new AStarRouteEngine(loaded.graph);
     NavigationRoute ordinary = engine.findRoute("START","ROOM_B",RouteOptions.DEFAULT).route;
-    assertTrue(ordinary.isMultiFloor()); assertEquals(13.8, ordinary.totalDistance, 1e-8);
+    assertTrue(ordinary.isMultiFloor()); assertEquals(19.02079728939615, ordinary.totalDistance, 1e-8);
     NavigationRoute accessible = engine.findRoute("START","ROOM_B",RouteOptions.WHEELCHAIR).route;
     assertTrue(accessible.segments.stream().anyMatch(s -> s.edge.type == EdgeType.ELEVATOR));
     assertFalse(accessible.segments.stream().anyMatch(s -> s.edge.type == EdgeType.STAIR));
   }
 
-  @Test public void poiScreenCalculatesBothFloorRoutesAndRestrictsUnsupportedArTraversal() {
+  @Test public void poiScreenCalculatesBothFloorRoutesAndAllowsManualFloorHandoff() {
     MapRouteActivity map = (MapRouteActivity) instrumentation.startActivitySync(new Intent(
         instrumentation.getTargetContext(),MapRouteActivity.class)
         .putExtra(MapRouteActivity.EXTRA_MAP_INDEX,1).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -81,17 +84,25 @@ public final class MapUiIntegrationTest {
       waitForMap(map);
       instrumentation.runOnMainSync(() -> {
         assertTrue(((TextView)map.findViewById(R.id.map_summary)).getText().toString().contains("Floors: 2"));
+        assertEquals("215", ((android.widget.EditText)map.findViewById(R.id.map_yaw)).getText().toString());
         ((Spinner)map.findViewById(R.id.destination_poi)).setSelection(2);
         map.findViewById(R.id.find_route).performClick();
         String text = ((TextView)map.findViewById(R.id.route_result)).getText().toString();
         assertTrue(text,text.contains("STAIR")); assertTrue(text,text.contains("F1 → F2"));
-        assertTrue(text,text.contains("목표 AR (2.00, 3.30, -8.00)"));
-        assertFalse(map.findViewById(R.id.apply_ar_route).isEnabled());
+        assertTrue(text,text.contains("목표 AR (2.95, 4.00, 7.70)"));
+        assertTrue(map.findViewById(R.id.apply_ar_route).isEnabled());
+        assertTrue(text,text.contains("다음 층"));
+        try {
+          float[] points = (float[]) field(map, "selectedPoints");
+          int[] stageLengths = (int[]) field(map, "selectedStageLengths");
+          assertEquals(4.0f, points[stageLengths[0] - 2], 0.001f);
+        } catch (Exception e) { throw new AssertionError(e); }
         ((CheckBox)map.findViewById(R.id.wheelchair_route)).setChecked(true);
         map.findViewById(R.id.find_route).performClick();
         String accessible = ((TextView)map.findViewById(R.id.route_result)).getText().toString();
         assertTrue(accessible,accessible.contains("ELEVATOR"));
         assertFalse(accessible,accessible.contains("· STAIR"));
+        assertTrue(map.findViewById(R.id.apply_ar_route).isEnabled());
         ((Spinner)map.findViewById(R.id.destination_poi)).setSelection(1);
         map.findViewById(R.id.find_route).performClick();
         assertTrue(map.findViewById(R.id.apply_ar_route).isEnabled());

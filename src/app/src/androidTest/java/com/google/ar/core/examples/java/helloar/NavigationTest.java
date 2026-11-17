@@ -52,10 +52,18 @@ public class NavigationTest {
 
   @Test
   public void arrivalThresholdIsStrictAndHeightIndependent() throws Exception {
+    setField("route", java.util.Collections.singletonList(new Waypoint(0f, -0.5f, -2f)));
     setField("navigationStarted", true);
     assertFalse(activity.advanceWaypointIfArrived(Pose.makeTranslation(0.8f, 0f, -2f)));
     assertFalse(activity.advanceWaypointIfArrived(Pose.makeTranslation(0.81f, 0f, -2f)));
     assertTrue(activity.advanceWaypointIfArrived(Pose.makeTranslation(0.79f, 10f, -2f)));
+    assertEquals(1, getField("currentWaypointIndex"));
+  }
+
+  @Test
+  public void passingAnIntermediateWaypointAdvancesTheRoute() throws Exception {
+    setField("navigationStarted", true);
+    assertTrue(activity.advanceWaypointIfArrived(Pose.makeTranslation(0.9f, 0f, -2.2f)));
     assertEquals(1, getField("currentWaypointIndex"));
   }
 

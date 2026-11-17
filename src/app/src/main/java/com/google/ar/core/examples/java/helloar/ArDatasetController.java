@@ -25,6 +25,7 @@ final class ArDatasetController {
   private volatile ArRecordingStore.Entry active;
   private volatile boolean finished;
   private long startedElapsed, lastStorageCheck, lastRecordedFrame;
+  private long lastTrackWriteWarning;
   private float[] frameHeading;
   private Anchor mapReferenceAnchor;
   private String mapReferenceAsset;
@@ -169,7 +170,11 @@ final class ArDatasetController {
       for (float value : frameHeading) bytes.putFloat(value);
       bytes.flip();
       try { frame.recordTrackData(HEADING_TRACK, bytes); lastRecordedFrame = frame.getTimestamp(); }
-      catch (Exception e) { stopRecording(session, "방위 데이터 녹화에 실패했습니다: " + e.getMessage()); }
+      catch (IllegalStateException busy) { logTrackWriteBusy(busy); }
+      catch (Exception e) {
+        android.util.Log.e("ArDatasetController", "Unable to record heading track", e);
+        stopRecording(session, "방위 데이터 녹화에 실패했습니다: " + e);
+      }
     }
     if (mode == Mode.RECORDING && hasOrientation(active)
         && mapReferenceAnchor != null && mapReferenceAnchor.getTrackingState() == TrackingState.TRACKING
@@ -181,7 +186,21 @@ final class ArDatasetController {
       for (float value : relativeSensor) bytes.putFloat(value);
       bytes.flip();
       try { frame.recordTrackData(MAP_ORIENTATION_TRACK, bytes); lastMapFrame = frame.getTimestamp(); }
-      catch (Exception e) { stopRecording(session, "출발 방향 기록에 실패했습니다: " + e.getMessage()); }
+      catch (IllegalStateException busy) { logTrackWriteBusy(busy); }
+      catch (Exception e) {
+        android.util.Log.e("ArDatasetController", "Unable to record map orientation track", e);
+        stopRecording(session, "출발 방향 기록에 실패했습니다: " + e);
+      }
+    }
+  }
+
+  private void logTrackWriteBusy(IllegalStateException error) {
+    // ARCore may temporarily reject custom samples while its image/recording pipeline is busy.
+    // Keep the MP4 recording and try writing again on the next frame.
+    long now = SystemClock.elapsedRealtime();
+    if (now - lastTrackWriteWarning >= 3000) {
+      android.util.Log.w("ArDatasetController", "ARCore custom track busy; retrying", error);
+      lastTrackWriteWarning = now;
     }
   }
 
@@ -239,6 +258,16 @@ final class ArDatasetController {
       mapReferenceAsset = active.startPoint.mapAsset;
       listener.changed();
       break;
+    }
+    if (mapReferenceAnchor == null && MapOrientation.usesSensor(active.startPoint.mapAsset)) {
+      // Custom orientation samples may be dropped when ARCore's recorder is busy.
+      // The recorded magnetic-heading track can still reconstruct the same map bearing.
+      Double yaw = configuredSensorYaw(active.startPoint.mapAsset, frame);
+      if (yaw != null) {
+        mapReferenceAnchor = session.createAnchor(referencePose(frame.getCamera().getPose(), yaw));
+        mapReferenceAsset = active.startPoint.mapAsset;
+        listener.changed();
+      }
     }
   }
 
