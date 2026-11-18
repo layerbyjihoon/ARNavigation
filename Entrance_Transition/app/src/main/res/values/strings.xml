@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">문화관 실내·실외 전환</string>
+    <string name="segmentation_legend">세그먼테이션 · 벽 분홍 / 바닥 초록 / 천장 보라 / 계단 노랑 / 문 주황 / 하늘 파랑</string>
+    <string name="target_building">숭실대학교 문화관</string>
+    <string name="mode_unknown">판정 중</string>
+    <string name="mode_indoor">실내</string>
+    <string name="mode_outdoor">실외</string>
+    <string name="loading">문화관 기준 데이터를 준비하고 있습니다.</string>
+    <string name="scan_hint">문화관 입구에서 주변을 천천히 비춰주세요.</string>
+    <string name="rescan">다시 판정</string>
+    <string name="permission_hint">실내·실외 구조를 비교하려면 카메라 권한이 필요합니다. 영상은 저장하거나 전송하지 않습니다.</string>
+    <string name="permission_button">카메라 권한 허용</string>
+    <string name="open_settings">권한 설정 열기</string>
+    <string name="camera_error">카메라를 시작하지 못했습니다. 다시 판정을 눌러 재시도해주세요.</string>
+    <string name="model_error">모델 또는 기준 데이터를 읽지 못했습니다. 다시 판정을 눌러 재시도해주세요.</string>
+    <string name="inference_error">프레임을 분석하지 못했습니다. 주변을 다시 비춰주세요.</string>
+    <string name="ambiguous_hint">구조가 모호하거나 가려져 있습니다. 주변을 더 넓게 비춰주세요.</string>
+    <string name="indoor_hint">실내 점수가 0.75 이상이므로 실내로 전환했습니다.</string>
+    <string name="outdoor_hint">실내 점수가 0.75 미만이므로 실외로 표시합니다.</string>
+    <string name="checking_hint">구조를 연속 확인하고 있습니다.</string>
+    <string name="scope_hint">문화관 사진 기준 판정 · 건물 위치 자동 식별 미지원</string>
+</resources>

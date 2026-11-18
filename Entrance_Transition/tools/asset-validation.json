@@ -1,0 +1,43 @@
+{
+  "checkpointUrl": "https://download.openmmlab.com/mmsegmentation/v0.5/segformer/segformer_mit-b0_512x512_160k_ade20k/segformer_mit-b0_512x512_160k_ade20k_20210726_101530-8ffa8fda.pth",
+  "checkpointSha256": "8ffa8fdac140ffaef9119150aca65e9fcb4e7a165e60b80be0102cc805d73a9c",
+  "modelSha256": "fff79e1a86f621928d200ff49ddbc4a80695703f7a0586f25f2459d67c4475a3",
+  "sourceImages": [
+    {
+      "file": "gate1.jpeg",
+      "sha256": "8df34e6be2579cabb58c484b0a69881f2cee81e2abff2d8d7b6c272c08a3ecdc",
+      "maxLogitError": 5.7220458984375e-05,
+      "classAgreement": 1.0
+    },
+    {
+      "file": "gate2.jpeg",
+      "sha256": "70756c1ae1f7b31cbc548fd9cc2456854fbf6ce4f645e4b0149ac51fa0710f0c",
+      "maxLogitError": 4.1961669921875e-05,
+      "classAgreement": 1.0
+    },
+    {
+      "file": "gate3.jpeg",
+      "sha256": "e1feaa3e4a496a35a574c779bfb732b5e23b4b5603b3e7d436e8ae9a732e9230",
+      "maxLogitError": 4.9591064453125e-05,
+      "classAgreement": 1.0
+    },
+    {
+      "file": "gate4.jpeg",
+      "sha256": "9efd228b930f61cc577fefa63a68303687cc9081e9ffd8a58cb126bb78496a65",
+      "maxLogitError": 4.1961669921875e-05,
+      "classAgreement": 1.0
+    },
+    {
+      "file": "avoidance.jpeg",
+      "sha256": "56edf779cceb8186a71bd66e62eb2dbceeb4808d6bbeef1d8491413b9f9a18d0",
+      "maxLogitError": 0.0001373291015625,
+      "classAgreement": 1.0
+    },
+    {
+      "file": "avoidance2.jpeg",
+      "sha256": "9a1b5fad0496e0f88f22e89b2003c5f2c559e38abf537039a9abae14689a97fd",
+      "maxLogitError": 0.0001220703125,
+      "classAgreement": 1.0
+    }
+  ]
+}
