@@ -4,22 +4,27 @@ import android.content.Context;
 import android.graphics.*;
 import android.util.AttributeSet;
 import android.view.View;
+import com.google.ar.core.examples.java.helloar.R;
 import com.google.ar.core.examples.java.helloar.segmentation.*;
 import com.google.ar.core.examples.java.helloar.localization.*;
 
 /** Debug-only mask/observations/status. The normal navigation UI stays unchanged when toggles are off. */
 public final class SegmentationDebugOverlay extends View {
-  private boolean mask,landmarks,status;
+  private boolean mask,landmarks,boundaries,status;
   private SegmentationController.Completed result;
   private Bitmap bitmap;
   private final Paint paint=new Paint(Paint.ANTI_ALIAS_FLAG);
   private String text="";
+  private long displayedAtNanos;
   public SegmentationDebugOverlay(Context context,AttributeSet attrs){super(context,attrs);setWillNotDraw(false);}
-  public void configure(boolean mask,boolean landmarks,boolean status){this.mask=mask;this.landmarks=landmarks;this.status=status;invalidate();}
+  public void configure(boolean mask,boolean landmarks,boolean boundaries,boolean status){
+    this.mask=mask;this.landmarks=landmarks;this.boundaries=boundaries;this.status=status;invalidate();
+  }
   public void display(SegmentationController.Completed next,String text) {
     this.text=text;
     if(result==null||next==null||result.segmentation!=next.segmentation){if(bitmap!=null){bitmap.recycle();bitmap=null;}}
     result=next;
+    displayedAtNanos=android.os.SystemClock.elapsedRealtimeNanos();
     invalidate();
   }
   private static int color(String name) {
@@ -28,7 +33,7 @@ public final class SegmentationDebugOverlay extends View {
   }
   @Override protected void onDraw(Canvas canvas) {
     super.onDraw(canvas);
-    if(result!=null&&android.os.SystemClock.elapsedRealtimeNanos()-result.segmentation.frame.timestamp<2_000_000_000L) {
+    if(result!=null&&android.os.SystemClock.elapsedRealtimeNanos()-displayedAtNanos<2_000_000_000L) {
       SegmentationResult seg=result.segmentation;FrameSnapshot frame=seg.frame;
       float[] source={0,0,seg.width,0,0,seg.height},destination=new float[6];
       for(int i=0;i<3;i++) {
@@ -50,11 +55,23 @@ public final class SegmentationDebugOverlay extends View {
         canvas.drawText(ob.type+String.format(java.util.Locale.US," #%d %.2f %s%s",ob.trackId,ob.confidence,ob.stable?"확인 ":"후보 ",ob.depthValid?"3D":"2D"),center[0]+16,center[1],paint);
         if(ob.worldPosition!=null)canvas.drawText(String.format(java.util.Locale.US,"world %.2f %.2f %.2f",ob.worldPosition[0],ob.worldPosition[1],ob.worldPosition[2]),center[0]+16,center[1]+30,paint);
       }
-      if(landmarks)for(float[] boundary:result.wallBoundaries) {
+      if(boundaries)for(float[] boundary:result.wallBoundaries) {
+        if(boundary.length<4)continue;
         float[] points=boundary.clone();for(int i=0;i<points.length;i+=2){points[i]*=seg.width;points[i+1]*=seg.height;}
-        transform.mapPoints(points);paint.setColor(Color.CYAN);paint.setStrokeWidth(4);paint.setStyle(Paint.Style.STROKE);
+        transform.mapPoints(points);paint.setStrokeCap(Paint.Cap.ROUND);paint.setStrokeJoin(Paint.Join.ROUND);paint.setStyle(Paint.Style.STROKE);
         Path path=new Path();path.moveTo(points[0],points[1]);for(int i=2;i<points.length;i+=2)path.lineTo(points[i],points[i+1]);
-        canvas.drawPath(path,paint);
+        paint.setColor(Color.BLACK);paint.setStrokeWidth(11);canvas.drawPath(path,paint);
+        paint.setColor(0xFFFFD54F);paint.setStrokeWidth(6);canvas.drawPath(path,paint);
+      }
+      if(boundaries) {
+        String label="벽·바닥 경계: "+(result.wallBoundaries.isEmpty()?"미검출":result.wallBoundaries.size()+"개");
+        float density=getResources().getDisplayMetrics().density;
+        paint.setStyle(Paint.Style.FILL);paint.setTextSize(14*getResources().getDisplayMetrics().scaledDensity);
+        View header=getRootView().findViewById(R.id.ar_header);
+        float x=16*density,y=header==null?getHeight()*.32f:header.getBottom()+8*density;
+        float width=paint.measureText(label)+20*density;
+        paint.setColor(0xCC101820);canvas.drawRoundRect(x,y,x+width,y+32*density,8*density,8*density,paint);
+        paint.setColor(0xFFFFD54F);canvas.drawText(label,x+10*density,y+22*density,paint);
       }
     }
     if(status){

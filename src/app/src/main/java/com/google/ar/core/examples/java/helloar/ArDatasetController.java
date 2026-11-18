@@ -27,6 +27,7 @@ final class ArDatasetController {
   private long startedElapsed, lastStorageCheck, lastRecordedFrame;
   private long lastTrackWriteWarning;
   private float[] frameHeading;
+  private Pose playbackStartCameraPose;
   private Anchor mapReferenceAnchor;
   private String mapReferenceAsset;
   private long lastMapFrame;
@@ -118,23 +119,28 @@ final class ArDatasetController {
     if (mode != Mode.LIVE) throw new IOException("녹화 또는 재생을 먼저 종료하세요.");
     if (!entry.playable() || !store.file(entry).isFile()) throw new IOException("정상 종료된 녹화 파일이 아닙니다.");
     clearMapReference();
-    active = entry; finished = false; frameHeading = null; mode = Mode.PLAYBACK;
+    active = entry; finished = false; frameHeading = null;
+    playbackStartCameraPose = null; mode = Mode.PLAYBACK;
     listener.changed();
   }
   void exitPlayback() {
     if (mode != Mode.PLAYBACK) return;
     clearMapReference();
-    active = null; finished = false; frameHeading = null; mode = Mode.LIVE;
+    active = null; finished = false; frameHeading = null;
+    playbackStartCameraPose = null; mode = Mode.LIVE;
     listener.changed();
   }
   void configureNewSession(Session session) throws IOException {
     clearMapReference();
     if (mode == Mode.PLAYBACK) session.setPlaybackDatasetUri(Uri.fromFile(store.file(active)));
-    finished = false; frameHeading = null;
+    finished = false; frameHeading = null; playbackStartCameraPose = null;
   }
 
   void onFrame(Session session, Frame frame) {
     if (mode == Mode.PLAYBACK) {
+      if (playbackStartCameraPose == null && frame.getTimestamp() != 0
+          && frame.getCamera().getTrackingState() == TrackingState.TRACKING)
+        playbackStartCameraPose = frame.getCamera().getPose();
       // Never fall back to live IMU values while replaying a recorded camera/pose.
       frameHeading = null;
       for (TrackData data : frame.getUpdatedTrackData(HEADING_TRACK)) {
@@ -205,6 +211,7 @@ final class ArDatasetController {
   }
 
   float[] headingForFrame() { return frameHeading; }
+  Pose playbackStartCameraPose() { return playbackStartCameraPose; }
 
   Double configuredSensorYaw(String asset, Frame frame) {
     if (!MapOrientation.usesSensor(asset) || frameHeading == null) return null;
@@ -223,7 +230,8 @@ final class ArDatasetController {
   boolean expectsMapReference(String asset) {
     return mode == Mode.PLAYBACK && active != null && active.startPoint != null
         && hasOrientation(active) && asset.equals(active.startPoint.mapAsset)
-        && (!MapOrientation.usesSensor(asset) || MapOrientation.matchesRecording(active));
+        && (!MapOrientation.usesSensor(asset) || MapOrientation.SENSOR_SOURCE.equals(active.mapOrientationSource)
+            || MapOrientation.matchesRecording(active));
   }
   void clearMapReference() {
     if (mapReferenceAnchor != null) { mapReferenceAnchor.detach(); mapReferenceAnchor = null; }
@@ -273,7 +281,9 @@ final class ArDatasetController {
 
   private static boolean hasOrientation(ArRecordingStore.Entry entry) {
     return entry != null && entry.startPoint != null
-        && (entry.startPoint.direction != null || MapOrientation.matchesRecording(entry));
+        && (entry.startPoint.direction != null || MapOrientation.matchesRecording(entry)
+            || (MapOrientation.usesSensor(entry.startPoint.mapAsset)
+                && MapOrientation.SENSOR_SOURCE.equals(entry.mapOrientationSource)));
   }
 
   private static Pose referencePose(Pose position, double yaw) {

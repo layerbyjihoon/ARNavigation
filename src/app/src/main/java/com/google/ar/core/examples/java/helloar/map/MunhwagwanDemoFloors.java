@@ -45,7 +45,7 @@ public final class MunhwagwanDemoFloors {
     String description = metadata.description == null ? "" : metadata.description;
     description = description.replace("같은 층 경로만 사용.",
         "층간 계단은 시연용 후보이며 계단 이동 거리는 제외.")
-        .replace("층고·AR 정렬 미확정.", "층고 미측정. AR 정렬은 자북 기준 반시계 85.5°.");
+        .replace("층고·AR 정렬 미확정.", "층고 미측정. AR 정렬은 자북 기준 반시계 70°.");
     IndoorMap map = new IndoorMap(source.schema, source.version,
         new IndoorMapMetadata(metadata.id, metadata.name, description, metadata.createdAt,
             metadata.updatedAt, metadata.author, metadata.source), source.coordinateSystem,

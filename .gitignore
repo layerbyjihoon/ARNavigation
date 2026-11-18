@@ -1,2 +1,8 @@
 # Local installation packages exceed GitHub's regular file size limit.
 /apk/*.apk
+# Local AR replay videos can be large and contain device screen content.
+/qa
+
+# Local verification code and fixtures; not part of the shipped app.
+/src/app/src/test/
+/src/app/src/androidTest/

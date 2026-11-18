@@ -5,13 +5,15 @@ final class StairFloorTracker {
   enum Phase { START_FLOOR, BETWEEN_FLOORS, NEXT_FLOOR }
 
   private static final float BETWEEN_METERS = 0.8f;
-  private static final float UNKNOWN_FLOOR_METERS = 2.4f;
+  private static final float DEFAULT_FLOOR_HEIGHT_METERS = 3.3f;
+  private static final float ARRIVAL_FRACTION = 0.8f;
   private static final long CONFIRM_MS = 1200;
 
   final String startFloor;
   final String nextFloor;
   private final float startCameraY;
   private final int direction;
+  private final float floorHeightMeters;
   private final float nextFloorMeters;
   private final float resetMeters;
   private Phase phase = Phase.START_FLOOR;
@@ -28,8 +30,9 @@ final class StairFloorTracker {
     this.nextFloor = nextFloor;
     this.direction = ascending ? 1 : -1;
     this.startCameraY = startCameraY;
-    nextFloorMeters = mappedRiseMeters >= 2f
-        ? Math.max(1.8f, mappedRiseMeters * 0.8f) : UNKNOWN_FLOOR_METERS;
+    floorHeightMeters = mappedRiseMeters >= 2f
+        ? mappedRiseMeters : DEFAULT_FLOOR_HEIGHT_METERS;
+    nextFloorMeters = Math.max(1.8f, floorHeightMeters * ARRIVAL_FRACTION);
     resetMeters = Math.max(1.3f, nextFloorMeters * 0.6f);
   }
 
@@ -52,6 +55,7 @@ final class StairFloorTracker {
   Phase phase() { return phase; }
   float climbedMeters() { return climbedMeters; }
   float verticalDeltaMeters() { return climbedMeters * direction; }
+  float floorRiseMeters() { return floorHeightMeters * direction; }
   void trackingLost() { nextFloorSince = -1; }
 
   static String label(String floorId) {

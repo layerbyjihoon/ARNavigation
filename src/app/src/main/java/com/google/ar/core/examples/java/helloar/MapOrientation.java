@@ -4,7 +4,7 @@ package com.google.ar.core.examples.java.helloar;
 final class MapOrientation {
   static final String MUNHWAGWAN_ASSET = "maps/munhwagwan.indoor.json";
   static final String SENSOR_SOURCE = "MAGNETIC_NORTH_CCW";
-  static final double MUNHWAGWAN_CCW_DEGREES = 85.5;
+  static final double MUNHWAGWAN_CCW_DEGREES = 70.0;
 
   private MapOrientation() {}
   static boolean usesSensor(String asset) { return MUNHWAGWAN_ASSET.equals(asset); }

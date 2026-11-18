@@ -20,13 +20,19 @@ import android.content.Intent;
 import android.widget.CheckBox;
 import com.google.ar.core.examples.java.helloar.segmentation.SegmentationController;
 import com.google.ar.core.examples.java.helloar.localization.*;
+import com.google.ar.core.examples.java.helloar.coordinates.*;
+import com.google.ar.core.examples.java.helloar.map.*;
+import com.google.ar.core.examples.java.helloar.routing.*;
 import com.google.ar.core.examples.java.helloar.debug.SegmentationDebugOverlay;
 import android.content.SharedPreferences;
 import android.content.Context;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.text.InputType;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.widget.EditText;
+import android.widget.SeekBar;
 import androidx.appcompat.app.AlertDialog;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
@@ -41,6 +47,8 @@ import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
 import com.google.ar.core.ArCoreApk.Availability;
 import com.google.ar.core.Camera;
+import com.google.ar.core.CameraConfig;
+import com.google.ar.core.CameraConfigFilter;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
 import com.google.ar.core.Pose;
@@ -69,6 +77,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 import android.view.View;
@@ -87,11 +97,20 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   private static final float ARRIVAL_DISTANCE = 0.8f;
   private static final long DEBUG_UPDATE_INTERVAL_MS = 200;
+  private static final String EXPERIMENT_RECORDING_ID =
+      "30f9c2f2-bbe1-4ed4-9e8c-bca748f8098b";
+  private static final float EXPERIMENT_CAMERA_HEIGHT_METERS = 1.1f;
 
   // Only these requests cross from the UI thread to the GL render thread.
   private final AtomicReference<Boolean> startFromUi = new AtomicReference<>();
   private volatile boolean resetNavigationRequested;
   private final AtomicReference<ArRoutePlan> pendingMapRoute = new AtomicReference<>();
+  private final AtomicBoolean experimentLoading = new AtomicBoolean();
+  private volatile boolean experimentReplay;
+  private volatile boolean experimentAutoStartPending;
+  private volatile double debugMapAngleDegrees = MapOrientation.MUNHWAGWAN_CCW_DEGREES;
+  private View angleDebugControls;
+  private TextView angleDebugValue;
   private static final int MAP_ROUTE_REQUEST = 1001;
   private String selectedMapRouteName;
   private ArRoutePlan activeMapPlan;
@@ -137,6 +156,12 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private SegmentationController segmentation;
   private SegmentationDebugOverlay semanticOverlay;
   private final RouteAlignmentManager semanticAlignment=new RouteAlignmentManager();
+  private final CorridorCenterEstimator corridorCenterEstimator = new CorridorCenterEstimator();
+  private final CorridorCenterTracker corridorCenter = new CorridorCenterTracker();
+  private double lastCenterRouteYaw = Double.NaN;
+  private long lastCorridorEvidenceMs;
+  private float lastCorridorWidth;
+  private boolean lastCorridorSingleWall;
   private volatile boolean semanticCorrectionEnabled=true,compareSemanticRoutes;
   private long lastSemanticUi;
   private boolean lastCorrectionAccepted;
@@ -154,6 +179,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private String alignmentStatus;
   private String startLocation;
   private Anchor originAnchor;
+  private Anchor requestedStartAnchor;
+  private boolean captureStartOnTracking;
   private boolean startNavigationRequested;
   private boolean navigationStarted;
   private boolean navigationCompleted;
@@ -223,6 +250,32 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       toolsPanel.setVisibility(open ? View.VISIBLE : View.GONE);
       toolsToggle.setText(open ? R.string.nav_tools_close : R.string.nav_tools_open);
     });
+    angleDebugControls = findViewById(R.id.angle_debug_controls);
+    angleDebugValue = findViewById(R.id.angle_debug_value);
+    EditText angleInput = findViewById(R.id.angle_debug_input);
+    SeekBar angleSeek = findViewById(R.id.angle_debug_seek);
+    angleInput.setText(String.format(Locale.US, "%.1f", debugMapAngleDegrees));
+    angleSeek.setProgress((int) Math.round(debugMapAngleDegrees * 2));
+    angleSeek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+      @Override public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+        if (fromUser) angleInput.setText(String.format(Locale.US, "%.1f", progress / 2.0));
+      }
+      @Override public void onStartTrackingTouch(SeekBar bar) { }
+      @Override public void onStopTrackingTouch(SeekBar bar) { }
+    });
+    angleInput.addTextChangedListener(new TextWatcher() {
+      @Override public void beforeTextChanged(CharSequence text, int start, int count, int after) { }
+      @Override public void onTextChanged(CharSequence text, int start, int before, int count) {
+        try {
+          double degrees = Double.parseDouble(text.toString().replace(',', '.'));
+          if (degrees < 0 || degrees > 360) return;
+          debugMapAngleDegrees = degrees;
+          angleDebugValue.setText(getString(R.string.angle_debug_value_format, degrees));
+          angleSeek.setProgress((int) Math.round(degrees * 2));
+        } catch (NumberFormatException ignored) { }
+      }
+      @Override public void afterTextChanged(Editable text) { }
+    });
     Button visionDebugButton = findViewById(R.id.vision_debug_button);
     visionDebugButton.setOnClickListener(v -> {
       visionDebugEnabled = !visionDebugEnabled;
@@ -249,12 +302,15 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     segmentation=new SegmentationController(getAssets());
     semanticOverlay=findViewById(R.id.semantic_overlay);
     CheckBox runModel=findViewById(R.id.semantic_enable),correct=findViewById(R.id.semantic_correction);
-    CheckBox mask=findViewById(R.id.semantic_mask),landmarks=findViewById(R.id.semantic_landmarks),status=findViewById(R.id.semantic_status);
+    CheckBox mask=findViewById(R.id.semantic_mask),landmarks=findViewById(R.id.semantic_landmarks),
+        boundaries=findViewById(R.id.semantic_boundaries),status=findViewById(R.id.semantic_status);
     runModel.setOnCheckedChangeListener((button,checked)->segmentation.setEnabled(checked));
     correct.setOnCheckedChangeListener((button,checked)->semanticCorrectionEnabled=checked);
     android.widget.CompoundButton.OnCheckedChangeListener display=(button,checked)->
-        semanticOverlay.configure(mask.isChecked(),landmarks.isChecked(),status.isChecked());
-    mask.setOnCheckedChangeListener(display);landmarks.setOnCheckedChangeListener(display);status.setOnCheckedChangeListener(display);
+        semanticOverlay.configure(mask.isChecked(),landmarks.isChecked(),boundaries.isChecked(),status.isChecked());
+    mask.setOnCheckedChangeListener(display);landmarks.setOnCheckedChangeListener(display);
+    boundaries.setOnCheckedChangeListener(display);status.setOnCheckedChangeListener(display);
+    semanticOverlay.configure(mask.isChecked(),landmarks.isChecked(),boundaries.isChecked(),status.isChecked());
     ((CheckBox)findViewById(R.id.semantic_compare)).setOnCheckedChangeListener((button,checked)->compareSemanticRoutes=checked);
     try {
       recordingStore = new ArRecordingStore(getFilesDir());
@@ -273,6 +329,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
     }
     updateDatasetControls();
+    findViewById(R.id.experiment_replay_button).setOnClickListener(v -> startExperimentReplay());
     alignmentPreferences = getSharedPreferences("map_alignment", MODE_PRIVATE);
     loadReferenceBearing();
     findViewById(R.id.calibrate_button).setOnClickListener(v -> showAlignmentDialog());
@@ -413,6 +470,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
     // Note that order matters - see the note in onPause(), the reverse applies here.
     try {
+      if (newSession && (datasets == null || datasets.mode() != ArDatasetController.Mode.PLAYBACK))
+        logArCameraOptions();
       configureSession();
       if (newSession && datasets != null) datasets.configureNewSession(session);
       session.resume();
@@ -723,6 +782,14 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     }
     long now = SystemClock.elapsedRealtime();
     stairFloorTracker.update(camera.getPose().ty(), now);
+    if (stairFloorTracker.phase() == StairFloorTracker.Phase.NEXT_FLOOR
+        && activeMapPlan != null && activeStageIndex + 1 < activeMapPlan.stages.size()) {
+      // Height confirmation must advance the route even if the stair entrance waypoint
+      // was missed while the user was climbing.
+      if (!waitingForFloorChange && awaitNextFloor())
+        Log.i(TAG, "AR height confirmed floor transition to " + stairFloorTracker.nextFloor);
+      if (waitingForFloorChange) startNavigationRequested = true;
+    }
     if (now - lastFloorEstimatePostAt < 250) return;
     lastFloorEstimatePostAt = now;
     floorEstimatePostedVisible = true;
@@ -804,13 +871,25 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     String line = observedStairLine != null ? display + ": 깊이 보정 위치"
         : fallbackStairLine != null ? display + ": 임시 위치"
         : display + ": 계단 관측 전";
+    SegmentationController.Completed latestSemantic = segmentation.latest();
+    int boundaryLines = latestSemantic == null ? 0 : latestSemantic.wallBoundaries.size();
+    String corridor = String.format(Locale.getDefault(),
+        "\n벽·바닥 경계 %d선 · 복도 보정: %s · 각도 %+.1f° X %+.2f / Z %+.2f m",
+        boundaryLines,
+        now - lastCorridorEvidenceMs < (lastCorridorSingleWall ? 4000 : 1800)
+            ? lastCorridorSingleWall ? "한쪽 벽에서 1.0m"
+                : String.format(Locale.getDefault(), "양쪽 벽 중앙(폭 %.1f m)", lastCorridorWidth)
+            : "관측 부족",
+        Math.toDegrees(corridorCenter.yaw()), corridorCenter.x(), corridorCenter.z());
     String status = (camera.getTrackingState() == TrackingState.TRACKING ? "" : "추적 대기\n")
-        + model + "\n" + depth + "\n" + line;
+        + model + "\n" + depth + "\n" + line + corridor;
     visionDebugText.post(() -> visionDebugText.setText(status));
   }
 
   private void prepareStairFallback(ArRoutePlan.Stage stage) {
     if (fallbackStairLine != null) return;
+    corridorCenter.reset();
+    lastCorridorEvidenceMs = 0;
     fallbackStairPath = StairFallbackPath.from(route, "STAIR_UP".equals(stage.transition));
     fallbackStairLine = new RouteLineGeometry(
         fallbackStairPath.waypoints, fallbackStairPath.start);
@@ -877,10 +956,12 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     if (confirmed != null && !navigationStarted && !startNavigationRequested
         && (confirmed || (!returnToStartRequired && !navigationCompleted))) {
       detachRouteEntryAnchor();
+      detachRequestedStartAnchor();
       alignmentStatus = null;
       returnToStartRequired |= navigationCompleted;
       navigationCompleted = false;
       startNavigationRequested = true;
+      captureStartOnTracking = true;
     }
     ArRoutePlan plan = pendingMapRoute.getAndSet(null);
     if (plan != null) {
@@ -913,6 +994,10 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       pendingBearing.set(null);
       routeLineGeometry = new RouteLineGeometry(route);
       Log.i(TAG, "Map route applied: " + plan.name + ", waypoints=" + route.size());
+      if (experimentReplay && experimentAutoStartPending) {
+        experimentAutoStartPending = false;
+        startNavigationRequested = true;
+      }
     }
     if (resetNavigationRequested) {
       resetNavigationRequested = false;
@@ -988,25 +1073,33 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       return;
     }
     try {
-      if (waitingForFloorChange) {
-        observedStairLine = null;
-        observedStairMarker = null;
-        fallbackStairPath = null;
-        fallbackStairLine = null;
-        stairApproachLine = null;
-        stairFloorTracker = null;
-        activeStageIndex++;
-        route = activeMapPlan.stages.get(activeStageIndex).waypoints;
-        routeLineGeometry = new RouteLineGeometry(route);
-        // The semantic map uses the first floor's local origin and landmarks.
-        // Do not apply those corrections after re-anchoring on another floor.
-        segmentation.setMap(null);
-        waitingForFloorChange = false;
-        returnToStartRequired = false;
-        startLocation = activeMapPlan.stages.get(activeStageIndex).floorId + " 출구";
+      boolean nextFloorStart = waitingForFloorChange;
+      if (captureStartOnTracking && requestedStartAnchor == null)
+        requestedStartAnchor = session.createAnchor(camera.getPose());
+      if (requestedStartAnchor != null
+          && requestedStartAnchor.getTrackingState() != TrackingState.TRACKING) {
+        if (requestedStartAnchor.getTrackingState() == TrackingState.STOPPED) {
+          resetNavigation();
+          startNavigationRequested = false;
+          alignmentStatus = "출발 위치 추적이 끊겼습니다. 실제 출발점에서 다시 시작하세요.";
+        } else {
+          alignmentStatus = "안내 시작 위치의 추적을 복구하는 중입니다.";
+        }
+        return;
       }
+      Float expectedNextFloorY = null;
       Double yaw = null;
-      if (datasets != null && !routeUseManualAlignment && !alignmentKey.equals(datasetAlignmentOverride)) {
+      if (nextFloorStart && originAnchor != null
+          && originAnchor.getTrackingState() == TrackingState.TRACKING) {
+        Pose previousRoute = correctedRoutePose();
+        float[] axis = previousRoute.getZAxis();
+        yaw = Math.atan2(axis[0], axis[2]);
+        if (stairFloorTracker != null)
+          expectedNextFloorY = originAnchor.getPose().ty() - 0.52f
+              + stairFloorTracker.floorRiseMeters();
+      }
+      if (yaw == null && datasets != null && !routeUseManualAlignment
+          && !alignmentKey.equals(datasetAlignmentOverride)) {
         Pose recordedReference = datasets.mapReferenceFor(alignmentKey);
         if (recordedReference != null) {
           float[] axis = recordedReference.getZAxis();
@@ -1082,19 +1175,63 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
             : "방위 센서가 불안정합니다. 기기를 천천히 8자로 움직이거나 복도 방향으로 재보정하세요.";
         return;
       }
-      Float floorY = findFloor(camera.getPose());
+      Pose playbackStart = experimentReplay && datasets != null
+          ? datasets.playbackStartCameraPose() : null;
+      if (experimentReplay && playbackStart == null) {
+        alignmentStatus = "녹화의 첫 추적 위치를 복원하는 중입니다.";
+        return;
+      }
+      // The stair A→B experiment uses its recorded first camera pose. Plane estimates
+      // during replay vary, so hold the route at an assumed 1.1 m camera height.
+      Pose startPose = experimentReplay ? playbackStart
+          : requestedStartAnchor != null ? requestedStartAnchor.getPose() : camera.getPose();
+      Float floorY = experimentReplay
+          ? playbackStart.ty() - EXPERIMENT_CAMERA_HEIGHT_METERS
+          : findFloor(startPose, expectedNextFloorY);
+      if (floorY == null && nextFloorStart && expectedNextFloorY != null
+          && stairFloorTracker != null
+          && stairFloorTracker.phase() == StairFloorTracker.Phase.NEXT_FLOOR
+          && FloorPlaneGeometry.isNearbyFloor(
+              camera.getPose().ty() - expectedNextFloorY, 0f)) {
+        // ARCore Y confirmed the floor change, but the exit floor plane may not
+        // have been detected yet. Use the expected floor height until it is.
+        floorY = expectedNextFloorY;
+      }
       if (floorY == null) {
         alignmentStatus = "가까운 앞쪽 바닥을 천천히 비춰 수평면을 인식시켜 주세요.";
         return;
       }
       // Existing route vertices are at y=-0.5; place the ribbon 2cm above the floor.
-      Pose origin = yawPose(camera.getPose().tx(), floorY + 0.52f,
-          camera.getPose().tz(), yaw);
-      routeCameraHeight = camera.getPose().ty() - floorY;
+      Pose origin = yawPose(startPose.tx(), floorY + 0.52f,
+          startPose.tz(), yaw);
+      routeCameraHeight = experimentReplay ? EXPERIMENT_CAMERA_HEIGHT_METERS
+          : startPose.ty() - floorY;
       Anchor newOrigin = session.createAnchor(origin);
       detachOriginAnchor();
       originAnchor = newOrigin;
       detachRouteEntryAnchor();
+      detachRequestedStartAnchor();
+      if (nextFloorStart) {
+        observedStairLine = null;
+        observedStairMarker = null;
+        fallbackStairPath = null;
+        fallbackStairLine = null;
+        stairApproachLine = null;
+        stairFloorTracker = null;
+        activeStageIndex++;
+        route = activeMapPlan.stages.get(activeStageIndex).waypoints;
+        routeLineGeometry = new RouteLineGeometry(route);
+        // Corrections from the previous floor's landmarks must not move this stage.
+        semanticAlignment.reset();
+        corridorCenter.reset();
+        lastCenterRouteYaw = Double.NaN;
+        lastCorridorEvidenceMs = 0;
+        segmentation.setMap(null);
+        waitingForFloorChange = false;
+        returnToStartRequired = false;
+        startLocation = activeMapPlan.stages.get(activeStageIndex).floorId + " 출구";
+        Log.i(TAG, "Next floor stage anchored: " + startLocation);
+      }
       currentWaypointIndex = 0;
       navigationStarted = true;
       if (activeMapPlan != null) {
@@ -1110,7 +1247,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       startNavigationRequested = false;
       routeLineGeometry.invalidate();
       lastDebugUpdateTime = 0;
-      Log.i(TAG, "Navigation started: origin=(0,0,0), target=WP1");
+      Log.i(TAG, "Navigation started: frame=" + frame.getTimestamp()
+          + " origin=" + originAnchor.getPose() + " target=WP1");
     } catch (NotTrackingException e) {
       // Tracking may change while ARCore processes the request. Retry next frame.
       Log.w(TAG, "Waiting for tracking before creating the origin", e);
@@ -1119,6 +1257,9 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   private void resetNavigation() {
     semanticAlignment.reset();
+    corridorCenter.reset();
+    lastCenterRouteYaw = Double.NaN;
+    lastCorridorEvidenceMs = 0;
     if (segmentation != null) segmentation.invalidate();
     observedStairLine = null;
     observedStairMarker = null;
@@ -1132,6 +1273,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     lastStairDepthPointCount = 0;
     detachOriginAnchor();
     detachRouteEntryAnchor();
+    detachRequestedStartAnchor();
     returnToStartRequired |= navigationStarted || navigationCompleted;
     navigationStarted = false;
     navigationCompleted = false;
@@ -1147,6 +1289,14 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   private void detachRouteEntryAnchor() {
     if (routeEntryAnchor != null) { routeEntryAnchor.detach(); routeEntryAnchor = null; }
+  }
+
+  private void detachRequestedStartAnchor() {
+    if (requestedStartAnchor != null) {
+      requestedStartAnchor.detach();
+      requestedStartAnchor = null;
+    }
+    captureStartOnTracking = false;
   }
 
   private void detachOriginAnchor() {
@@ -1265,6 +1415,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   private boolean awaitNextFloor() {
     if (activeMapPlan == null || activeStageIndex + 1 >= activeMapPlan.stages.size()) return false;
     ArRoutePlan.Stage stage = activeMapPlan.stages.get(activeStageIndex);
+    navigationStarted = false;
     navigationCompleted = false;
     waitingForFloorChange = true;
     returnToStartRequired = false;
@@ -1377,6 +1528,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     record.setText(mode == ArDatasetController.Mode.RECORDING
         ? R.string.ar_record_stop : R.string.ar_record_start);
     findViewById(R.id.recordings_button).setEnabled(datasets != null);
+    findViewById(R.id.experiment_replay_button).setEnabled(
+        datasets != null && mode != ArDatasetController.Mode.RECORDING && !experimentLoading.get());
     findViewById(R.id.stop_playback_button).setVisibility(playback ? View.VISIBLE : View.GONE);
     TextView status = findViewById(R.id.dataset_status);
     status.setVisibility(playback || mode == ArDatasetController.Mode.RECORDING
@@ -1439,10 +1592,83 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
         resetNavigation();
         startNavigationRequested = false;
         alignmentStatus = MapOrientation.usesSensor(request.point.mapAsset)
-            ? "폰 방위 센서와 반시계 85.5°로 문화관 방향을 적용했습니다. 길안내 시작을 누르세요."
+            ? "폰 방위 센서와 반시계 70°로 문화관 방향을 적용했습니다. 길안내 시작을 누르세요."
             : "문에서 복도 쪽을 바라보는 출발 방향을 적용했습니다. 길안내 시작을 누르세요.";
       }
     }
+  }
+
+  private void startExperimentReplay() {
+    if (datasets == null || recordingStore == null
+        || datasets.mode() == ArDatasetController.Mode.RECORDING
+        || !experimentLoading.compareAndSet(false, true)) return;
+    ArRecordingStore.Entry recording = null;
+    for (ArRecordingStore.Entry entry : recordingStore.list()) {
+      if (entry.playable() && EXPERIMENT_RECORDING_ID.equals(entry.id)
+          && entry.startPoint != null
+          && MapRouteActivity.MUNHWAGWAN_MAP.equals(entry.startPoint.mapAsset)
+          && "F3_STAIR_A".equals(entry.startPoint.nodeId)) {
+        recording = entry;
+        break;
+      }
+    }
+    if (recording == null) {
+      experimentLoading.set(false);
+      Toast.makeText(this, R.string.experiment_replay_missing, Toast.LENGTH_LONG).show();
+      return;
+    }
+    Button button = findViewById(R.id.experiment_replay_button);
+    button.setEnabled(false);
+    ArRecordingStore.Entry selected = recording;
+    new Thread(() -> {
+      try {
+        ArRoutePlan plan = buildExperimentRoute();
+        runOnUiThread(() -> {
+          experimentLoading.set(false);
+          button.setEnabled(true);
+          if (isFinishing() || !activityResumed) return;
+          switchDataset(selected);
+          if (datasets.mode() != ArDatasetController.Mode.PLAYBACK) return;
+          experimentReplay = true;
+          experimentAutoStartPending = true;
+          pendingMapRoute.set(plan);
+          angleDebugControls.setVisibility(View.VISIBLE);
+          findViewById(R.id.ar_tools_panel).setVisibility(View.GONE);
+          ((Button) findViewById(R.id.ar_tools_toggle)).setText(R.string.nav_tools_open);
+          Log.i(TAG, "Experiment replay started with live map angle " + debugMapAngleDegrees);
+        });
+      } catch (Exception error) {
+        Log.e(TAG, "Experiment route unavailable", error);
+        runOnUiThread(() -> {
+          experimentLoading.set(false);
+          button.setEnabled(true);
+          if (!isFinishing()) Toast.makeText(this,
+              "실험 경로를 열 수 없습니다: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        });
+      }
+    }, "ar-experiment-route").start();
+  }
+
+  private ArRoutePlan buildExperimentRoute() throws IOException {
+    MapLoadResult loaded = new IndoorMapRepository().loadFromAsset(
+        getAssets()::open, MapRouteActivity.MUNHWAGWAN_MAP);
+    if (!loaded.isSuccess()) throw new IOException("문화관 지도를 불러오지 못했습니다.");
+    NavigationRoute path = new AStarRouteEngine(loaded.graph)
+        .findRoute("F3_STAIR_A", "F3_STAIR_B", RouteOptions.DEFAULT).route;
+    if (path == null || path.nodes.size() < 2)
+      throw new IOException("계단 A→B 경로를 찾지 못했습니다.");
+    MapCoordinateTransformer transformer = new LocalMapCoordinateTransformer(
+        loaded.map.coordinateSystem, path.nodes.get(0).position,
+        new MapPosition(0, -0.5, 0), 0);
+    List<MapPosition> points = RouteCoordinateAdapter.toAr(path, transformer);
+    float[] packed = new float[points.size() * 3];
+    for (int i = 0; i < points.size(); i++) {
+      packed[i * 3] = (float) points.get(i).x;
+      packed[i * 3 + 1] = (float) points.get(i).y;
+      packed[i * 3 + 2] = (float) points.get(i).z;
+    }
+    return ArRoutePlan.decode("계단 A→B 각도 시험", packed,
+        MapRouteActivity.MUNHWAGWAN_MAP, null, null, "3층 계단 A");
   }
 
   // Stop the GL thread before changing the session's source. Both sources feed the same renderer.
@@ -1451,6 +1677,9 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     if (datasets.mode() == ArDatasetController.Mode.RECORDING) {
       Toast.makeText(this, "녹화를 먼저 종료하세요.", Toast.LENGTH_LONG).show(); return;
     }
+    experimentReplay = false;
+    experimentAutoStartPending = false;
+    angleDebugControls.setVisibility(View.GONE);
     displayRotationHelper.onPause();
     surfaceView.onPause();
     headingSensor.pause();
@@ -1517,7 +1746,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     AlertDialog dialog = new AlertDialog.Builder(this)
         .setTitle("건물 기준 방향 보정")
         .setMessage(MapOrientation.usesSensor(dialogKey)
-            ? "문화관 기본 정렬은 폰 센서의 자북에서 반시계 85.5°(방위각 274.5°)입니다. 아래 수동 설정은 기본 정렬 대신 사용하며 85.5°를 추가로 더하지 않습니다. 현재 방향은 도면 위쪽을 바라볼 때만 사용하세요. 설정하면 안내가 초기화됩니다."
+            ? "문화관 기본 정렬은 폰 센서의 자북에서 반시계 70°(방위각 290°)입니다. 아래 수동 설정은 기본 정렬 대신 사용하며 70°를 추가로 더하지 않습니다. 현재 방향은 도면 위쪽을 바라볼 때만 사용하세요. 설정하면 안내가 초기화됩니다."
             : "지도 회전각 0°의 기준을 설정합니다. 측정한 자북 방위를 입력하거나 카메라 정면을 실제 기준 방향으로 향한 뒤 현재 방향을 누르세요. 설정하면 안내가 초기화됩니다.")
         .setView(input)
         .setPositiveButton("방위 저장", null)
@@ -1545,7 +1774,9 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     catch (IllegalArgumentException e) { return null; }
   }
 
-  private Float findFloor(Pose camera) {
+  private Float findFloor(Pose camera) { return findFloor(camera, null); }
+
+  private Float findFloor(Pose camera, Float expectedY) {
     Float height = null;
     for (Plane plane : session.getAllTrackables(Plane.class)) {
       if (plane.getTrackingState() != TrackingState.TRACKING || plane.getSubsumedBy() != null
@@ -1560,7 +1791,9 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       float distance = FloorPlaneGeometry.distanceToPolygon(
           plane.getPolygon(), localCamera[0], localCamera[2]);
       if (FloorPlaneGeometry.isNearbyFloor(below, distance)
-          && (height == null || y < height)) height = y;
+          && (expectedY == null || Math.abs(y - expectedY) <= 0.5f)
+          && (height == null || (expectedY == null ? y < height
+              : Math.abs(y - expectedY) < Math.abs(height - expectedY)))) height = y;
     }
     return height;
   }
@@ -1579,18 +1812,27 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
 
   private Pose correctedRoutePose() {
     Rigid2D transform=semanticAlignment.current();
-    return levelAnchorPose().compose(yawPose((float)transform.x,0,(float)transform.z,transform.yaw));
+    double angleDelta = experimentReplay && MapOrientation.usesSensor(alignmentKey)
+        && !routeUseManualAlignment
+        ? Math.toRadians(debugMapAngleDegrees - MapOrientation.MUNHWAGWAN_CCW_DEGREES) : 0;
+    return levelAnchorPose().compose(yawPose(
+        corridorCenter.poseX((float) transform.x, (float) transform.z), 0,
+        corridorCenter.poseZ((float) transform.x, (float) transform.z),
+        transform.yaw + corridorCenter.yaw() + angleDelta));
   }
 
   private void processSemanticFrame(Frame frame) {
     boolean tracking=frame.getCamera().getTrackingState()==TrackingState.TRACKING;
     boolean anchored=navigationStarted&&originAnchor!=null&&originAnchor.getTrackingState()==TrackingState.TRACKING;
     SegmentationController.Completed completed=segmentation.takeCompleted();
-    if(completed!=null&&semanticCorrectionEnabled&&segmentation.isEnabled()&&tracking&&anchored)
+    if(completed!=null&&semanticCorrectionEnabled&&!experimentReplay
+        &&segmentation.isEnabled()&&tracking&&anchored)
       lastCorrectionAccepted=semanticAlignment.accept(completed.match,frame.getTimestamp());
-    semanticAlignment.tick(frame.getTimestamp(),tracking&&anchored&&semanticCorrectionEnabled&&segmentation.isEnabled());
+    semanticAlignment.tick(frame.getTimestamp(),tracking&&anchored&&semanticCorrectionEnabled
+        &&!experimentReplay&&segmentation.isEnabled());
     segmentation.onFrame(frame,anchored?levelAnchorPose():null,tracking&&anchored,semanticAlignment.current());
     long now=SystemClock.elapsedRealtime();
+    updateCorridorCenter(completed, anchored && tracking, now);
     if(now-lastSemanticUi<500)return;
     lastSemanticUi=now;
     SegmentationController.Completed latest=segmentation.latest();
@@ -1604,7 +1846,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       for(LandmarkObservation ob:latest.observations){if(ob.type.equals("DOOR"))doors++;if(ob.type.equals("STAIRS"))stairs++;if(ob.metricValid)depth++;}
       message.append(String.format(Locale.US,"\n%.0f ms · door %d stairs %d · 3D %d",latest.segmentation.inferenceMillis,doors,stairs,depth));
       message.append("\n").append(latest.match.status).append(" ").append(latest.match.reason);
-      message.append("\n누적 구조물 ").append(latest.accumulatedCount).append(" · 복도 방향 ").append(latest.corridorYaw==null?"대기":"합의");
+      message.append("\n누적 문·계단 ").append(latest.accumulatedCount).append(" · 복도 방향 ").append(latest.corridorYaw==null?"대기":"합의");
       message.append("\n확인 추적 ").append(latest.confirmedTracks).append(" · 경로 2D 추적 ").append(latest.bearingTracks);
       message.append(String.format(Locale.US,"\ncandidates %d inliers %d residual %.3f %s",latest.match.candidates,latest.match.inliers,latest.match.residual,latest.match.residualUnit));
       float[] pose=latest.segmentation.frame.cameraToWorld;
@@ -1618,6 +1860,41 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     });
   }
 
+  private void updateCorridorCenter(SegmentationController.Completed completed,
+      boolean anchored, long nowMs) {
+    if (!anchored || activeMapPlan == null || !segmentation.isEnabled()
+        || experimentReplay
+        || fallbackStairPath != null
+        || currentWaypointIndex >= route.size()) {
+      corridorCenter.reset();
+      lastCenterRouteYaw = Double.NaN;
+      lastCorridorEvidenceMs = 0;
+      return;
+    }
+    Waypoint from = currentWaypointIndex == 0
+        ? new Waypoint(0, route.get(0).y, 0) : route.get(currentWaypointIndex - 1);
+    Waypoint to = route.get(currentWaypointIndex);
+    double routeYaw = Math.atan2(to.x - from.x, to.z - from.z);
+    if (Double.isFinite(lastCenterRouteYaw)
+        && Math.abs(Rigid2D.wrap(routeYaw - lastCenterRouteYaw)) > Math.toRadians(20)) {
+      corridorCenter.reset();
+      lastCorridorEvidenceMs = 0;
+    }
+    lastCenterRouteYaw = routeYaw;
+    if (completed != null && completed.segmentation != null) {
+      CorridorCenterEstimator.Observation observation = corridorCenterEstimator.estimate(
+          completed.segmentation, completed.wallBoundaries, route, currentWaypointIndex,
+          semanticAlignment.current());
+      if (observation != null) {
+        lastCorridorEvidenceMs = nowMs;
+        lastCorridorWidth = observation.width;
+        lastCorridorSingleWall = observation.singleWall;
+      }
+      corridorCenter.observe(observation, nowMs);
+    }
+    corridorCenter.tick(nowMs);
+  }
+
   /** Configures the session with feature settings. */
   private void configureSession() {
     Config config = session.getConfig();
@@ -1627,5 +1904,33 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
         ? Config.DepthMode.AUTOMATIC : Config.DepthMode.DISABLED);
     config.setInstantPlacementMode(Config.InstantPlacementMode.DISABLED);
     session.configure(config);
+  }
+
+  private void logArCameraOptions() {
+    try {
+      CameraConfigFilter filter = new CameraConfigFilter(session);
+      filter.setFacingDirection(CameraConfig.FacingDirection.BACK);
+      CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+      Set<String> seen = new HashSet<>();
+      Log.i(TAG, "ARCore active camera ID=" + session.getCameraConfig().getCameraId());
+      for (CameraConfig option : session.getSupportedCameraConfigs(filter)) {
+        String id = option.getCameraId();
+        if (!seen.add(id)) continue;
+        String fov = "unknown";
+        try {
+          CameraCharacteristics camera = manager.getCameraCharacteristics(id);
+          android.util.SizeF sensor = camera.get(
+              CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE);
+          float[] focal = camera.get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS);
+          if (sensor != null && focal != null && focal.length > 0 && focal[0] > 0)
+            fov = String.format(Locale.US, "%.1f°", Math.toDegrees(
+                2 * Math.atan(sensor.getWidth() / (2 * focal[0]))));
+        } catch (Exception ignored) { }
+        Log.i(TAG, "ARCore rear camera option ID=" + id + " horizontal FOV≈" + fov
+            + " image=" + option.getImageSize() + " depth=" + option.getDepthSensorUsage());
+      }
+    } catch (Exception e) {
+      Log.w(TAG, "ARCore camera options unavailable", e);
+    }
   }
 }

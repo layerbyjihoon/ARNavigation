@@ -30,9 +30,7 @@ final class ArRecordingDialogs {
       details.setText(entry.fileName + "\n시작: " + date.format(new Date(entry.startedAt))
           + "\n출발 지점: " + RecordingStartPoint.describe(entry.startPoint)
           + (entry.startPoint == null ? "" : "\n" + entry.startPoint.coordinates())
-          + (entry.startPoint == null ? "" : "\n녹화 기준: " + (MapOrientation.matchesRecording(entry)
-              ? entry.startPoint.directionDescription()
-              : entry.startPoint.direction == null ? "기존 수동 정렬" : entry.startPoint.direction.description()))
+          + (entry.startPoint == null ? "" : "\n녹화 기준: " + orientationLabel(entry))
           + (entry.endedAt == 0 ? "" : "\n종료: " + date.format(new Date(entry.endedAt)))
           + String.format(java.util.Locale.getDefault(), "\n녹화 시간: %.1f초 · %s",
               entry.durationMillis / 1000.0, Formatter.formatFileSize(context, entry.sizeBytes))
@@ -56,6 +54,18 @@ final class ArRecordingDialogs {
       buttons.addView(play); buttons.addView(delete); rows.addView(buttons);
     }
     ScrollView scroll = new ScrollView(context); scroll.addView(rows); dialog.setView(scroll); dialog.show();
+  }
+
+  private static String orientationLabel(ArRecordingStore.Entry entry) {
+    if (MapOrientation.usesSensor(entry.startPoint.mapAsset)
+        && MapOrientation.SENSOR_SOURCE.equals(entry.mapOrientationSource)
+        && entry.mapCounterClockwiseDegrees != null) {
+      return String.format(java.util.Locale.getDefault(),
+          "폰 방위 센서 · 녹화 시 반시계 %.1f° · 재생 시 반시계 %.1f°",
+          entry.mapCounterClockwiseDegrees, MapOrientation.MUNHWAGWAN_CCW_DEGREES);
+    }
+    return entry.startPoint.direction == null
+        ? "기존 수동 정렬" : entry.startPoint.direction.description();
   }
 
   private static String statusLabel(String status) {

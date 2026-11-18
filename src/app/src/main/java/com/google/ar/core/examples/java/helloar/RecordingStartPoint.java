@@ -39,7 +39,7 @@ final class RecordingStartPoint {
     return point == null ? "미지정" : point.description();
   }
   String directionDescription() {
-    if (MapOrientation.usesSensor(mapAsset)) return "폰 방위 센서 · 자북 기준 반시계 85.5°"
+    if (MapOrientation.usesSensor(mapAsset)) return "폰 방위 센서 · 자북 기준 반시계 70°"
         + (direction == null ? "" : String.format(Locale.getDefault(), " · 복도 쪽 방위 %.1f°",
             MapOrientation.entryBearing(direction.canonicalYawDegrees)));
     return direction == null ? "자동 출발 방향 없음 · 기존 방향 보정 사용" : direction.description();

@@ -37,7 +37,7 @@ final class RecordingStartDialog {
     int pad = (int) (20 * activity.getResources().getDisplayMetrics().density);
     content.setPadding(pad, pad / 2, pad, pad / 2);
     TextView guidance = new TextView(activity);
-    guidance.setText("선택한 실제 위치에 서세요. 문화관은 폰 방위 센서와 반시계 85.5°로 정렬합니다. 출발 위치를 자동으로 인식하지는 않습니다.");
+    guidance.setText("선택한 실제 위치에 서세요. 문화관은 폰 방위 센서와 반시계 70°로 정렬합니다. 출발 위치를 자동으로 인식하지는 않습니다.");
     content.addView(guidance);
     maps = addSpinner(content, "지도", R.id.record_start_map);
     floors = addSpinner(content, "층", R.id.record_start_floor);
