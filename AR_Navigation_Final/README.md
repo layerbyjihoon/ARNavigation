@@ -8,9 +8,11 @@ Android Studio에서 **이 폴더(`AR_Navigation_Final`)**를 열고 `app`을 �
 2. 검색에서 문화관을 선택하고 목적 호실을 설정합니다.
 3. 문화관 앞문(위도 37.49637, 경도 126.95442)까지의 TMAP 경로가 준비되면 지도에서 AR 안내를 시작합니다.
 4. 출입구 30m 이내의 최신 GPS(5초 이내, 수평 정확도 20m 이하)가 관측되면 전환 추론을 시작합니다.
-5. gate1~4 구조 유사도의 최댓값이 0.75 이상인 유효·최신 프레임 하나로 실내 전환을 확정합니다.
+5. 실내 구조 유사도가 0.75 이상이고 유리문 밖을 포함한 실외 기준 유사도가 0.90 미만인 프레임이 300ms 이상에 걸쳐 3개 연속 관측되면 실내 전환을 확정합니다.
 6. 실외 GPS·방향 센서·CameraX와 전환 모델을 정리하고 **카메라 CLOSED 확인 후** 실내 ARCore 화면을 엽니다.
 7. 전달된 첫 호실 경로는 추적·방향·바닥이 준비되면 한 번 자동 시작합니다. 실제 출발점은 F1_C006·F1_C007 중점(X 12.251m, Z 3.0465m)입니다.
+
+문화관 안에서 출발할 때는 지도 메뉴의 **문화관 실내에서 출발** 또는 실내 AR의 **실외 목적지**를 선택합니다. 실외 목적지와 현재 실내 출발점을 고른 뒤 정문까지 안내받습니다. 문 밖으로 나가면서 가까운 바닥과 주변을 비추면 현재 GPS 위치로부터 기존 목적지까지 TMAP AR 안내가 자동으로 이어집니다.
 
 실외 화살표는 목적지까지 직선거리 50m 이내에서 목적지를 직접 가리키며, 그 밖에서는 경로의 10m 앞 지점을 가리킵니다.
 경로에서 35m를 벗어난 상태가 2초간 지속되면 이탈로 판단하고, 재탐색 최소 간격은 5초입니다.
@@ -21,8 +23,8 @@ Android Studio에서 **이 폴더(`AR_Navigation_Final`)**를 열고 `app`을 �
 
 - 전체 JDK 21, Android SDK 36.1, Java 소스 17, Min SDK 24 / Target SDK 36
 - 각 폴더에 포함된 Gradle Wrapper 사용
-- `local.properties` 또는 환경변수: `MAPS_API_KEY`, `PLACES_API_KEY`, `TMAP_APP_KEY` 또는 `TMAP_PROXY_BASE_URL`
-- 이 컴퓨터의 기존 로컬 설정은 복사했으며 `.gitignore`로 제외했습니다. 다른 컴퓨터에서는 직접 설정해야 합니다.
+- `AR_Navigation_Final/.env`에 `MAPS_API_KEY`, `PLACES_API_KEY`, 그리고 `TMAP_APP_KEY` 또는 `TMAP_PROXY_BASE_URL`을 따옴표 없이 입력합니다.
+- Gradle은 환경변수, `.env`의 채워진 값, `local.properties` 순서로 설정을 읽습니다.
 - 새 디버그 패키지: **`com.example.arnavigation.finalapp.debug`**. Google Cloud 키에 Android 앱 제한이 있으면 이 패키지와 해당 서명 SHA-1 등록이 필요합니다. API 활성화·결제·실제 경로 응답 성공 여부는 별도 확인 대상입니다.
 
 ```bash

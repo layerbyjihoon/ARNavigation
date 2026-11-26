@@ -74,6 +74,10 @@
     <Button android:id="@+id/start_nav_button" style="@style/NavButton.Primary"
         android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
         android:enabled="false" android:text="@string/nav_start_sample" />
+    <Button android:id="@+id/choose_outdoor_destination" style="@style/NavButton.Secondary"
+        android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+        android:layout_marginStart="8dp" android:text="@string/outdoor_pick_destination"
+        android:visibility="gone" />
   </LinearLayout>
 
   <LinearLayout android:id="@+id/angle_debug_controls"

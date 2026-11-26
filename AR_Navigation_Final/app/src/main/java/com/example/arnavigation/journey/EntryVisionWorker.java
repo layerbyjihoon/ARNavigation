@@ -15,7 +15,7 @@ import java.util.concurrent.Executors;
 /** One serial inference worker, sharing the outdoor CameraX session. Never opens a camera. */
 public final class EntryVisionWorker implements ImageAnalysis.Analyzer {
     public interface Listener {
-        void onResult(String session, double score, boolean valid, long capturedMs);
+        void onResult(String session, double inside, double outside, boolean valid, long capturedMs);
         void onError();
     }
     public final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -45,7 +45,9 @@ public final class EntryVisionWorker implements ImageAnalysis.Analyzer {
             Matrix rotate = new Matrix(); rotate.postRotate(image.getImageInfo().getRotationDegrees());
             upright = Bitmap.createBitmap(raw, 0, 0, raw.getWidth(), raw.getHeight(), rotate, true);
             MunhwaClassifier.Result result = classifier.classify(upright);
-            main.execute(() -> { if (!closed) listener.onResult(currentSession, result.inside, result.valid, at); });
+            main.execute(() -> {
+                if (!closed) listener.onResult(currentSession, result.inside, result.outside, result.valid, at);
+            });
         } catch (Exception error) {
             failed = true;
             if (classifier != null) { try { classifier.close(); } catch (Exception ignored) { } classifier = null; }

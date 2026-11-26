@@ -21,13 +21,16 @@ public final class MunhwaClassifier implements AutoCloseable {
     static final String BUILDING_ID = "ssu-munhwagwan";
     private final SegformerSegmenter segmenter;
     private final List<StructureSignature> inside;
+    private final List<StructureSignature> outside;
 
     public static final class Result {
         public final double inside;
+        public final double outside;
         public final boolean valid;
         final SegmentationMask mask;
-        Result(double inside, boolean valid, SegmentationMask mask) {
+        Result(double inside, double outside, boolean valid, SegmentationMask mask) {
             this.inside = inside;
+            this.outside = outside;
             this.valid = valid;
             this.mask = mask;
         }
@@ -46,6 +49,8 @@ public final class MunhwaClassifier implements AutoCloseable {
             throw new IllegalArgumentException("Incompatible Cultural Center references");
         }
         inside = signatures(profile.getAsJsonArray("insideMasks"));
+        outside = signatures(profile.getAsJsonArray("outsideMasks"));
+        outside.addAll(signatures(profile.getAsJsonArray("doorwayOutsideMasks")));
         byte[] model;
         try (InputStream stream = assets.open("segformer-b0-ade20k.onnx")) {
             java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
@@ -64,7 +69,7 @@ public final class MunhwaClassifier implements AutoCloseable {
     public Result classify(Bitmap uprightFullFrame) throws Exception {
         SegmentationMask mask = segmenter.run(uprightFullFrame);
         StructureSignature frame = StructureSignature.from(mask);
-        return new Result(best(frame, inside), frame.isValid(), mask);
+        return new Result(best(frame, inside), best(frame, outside), frame.isValid(), mask);
     }
 
     private static List<StructureSignature> signatures(JsonArray masks) {

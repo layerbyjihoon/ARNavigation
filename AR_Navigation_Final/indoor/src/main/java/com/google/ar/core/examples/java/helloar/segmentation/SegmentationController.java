@@ -69,9 +69,10 @@ public final class SegmentationController implements AutoCloseable {
   public Completed takeCompleted(){Completed result=pending.getAndSet(null);return result!=null&&result.generation==generation.get()?result:null;}
   public void invalidate(){generation.incrementAndGet();pending.set(null);latest=null;lastSubmitted=lastInferenceSubmitted=0;}
 
-  public void onFrame(Frame frame,Pose origin,boolean tracking,Rigid2D currentCorrection) {
+  public void onFrame(Frame frame,Pose origin,boolean tracking,Rigid2D currentCorrection,
+      boolean requiredForExit) {
     long now=android.os.SystemClock.elapsedRealtimeNanos();
-    if(closed||!enabled||!ready||now-lastSubmitted<100_000_000L||!busy.compareAndSet(false,true))return;
+    if(closed||(!enabled&&!requiredForExit)||!ready||now-lastSubmitted<100_000_000L||!busy.compareAndSet(false,true))return;
     final boolean runInference=now-lastInferenceSubmitted>=intervalNanos;
     final CameraFramePreprocessor.Yuv yuv;
     final FrameSnapshot snapshot;

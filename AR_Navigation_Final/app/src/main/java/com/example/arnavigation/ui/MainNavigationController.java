@@ -68,6 +68,13 @@ final class MainNavigationController {
         return selectedTab == null ? TAB_MAP : selectedTab;
     }
 
+    void prepareIndoorScreen() {
+        openMap();
+        Fragment ar = fragmentManager.findFragmentByTag(TAG_AR);
+        if (ar != null && !fragmentManager.isStateSaved())
+            fragmentManager.beginTransaction().remove(ar).commit();
+    }
+
     private void select(String tab) {
         if (tab.equals(selectedTab) && activeFragment(tab) != null) return;
         if (fragmentManager.isStateSaved()) return;

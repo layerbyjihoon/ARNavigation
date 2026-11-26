@@ -108,10 +108,20 @@ public final class MapFragment extends Fragment implements PermissionAware {
             if (binding.searchHeading.getVisibility() == View.VISIBLE) {
                 binding.placeSearch.clearFocus(); showSearch(false);
             } else {
+                var activity = (com.example.arnavigation.ui.MainActivity) requireActivity();
                 android.widget.PopupMenu menu = new android.widget.PopupMenu(requireContext(), v);
-                menu.getMenu().add("문화관 강의실").setOnMenuItemClickListener(item -> {
-                    ((com.example.arnavigation.ui.MainActivity) requireActivity()).chooseCultureRoom(); return true;
-                });
+                if (activity.isPickingOutdoorDestination()) {
+                    menu.getMenu().add(android.R.string.cancel).setOnMenuItemClickListener(item -> {
+                        activity.finish(); return true;
+                    });
+                } else {
+                    menu.getMenu().add("문화관 강의실").setOnMenuItemClickListener(item -> {
+                        activity.chooseCultureRoom(); return true;
+                    });
+                    menu.getMenu().add(R.string.indoor_departure).setOnMenuItemClickListener(item -> {
+                        activity.startIndoorDeparture(); return true;
+                    });
+                }
                 menu.show();
             }
         });

@@ -85,19 +85,22 @@ public final class ArNavigationFragment extends Fragment implements PermissionAw
         transitionStatus = view.findViewById(R.id.final_transition_status);
         vision = new com.example.arnavigation.journey.EntryVisionWorker(requireContext(),
             new com.example.arnavigation.journey.EntryVisionWorker.Listener() {
-                public void onResult(String session, double score, boolean valid, long capturedMs) {
+                public void onResult(String session, double inside, double outside, boolean valid, long capturedMs) {
                     if (!viewResumed || handingOff || !isAdded() || transitionStatus == null) return;
                     com.example.arnavigation.journey.JourneyState journey = activityHost().getJourney();
                     if (session == null || !session.equals(journey.destinationId()) || !journey.gate.isChecking()) return;
-                    long age = SystemClock.elapsedRealtime() - capturedMs;
+                    long now = SystemClock.elapsedRealtime();
+                    long age = now - capturedMs;
                     if (age < 0 || age > 2000) return;
-                    transitionStatus.setText(valid ? getString(R.string.final_checking, score)
+                    transitionStatus.setText(valid ? getString(R.string.final_checking, inside)
                         : getString(R.string.final_check_unknown));
-                    if (journey.gate.observe(score, valid, age)) handoff();
+                    if (journey.gate.observe(inside, outside, valid, capturedMs, now)) handoff();
                 }
                 public void onError() {
-                    if (viewResumed && !handingOff && transitionStatus != null)
+                    if (viewResumed && !handingOff && transitionStatus != null) {
+                        activityHost().getJourney().gate.resetObservations();
                         transitionStatus.setText(R.string.final_check_error);
+                    }
                 }
             });
         transitionStatus.setOnClickListener(button -> {
@@ -273,6 +276,7 @@ public final class ArNavigationFragment extends Fragment implements PermissionAw
     public void onPause() {
         viewResumed = false;
         if (vision != null) vision.suspend();
+        activityHost().getJourney().gate.resetObservations();
         unbindCamera();
         super.onPause();
     }

@@ -10,10 +10,17 @@ if (localPropertiesFile.exists()) {
     localPropertiesFile.withInputStream { localProperties.load(it) }
 }
 
+def dotenv = new Properties()
+def dotenvFile = rootProject.file('.env')
+if (dotenvFile.isFile()) {
+    dotenvFile.withReader('UTF-8') { dotenv.load(it) }
+}
+
 def configValue = { String name ->
     def environmentValue = System.getenv(name)
+    def dotenvValue = dotenv.getProperty(name)
     def localValue = localProperties.getProperty(name)
-    return environmentValue != null ? environmentValue : (localValue != null ? localValue : '')
+    return environmentValue != null ? environmentValue : (dotenvValue ?: localValue ?: '')
 }
 
 def quotedBuildConfigValue = { String value ->
@@ -103,6 +110,7 @@ dependencies {
 
     implementation 'com.google.android.gms:play-services-maps:20.0.0'
     implementation 'com.google.android.gms:play-services-location:21.4.0'
+    implementation 'com.google.android.gms:play-services-auth:19.2.0'
     implementation 'com.google.android.libraries.places:places:5.1.1'
 
     implementation 'androidx.camera:camera-camera2:1.6.2'

@@ -151,4 +151,15 @@
     <string name="final_use_room">이 호실로 설정</string>
     <string name="final_room_search">문화관 호실 검색</string>
     <string name="final_no_room">검색 결과가 없습니다. 다른 호실을 입력해 주세요.</string>
+  <string name="cloud_entrance_title">입구 위치 복원</string>
+  <string name="cloud_entrance_notice">이 세션을 제공하기 위해 Google에서 센서 데이터(예: 카메라 및 위치)를 처리합니다. <a href="https://support.google.com/ar?p=how-google-play-services-for-ar-handles-your-data">자세히 알아보기</a></string>
+  <string name="cloud_entrance_accept">입구 스캔</string>
+  <string name="cloud_entrance_decline">기존 방식으로 안내</string>
+  <string name="cloud_entrance_scan">입구 주변의 기둥과 벽을 여러 각도에서 천천히 비춰 주세요.</string>
+  <string name="cloud_entrance_move_to_start">입구 위치를 찾았습니다. 표시된 실내 출발 지점으로 이동해 주세요.</string>
+  <string name="cloud_entrance_fallback">입구 위치를 복원하지 못했습니다. 표시된 출발 지점에 서서 바닥을 비춘 뒤 길안내를 시작해 주세요.</string>
+  <string name="outdoor_pick_destination">실외 목적지</string>
+  <string name="outdoor_use_exit_route">정문 경로 선택</string>
+  <string name="outdoor_confirm_location">정문 밖으로 나가면서 앞쪽 바닥과 주변을 비춰 주세요.</string>
+  <string name="outdoor_checking">실외 확인 중</string>
 </resources>

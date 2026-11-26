@@ -41,4 +41,7 @@
     <string name="final_camera_release_error">카메라 해제를 확인할 수 없습니다. 지도에서 안내를 다시 시작해 주세요.</string>
     <string name="show_ar_guide">AR 안내로 돌아가기</string>
     <string name="final_choose_culture_first">검색에서 문화관을 선택하면 호실을 미리 설정할 수 있어요.</string>
+    <string name="indoor_departure">문화관 실내에서 출발</string>
+    <string name="outdoor_destination_confirm">실외 목적지로 설정</string>
+    <string name="outdoor_destination_confirm_message">문화관 정문을 거쳐 이 목적지까지 안내합니다.</string>
 </resources>

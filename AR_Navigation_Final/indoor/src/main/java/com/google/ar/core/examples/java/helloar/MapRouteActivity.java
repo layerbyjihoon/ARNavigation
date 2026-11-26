@@ -31,6 +31,10 @@ public final class MapRouteActivity extends AppCompatActivity {
   public static final String MUNHWAGWAN_MAP = "maps/munhwagwan.indoor.json";
   public static final String EXTRA_MAP_INDEX = "map_index";
   public static final String MUNHWAGWAN_START_ID = "F1_START_C006_C007";
+  static final String EXTRA_PICK_EXIT_ROUTE = "pick_exit_route";
+  static final String EXTRA_PREFERRED_START_POI = "preferred_start_poi";
+  static final String EXTRA_DESTINATION_POI = "destination_poi";
+  static final String MUNHWAGWAN_EXIT_ID = "F1_ENTRY_MAIN";
   private static final String[] MAP_ASSETS = {MUNHWAGWAN_MAP, TEST_MAP};
   private final ExecutorService worker = Executors.newSingleThreadExecutor();
   private TextView summary, output, notice, routeSummary;
@@ -39,6 +43,7 @@ public final class MapRouteActivity extends AppCompatActivity {
   private EditText yaw;
   private Button find, apply;
   private MapLoadResult loaded;
+  private EntranceCloudAnchor entranceCloudAnchor;
   private NavigationRoute selectedRoute;
   private float[] selectedPoints;
   private int[] selectedStageLengths;
@@ -50,9 +55,16 @@ public final class MapRouteActivity extends AppCompatActivity {
   private String savedYaw = "0";
   private boolean useDefaultYaw;
   private int selectedMap, loadGeneration;
+  private boolean pickExitRoute;
+  private String preferredExitStart;
 
   @Override protected void onCreate(Bundle saved) {
     super.onCreate(saved);
+    pickExitRoute = getIntent().getBooleanExtra(EXTRA_PICK_EXIT_ROUTE, false);
+    if (pickExitRoute && saved == null) {
+      preferredExitStart = getIntent().getStringExtra(EXTRA_PREFERRED_START_POI);
+      if (preferredExitStart == null) preferredExitStart = MUNHWAGWAN_START_ID;
+    }
     setContentView(R.layout.activity_map_route);
     // Android 15+ enforces edge-to-edge: keep controls clear of system bars and the keyboard.
     android.view.View content = findViewById(R.id.map_root);
@@ -112,7 +124,13 @@ public final class MapRouteActivity extends AppCompatActivity {
         if (selectedEntryDirection != null) result
             .putExtra(EXTRA_ENTRY_YAW, selectedEntryDirection.canonicalYawDegrees)
             .putExtra(EXTRA_ENTRY_DIRECTION, selectedEntryDirection.description());
+        if (entranceCloudAnchor != null) {
+          double planYaw = Double.parseDouble(yaw.getText().toString().trim());
+          EntranceCloudAnchor routeAnchor = entranceCloudAnchor.forRoute(loaded.map, first, planYaw);
+          if (routeAnchor != null) result.putExtra(EntranceCloudAnchor.EXTRA, routeAnchor.toRouteBundle());
+        }
         result.putExtra("final_room_name", to.name);
+        result.putExtra(EXTRA_DESTINATION_POI, to.id);
         setResult(RESULT_OK, result);
         finish();
       }
@@ -133,9 +151,9 @@ public final class MapRouteActivity extends AppCompatActivity {
       }
       @Override public void onNothingSelected(AdapterView<?> parent) {}
     });
-    if (getIntent().getBooleanExtra("final_pick_room", false)) {
+    if (pickExitRoute || getIntent().getBooleanExtra("final_pick_room", false)) {
       selectedMap = 0; maps.setSelection(0); maps.setEnabled(false);
-      apply.setText(R.string.final_use_room);
+      apply.setText(pickExitRoute ? R.string.outdoor_use_exit_route : R.string.final_use_room);
     }
     loadMap();
   }
@@ -144,6 +162,8 @@ public final class MapRouteActivity extends AppCompatActivity {
     final int generation = ++loadGeneration;
     final int mapIndex = selectedMap;
     final String asset = MAP_ASSETS[selectedMap];
+    final boolean cloudHandoff = MUNHWAGWAN_MAP.equals(asset)
+        && getIntent().getBooleanExtra("final_pick_room", false);
     loaded = null; selectedRoute = null; selectedPoints = null;
     find.setEnabled(false); setPreviewAvailable(false); start.setEnabled(false); destination.setEnabled(false);
     summary.setText(R.string.map_loading); notice.setText(""); output.setText("");
@@ -164,11 +184,14 @@ public final class MapRouteActivity extends AppCompatActivity {
         catch (java.io.IOException | RuntimeException e) { angleError = e.getMessage(); }
       }
       final MapLoadResult configuredMap = result;
+      final EntranceCloudAnchor cloudAnchor = cloudHandoff && result.isSuccess()
+          ? EntranceCloudAnchor.load(getAssets(), result.map) : null;
       final Double configuredAngle = defaultAngle;
       final String configurationError = angleError;
       runOnUiThread(() -> {
         if (isFinishing() || isDestroyed() || generation != loadGeneration) return;
         loaded = configuredMap;
+        entranceCloudAnchor = cloudAnchor;
         if (!configuredMap.isSuccess()) {
           summary.setText(R.string.map_load_failed); output.setText(issues(configuredMap.validation));
           routeSummary.setText(R.string.map_load_failed);
@@ -199,7 +222,14 @@ public final class MapRouteActivity extends AppCompatActivity {
           find.setEnabled(true);
           start.setEnabled(true); destination.setEnabled(true);
         }
-        if (selectedMap == 0) {
+        if (pickExitRoute) {
+          for (int i = 0; i < map.pois.size(); i++) {
+            if (map.pois.get(i).id.equals(preferredExitStart)) start.setSelection(i);
+            if (MUNHWAGWAN_EXIT_ID.equals(map.pois.get(i).id)) destination.setSelection(i);
+          }
+          destination.setEnabled(false);
+          findRoute();
+        } else if (selectedMap == 0) {
           for (int i = 0; i < map.pois.size(); i++)
             if (MUNHWAGWAN_START_ID.equals(map.pois.get(i).id)) start.setSelection(i);
           start.setEnabled(false);
@@ -331,7 +361,7 @@ public final class MapRouteActivity extends AppCompatActivity {
   }
 
   private Poi selectedStart() {
-    if (selectedMap == 0) {
+    if (selectedMap == 0 && !pickExitRoute) {
       if (loaded == null || !loaded.isSuccess()) return null;
       for (Poi poi : loaded.map.pois) if (MUNHWAGWAN_START_ID.equals(poi.id)) return poi;
       return null;

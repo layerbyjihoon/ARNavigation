@@ -31,6 +31,7 @@ import android.hardware.camera2.CameraManager;
 import android.text.InputType;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.method.LinkMovementMethod;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import androidx.appcompat.app.AlertDialog;
@@ -51,8 +52,10 @@ import com.google.ar.core.CameraConfig;
 import com.google.ar.core.CameraConfigFilter;
 import com.google.ar.core.Config;
 import com.google.ar.core.Frame;
+import com.google.ar.core.FutureState;
 import com.google.ar.core.Pose;
 import com.google.ar.core.Plane;
+import com.google.ar.core.ResolveCloudAnchorFuture;
 import com.google.ar.core.Session;
 import com.google.ar.core.TrackingState;
 import com.google.ar.core.examples.java.common.helpers.CameraPermissionHelper;
@@ -94,7 +97,31 @@ import java.util.ArrayList;
 public class HelloArActivity extends AppCompatActivity implements SampleRender.Renderer {
 
   public static final String EXTRA_AUTO_START_ON_FLOOR = "auto_start_on_floor";
+  public static final String EXTRA_OUTDOOR_PICKER = "outdoor_picker";
+  public static final String EXTRA_OUTDOOR_DESTINATION = "outdoor_destination";
+  public static final String EXTRA_BEGIN_OUTDOOR_DEPARTURE = "begin_outdoor_departure";
+  private static final int OUTDOOR_DESTINATION_REQUEST = 1002;
+  private static final int EXIT_ROUTE_REQUEST = 1003;
   private static final String TAG = HelloArActivity.class.getSimpleName();
+  private static final long ENTRANCE_RESOLVE_TIMEOUT_MS = 35_000;
+  private static final double ENTRANCE_START_RADIUS_METERS = 1.5;
+
+  private EntranceCloudAnchor entranceCloudAnchor;
+  private AlertDialog cloudNotice;
+  private boolean cloudConsentGranted;
+  private boolean cloudModeEnabled;
+  private boolean cloudStartPending;
+  private long cloudDeadline;
+  private ResolveCloudAnchorFuture cloudResolve;
+  private Anchor resolvedEntrance;
+  private Bundle pendingOutdoorDestination;
+  private Bundle outdoorDestination;
+  private Bundle exitRouteData;
+  private String destinationPoi;
+  private ArRoutePlan exitPlan;
+  private final OutdoorExitGate outdoorExitGate = new OutdoorExitGate();
+  private long outdoorCheckStart;
+  private volatile long outdoorDepartureFrame;
 
   private static final float ARRIVAL_DISTANCE = 0.8f;
   private static final long DEBUG_UPDATE_INTERVAL_MS = 200;
@@ -356,25 +383,66 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     resetButton.setOnClickListener(v -> resetNavigationRequested = true);
     findViewById(R.id.map_route_button).setOnClickListener(v ->
         startActivityForResult(new Intent(this, MapRouteActivity.class), MAP_ROUTE_REQUEST));
+    View outdoorButton = findViewById(R.id.choose_outdoor_destination);
+    outdoorButton.setVisibility(getIntent().hasExtra(EXTRA_OUTDOOR_PICKER) ? View.VISIBLE : View.GONE);
+    outdoorButton.setOnClickListener(v -> chooseOutdoorDestination());
     displayRotationHelper = new DisplayRotationHelper(/* context= */ this);
 
     // Set up renderer.
     render = new SampleRender(surfaceView, this, getAssets());
 
-    if (getIntent().hasExtra(MapRouteActivity.EXTRA_POINTS)) {
+    if (savedInstanceState != null) {
+      pendingOutdoorDestination = savedInstanceState.getBundle("pending_outdoor_destination");
+      outdoorDestination = savedInstanceState.getBundle(EXTRA_OUTDOOR_DESTINATION);
+      exitRouteData = savedInstanceState.getBundle("exit_route");
+      destinationPoi = savedInstanceState.getString("indoor_destination_poi");
+    }
+    if (exitRouteData != null && outdoorDestination != null) {
+      applyMapRoute(new Intent().putExtras(exitRouteData), true);
+    } else if (getIntent().hasExtra(MapRouteActivity.EXTRA_POINTS)) {
       autoStartOnNextRoute.set(savedInstanceState == null
           && getIntent().getBooleanExtra(EXTRA_AUTO_START_ON_FLOOR, false));
-      onActivityResult(MAP_ROUTE_REQUEST, RESULT_OK, getIntent());
+      if (autoStartOnNextRoute.get()) {
+        entranceCloudAnchor = EntranceCloudAnchor.fromRoute(
+            getIntent().getBundleExtra(EntranceCloudAnchor.EXTRA));
+      }
+      applyMapRoute(getIntent(), false);
     }
     installRequested = false;
+    if (savedInstanceState == null && getIntent().getBooleanExtra(EXTRA_BEGIN_OUTDOOR_DEPARTURE, false)) {
+      chooseOutdoorDestination();
+    }
   }
 
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
-    if (requestCode == MAP_ROUTE_REQUEST && resultCode == RESULT_OK && data != null) {
+    if (requestCode == OUTDOOR_DESTINATION_REQUEST && resultCode == RESULT_OK && data != null) {
+      pendingOutdoorDestination = data.getBundleExtra(EXTRA_OUTDOOR_DESTINATION);
+      if (pendingOutdoorDestination != null) {
+        startActivityForResult(new Intent(this, MapRouteActivity.class)
+            .putExtra(MapRouteActivity.EXTRA_PICK_EXIT_ROUTE, true)
+            .putExtra(MapRouteActivity.EXTRA_PREFERRED_START_POI, destinationPoi), EXIT_ROUTE_REQUEST);
+      }
+    } else if (requestCode == EXIT_ROUTE_REQUEST) {
+      if (resultCode == RESULT_OK && data != null && pendingOutdoorDestination != null
+          && MapRouteActivity.MUNHWAGWAN_EXIT_ID.equals(data.getStringExtra(MapRouteActivity.EXTRA_DESTINATION_POI))
+          && applyMapRoute(data, true)) {
+        outdoorDestination = pendingOutdoorDestination;
+        exitRouteData = data.getExtras();
+      }
+      pendingOutdoorDestination = null;
+    } else if (requestCode == MAP_ROUTE_REQUEST && resultCode == RESULT_OK && data != null) {
+      if (applyMapRoute(data, false)) {
+        outdoorDestination = null;
+        exitRouteData = null;
+      }
+    }
+  }
+
+  private boolean applyMapRoute(Intent data, boolean isExit) {
       try {
-        pendingMapRoute.set(ArRoutePlan.decodeStages(data.getStringExtra(MapRouteActivity.EXTRA_NAME),
+        ArRoutePlan plan = ArRoutePlan.decodeStages(data.getStringExtra(MapRouteActivity.EXTRA_NAME),
             data.getFloatArrayExtra(MapRouteActivity.EXTRA_POINTS),
             data.getIntArrayExtra(MapRouteActivity.EXTRA_STAGE_LENGTHS),
             data.getStringArrayExtra(MapRouteActivity.EXTRA_FLOORS),
@@ -385,20 +453,54 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
                 ? data.getDoubleExtra(MapRouteActivity.EXTRA_ENTRY_YAW, Double.NaN) : null,
             data.getStringExtra(MapRouteActivity.EXTRA_ENTRY_DIRECTION),
             data.getStringExtra(MapRouteActivity.EXTRA_START_LOCATION),
-            data.getStringExtra(MapRouteActivity.EXTRA_SEMANTIC_MAP)));
+            data.getStringExtra(MapRouteActivity.EXTRA_SEMANTIC_MAP));
+        exitPlan = isExit ? plan : null;
+        if (!isExit) destinationPoi = data.getStringExtra(MapRouteActivity.EXTRA_DESTINATION_POI);
+        outdoorDepartureFrame = 0;
+        pendingMapRoute.set(plan);
+        return true;
       } catch (IllegalArgumentException e) {
         autoStartOnNextRoute.set(false);
         Toast.makeText(this, "지도 경로를 적용할 수 없습니다: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        return false;
       }
+  }
+
+  private void chooseOutdoorDestination() {
+    Intent picker = getIntent().getParcelableExtra(EXTRA_OUTDOOR_PICKER);
+    if (picker != null) startActivityForResult(picker, OUTDOOR_DESTINATION_REQUEST);
+  }
+
+  private void completeOutdoorDeparture() {
+    outdoorDepartureFrame = 0;
+    if (session != null) {
+      displayRotationHelper.onPause();
+      surfaceView.onPause();
+      headingSensor.pause();
+      if (datasets != null) datasets.stopRecording(session);
+      session.pause();
+      releaseArSession();
     }
+    setResult(RESULT_OK, new Intent().putExtra(EXTRA_OUTDOOR_DESTINATION, outdoorDestination));
+    finish();
+  }
+
+  @Override protected void onSaveInstanceState(Bundle state) {
+    super.onSaveInstanceState(state);
+    state.putBundle("pending_outdoor_destination", pendingOutdoorDestination);
+    state.putBundle(EXTRA_OUTDOOR_DESTINATION, outdoorDestination);
+    state.putBundle("exit_route", exitRouteData);
+    state.putString("indoor_destination_poi", destinationPoi);
   }
 
   @Override
   protected void onDestroy() {
+    if (cloudNotice != null) cloudNotice.dismiss();
     if (segmentation != null) segmentation.close();
     if (stairVision != null) { stairVision.close(); stairVision = null; }
     if (session != null) {
       // onPause has already stopped the GL thread before Activity destruction.
+      clearCloudResolve();
       detachOriginAnchor();
       detachRouteEntryAnchor();
       detachDirectionAnchor();
@@ -418,7 +520,30 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
   protected void onResume() {
     super.onResume();
     activityResumed = true;
+    if (entranceCloudAnchor != null && !cloudConsentGranted) {
+      if (cloudNotice == null) showCloudNotice();
+      return;
+    }
     resumeArSession();
+  }
+
+  private void showCloudNotice() {
+    cloudNotice = new AlertDialog.Builder(this)
+        .setTitle(R.string.cloud_entrance_title)
+        .setMessage(getText(R.string.cloud_entrance_notice))
+        .setPositiveButton(R.string.cloud_entrance_accept, (dialog, which) -> chooseCloud(true))
+        .setNegativeButton(R.string.cloud_entrance_decline, (dialog, which) -> chooseCloud(false))
+        .setOnCancelListener(dialog -> chooseCloud(false))
+        .show();
+    TextView message = cloudNotice.findViewById(android.R.id.message);
+    if (message != null) message.setMovementMethod(LinkMovementMethod.getInstance());
+  }
+
+  private void chooseCloud(boolean accepted) {
+    cloudNotice = null;
+    cloudConsentGranted = accepted;
+    if (!accepted) entranceCloudAnchor = null;
+    if (activityResumed) resumeArSession();
   }
 
   private void resumeArSession() {
@@ -521,6 +646,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       // still call session.update() and get a SessionPausedException.
       displayRotationHelper.onPause();
       surfaceView.onPause();
+      clearCloudResolve();
+      resetOutdoorObservation();
       if (datasets != null) datasets.stopRecording(session);
       session.pause();
       // Playback discards frames while paused. Reopen from the start on resume.
@@ -980,6 +1107,9 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       resetNavigation();
       // Initial app handoff waits for tracking, yaw and floor without pinning an early pose.
       startNavigationRequested = autoStartOnNextRoute.getAndSet(false);
+      cloudStartPending = startNavigationRequested && cloudConsentGranted
+          && MapRouteActivity.MUNHWAGWAN_MAP.equals(plan.referenceId)
+          && "F1".equals(plan.stages.get(0).floorId);
       activeMapPlan = plan;
       activeStageIndex = 0;
       waitingForFloorChange = false;
@@ -1079,6 +1209,11 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       }
       final String feedback = alignmentStatus;
       runOnUiThread(() -> Toast.makeText(this, feedback, Toast.LENGTH_LONG).show());
+    }
+
+    if (cloudStartPending) {
+      startFromCloud(frame, camera);
+      return;
     }
 
     // Keep a start request pending until a reliable camera pose becomes available.
@@ -1246,30 +1381,112 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
         startLocation = activeMapPlan.stages.get(activeStageIndex).floorId + " 출구";
         Log.i(TAG, "Next floor stage anchored: " + startLocation);
       }
-      currentWaypointIndex = 0;
-      navigationStarted = true;
-      if (activeMapPlan != null) {
-        ArRoutePlan.Stage stage = activeMapPlan.stages.get(activeStageIndex);
-        stairFloorTracker = stage.transition != null && stage.transition.startsWith("STAIR")
-            ? new StairFloorTracker(stage.floorId, stage.nextFloorId,
-                "STAIR_UP".equals(stage.transition), camera.getPose().ty(),
-                Math.abs(route.get(route.size() - 1).y - route.get(0).y)) : null;
-      }
-      returnToStartRequired = false;
-      alignmentStatus = null;
-      navigationCompleted = false;
-      startNavigationRequested = false;
-      routeLineGeometry.invalidate();
-      lastDebugUpdateTime = 0;
-      Log.i(TAG, "Navigation started: frame=" + frame.getTimestamp()
-          + " origin=" + originAnchor.getPose() + " target=WP1");
+      finishNavigationStart(frame, camera);
     } catch (NotTrackingException e) {
       // Tracking may change while ARCore processes the request. Retry next frame.
       Log.w(TAG, "Waiting for tracking before creating the origin", e);
     }
   }
 
+  private void startFromCloud(Frame frame, Camera camera) {
+    long now = SystemClock.elapsedRealtime();
+    if (!cloudModeEnabled || (cloudDeadline != 0 && now >= cloudDeadline)) {
+      fallbackFromCloud();
+      return;
+    }
+    if (cloudDeadline == 0) cloudDeadline = now + ENTRANCE_RESOLVE_TIMEOUT_MS;
+    alignmentStatus = getString(R.string.cloud_entrance_scan);
+    try {
+      if (cloudResolve == null && resolvedEntrance == null
+          && camera.getTrackingState() == TrackingState.TRACKING) {
+        cloudResolve = session.resolveCloudAnchorAsync(entranceCloudAnchor.cloudId, null);
+      }
+      if (cloudResolve != null && cloudResolve.getState() == FutureState.DONE) {
+        Anchor.CloudAnchorState state = cloudResolve.getResultCloudAnchorState();
+        resolvedEntrance = cloudResolve.getResultAnchor();
+        cloudResolve = null;
+        if (state != Anchor.CloudAnchorState.SUCCESS || resolvedEntrance == null) {
+          Log.w(TAG, "Entrance Cloud Anchor resolve failed: " + state);
+          fallbackFromCloud();
+          return;
+        }
+      }
+      if (resolvedEntrance == null || resolvedEntrance.getTrackingState() == TrackingState.PAUSED
+          || camera.getTrackingState() != TrackingState.TRACKING) return;
+      Pose origin = resolvedEntrance.getTrackingState() == TrackingState.TRACKING
+          ? entranceCloudAnchor.routeOrigin(resolvedEntrance.getPose()) : null;
+      if (origin == null) {
+        fallbackFromCloud();
+        return;
+      }
+      Pose cameraPose = camera.getPose();
+      float cameraHeight = cameraPose.ty() - (origin.ty() + route.get(0).y);
+      double distance = Math.hypot(cameraPose.tx() - origin.tx(), cameraPose.tz() - origin.tz());
+      if (distance > ENTRANCE_START_RADIUS_METERS
+          || !FloorPlaneGeometry.isNearbyFloor(cameraHeight, 0)) {
+        alignmentStatus = getString(R.string.cloud_entrance_move_to_start);
+        return;
+      }
+      originAnchor = session.createAnchor(origin);
+      routeCameraHeight = cameraHeight;
+      clearCloudResolve();
+      cloudStartPending = false;
+      finishNavigationStart(frame, camera);
+    } catch (NotTrackingException ignored) {
+      // Tracking may change before ARCore creates the route origin. Retry on the next frame.
+    } catch (RuntimeException failure) {
+      Log.w(TAG, "Entrance Cloud Anchor unavailable", failure);
+      fallbackFromCloud();
+    }
+  }
+
+  private void fallbackFromCloud() {
+    clearCloudResolve();
+    cloudStartPending = false;
+    startNavigationRequested = false;
+    returnToStartRequired = true;
+    alignmentStatus = getString(R.string.cloud_entrance_fallback);
+  }
+
+  private void clearCloudResolve() {
+    if (cloudResolve != null) {
+      if (!cloudResolve.cancel()) {
+        Anchor result = cloudResolve.getResultAnchor();
+        if (result != null) result.detach();
+      }
+      cloudResolve = null;
+    }
+    if (resolvedEntrance != null) {
+      resolvedEntrance.detach();
+      resolvedEntrance = null;
+    }
+    cloudDeadline = 0;
+  }
+
+  private void finishNavigationStart(Frame frame, Camera camera) {
+    currentWaypointIndex = 0;
+    navigationStarted = true;
+    if (activeMapPlan != null) {
+      ArRoutePlan.Stage stage = activeMapPlan.stages.get(activeStageIndex);
+      stairFloorTracker = stage.transition != null && stage.transition.startsWith("STAIR")
+          ? new StairFloorTracker(stage.floorId, stage.nextFloorId,
+              "STAIR_UP".equals(stage.transition), camera.getPose().ty(),
+              Math.abs(route.get(route.size() - 1).y - route.get(0).y)) : null;
+    }
+    returnToStartRequired = false;
+    alignmentStatus = null;
+    navigationCompleted = false;
+    startNavigationRequested = false;
+    routeLineGeometry.invalidate();
+    lastDebugUpdateTime = 0;
+    Log.i(TAG, "Navigation started: frame=" + frame.getTimestamp()
+        + " origin=" + originAnchor.getPose() + " target=WP1");
+  }
+
   private void resetNavigation() {
+    clearCloudResolve();
+    resetOutdoorObservation();
+    cloudStartPending = false;
     semanticAlignment.reset();
     corridorCenter.reset();
     lastCenterRouteYaw = Double.NaN;
@@ -1368,7 +1585,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     if (!tracking) {
       postDebugText(getString(R.string.navigation_tracking,
           camera.getTrackingState().name(), camera.getTrackingFailureReason().name()),
-          getString(navigationStarted ? R.string.nav_status_recovering : R.string.nav_status_tracking),
+           cloudStartPending && alignmentStatus != null ? alignmentStatus
+               : getString(navigationStarted ? R.string.nav_status_recovering : R.string.nav_status_tracking),
           false);
       return;
     }
@@ -1379,7 +1597,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       boolean canStart = !startNavigationRequested
           && (selectedMapRouteName == null || findFloor(camera.getPose()) != null);
       String status = alignmentStatus;
-      if (selectedMapRouteName != null && !startNavigationRequested && !canStart) {
+      if (status == null && selectedMapRouteName != null && !startNavigationRequested && !canStart) {
         status = getString(R.string.nav_status_find_floor);
       } else if (status == null) {
         if (startNavigationRequested) status = getString(R.string.nav_status_preparing);
@@ -1512,7 +1730,9 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     lastDebugUpdateTime = now;
     String location = startLocation == null ? "" : getString(R.string.nav_ar_start_location, startLocation);
     boolean confirmStart = !waitingForFloorChange && (returnToStartRequired || navigationCompleted);
-    int action = navigationStarted ? R.string.nav_start_active
+    boolean exitReached = waitingToConfirmOutside();
+    int action = exitReached ? R.string.outdoor_checking
+        : navigationStarted ? R.string.nav_start_active
         : startNavigationRequested ? R.string.nav_start_preparing
         : waitingForFloorChange ? R.string.navigation_next_floor
         : confirmStart ? R.string.nav_start_confirm_location
@@ -1520,7 +1740,8 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     // Capture the state on the render thread; the UI never reads mutable navigation state.
     debugText.post(() -> {
       debugText.setText(text);
-      if (!status.contentEquals(navigationStatus.getText())) navigationStatus.setText(status);
+      String routeStatus = exitReached ? getString(R.string.outdoor_confirm_location) : status;
+      if (!routeStatus.contentEquals(navigationStatus.getText())) navigationStatus.setText(routeStatus);
       if (!location.contentEquals(navigationStartLocation.getText())) {
         navigationStartLocation.setText(location);
         navigationStartLocation.setVisibility(location.isEmpty() ? View.GONE : View.VISIBLE);
@@ -1530,7 +1751,7 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       if (!actionText.contentEquals(navigationStartButton.getText())) {
         navigationStartButton.setText(actionText);
       }
-      navigationStartButton.setEnabled(canStart);
+      navigationStartButton.setEnabled(!exitReached && canStart);
     });
   }
 
@@ -1844,7 +2065,10 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
       lastCorrectionAccepted=semanticAlignment.accept(completed.match,frame.getTimestamp());
     semanticAlignment.tick(frame.getTimestamp(),tracking&&anchored&&semanticCorrectionEnabled
         &&!experimentReplay&&segmentation.isEnabled());
-    segmentation.onFrame(frame,anchored?levelAnchorPose():null,tracking&&anchored,semanticAlignment.current());
+    boolean checkingExit = waitingToConfirmOutside();
+    observeOutdoorScene(frame.getTimestamp(), completed, checkingExit);
+    segmentation.onFrame(frame,anchored?levelAnchorPose():null,tracking&&anchored,
+        semanticAlignment.current(), checkingExit);
     long now=SystemClock.elapsedRealtime();
     updateCorridorCenter(completed, anchored && tracking, now);
     if(now-lastSemanticUi<500)return;
@@ -1871,6 +2095,34 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     runOnUiThread(()->{
       semanticOverlay.display(latest,text);
       ((TextView)findViewById(R.id.semantic_model_state)).setText(segmentation.state());
+    });
+  }
+
+  private boolean waitingToConfirmOutside() {
+    return navigationCompleted && !waitingForFloorChange && exitPlan != null
+        && activeMapPlan == exitPlan && (datasets == null || datasets.mode() != ArDatasetController.Mode.PLAYBACK);
+  }
+
+  private void resetOutdoorObservation() {
+    outdoorCheckStart = 0;
+    outdoorDepartureFrame = 0;
+    outdoorExitGate.reset();
+  }
+
+  private void observeOutdoorScene(long now, SegmentationController.Completed completed, boolean checking) {
+    if (!checking) {
+      if (outdoorCheckStart != 0) resetOutdoorObservation();
+      return;
+    }
+    if (outdoorCheckStart == 0) outdoorCheckStart = now;
+    if (completed == null || outdoorDepartureFrame != 0) return;
+    long timestamp = completed.segmentation.frame.timestamp;
+    if (timestamp < outdoorCheckStart || !outdoorExitGate.observe(completed.segmentation, now)) return;
+    outdoorDepartureFrame = timestamp;
+    Log.i(TAG, "Outdoor departure confirmed: frame=" + timestamp);
+    runOnUiThread(() -> {
+      if (activityResumed && !isFinishing() && outdoorDestination != null
+          && outdoorDepartureFrame == timestamp) completeOutdoorDeparture();
     });
   }
 
@@ -1917,6 +2169,19 @@ public class HelloArActivity extends AppCompatActivity implements SampleRender.R
     config.setDepthMode(session.isDepthModeSupported(Config.DepthMode.AUTOMATIC)
         ? Config.DepthMode.AUTOMATIC : Config.DepthMode.DISABLED);
     config.setInstantPlacementMode(Config.InstantPlacementMode.DISABLED);
+    cloudModeEnabled = cloudConsentGranted
+        && (datasets == null || datasets.mode() != ArDatasetController.Mode.PLAYBACK);
+    if (cloudModeEnabled) {
+      config.setCloudAnchorMode(Config.CloudAnchorMode.ENABLED);
+      try {
+        session.configure(config);
+        return;
+      } catch (RuntimeException failure) {
+        Log.w(TAG, "Could not enable Cloud Anchors", failure);
+        cloudModeEnabled = false;
+      }
+    }
+    config.setCloudAnchorMode(Config.CloudAnchorMode.DISABLED);
     session.configure(config);
   }
 
