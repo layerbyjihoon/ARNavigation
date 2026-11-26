@@ -1,0 +1,173 @@
+<!--
+   Copyright 2016 Google LLC
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+  <android.opengl.GLSurfaceView
+      android:id="@+id/surfaceview"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent" />
+  <com.google.ar.core.examples.java.helloar.debug.SegmentationDebugOverlay
+      android:id="@+id/semantic_overlay" android:layout_width="match_parent"
+      android:layout_height="match_parent" android:clickable="false" android:focusable="false" />
+  <TextView android:id="@+id/stair_ar_marker"
+      android:layout_width="wrap_content" android:layout_height="wrap_content"
+      android:background="@drawable/nav_ar_panel" android:padding="12dp"
+      android:textColor="@android:color/white" android:textSize="18sp"
+      android:textStyle="bold" android:elevation="8dp"
+      android:clickable="false" android:focusable="false" android:visibility="gone" />
+
+  <LinearLayout android:id="@+id/ar_header"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:layout_alignParentTop="true" android:layout_margin="16dp"
+      android:background="@drawable/nav_ar_panel" android:orientation="vertical"
+      android:padding="14dp">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:orientation="horizontal">
+      <TextView android:layout_width="0dp" android:layout_weight="1"
+          android:layout_height="wrap_content" android:text="@string/nav_ar_title"
+          android:textColor="@android:color/white" android:textSize="22sp" android:textStyle="bold" />
+      <Button android:id="@+id/ar_tools_toggle" style="@style/NavButton.Secondary"
+          android:layout_width="wrap_content" android:layout_height="wrap_content"
+          android:layout_marginStart="8dp" android:text="@string/nav_tools_open" />
+    </LinearLayout>
+    <TextView android:id="@+id/navigation_start_location"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:textColor="@android:color/white"
+        android:textSize="15sp" android:textStyle="bold" android:visibility="gone" />
+    <TextView android:id="@+id/navigation_status"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:text="@string/nav_status_tracking"
+        android:textColor="@color/nav_ar_text" android:textSize="14sp" />
+    <TextView android:id="@+id/stair_floor_estimate"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:textColor="@color/nav_ar_text"
+        android:textSize="13sp" android:visibility="gone" />
+    <TextView android:id="@+id/dataset_status"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" android:text="@string/ar_live_mode"
+        android:textColor="@android:color/white" android:textSize="13sp" android:visibility="gone" />
+  </LinearLayout>
+
+  <LinearLayout android:id="@+id/ar_actions"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:layout_alignParentBottom="true" android:layout_margin="16dp"
+      android:background="@drawable/nav_panel" android:orientation="horizontal" android:padding="10dp">
+    <Button android:id="@+id/map_route_button" style="@style/NavButton.Secondary"
+        android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp" android:text="@string/map_open" />
+    <Button android:id="@+id/start_nav_button" style="@style/NavButton.Primary"
+        android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content"
+        android:enabled="false" android:text="@string/nav_start_sample" />
+  </LinearLayout>
+
+  <LinearLayout android:id="@+id/angle_debug_controls"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:layout_above="@id/ar_actions" android:layout_marginStart="16dp"
+      android:layout_marginEnd="16dp" android:layout_marginBottom="8dp"
+      android:background="@drawable/nav_ar_panel" android:orientation="vertical"
+      android:padding="10dp" android:visibility="gone">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:gravity="center_vertical" android:orientation="horizontal">
+      <TextView android:id="@+id/angle_debug_value"
+          android:layout_width="0dp" android:layout_weight="1"
+          android:layout_height="wrap_content" android:text="@string/angle_debug_value"
+          android:textColor="@android:color/white" android:textSize="14sp" />
+      <EditText android:id="@+id/angle_debug_input"
+          android:layout_width="76dp" android:layout_height="wrap_content"
+          android:inputType="numberDecimal" android:selectAllOnFocus="true"
+          android:singleLine="true" android:text="70.0"
+          android:textColor="@android:color/white" android:textSize="16sp" />
+    </LinearLayout>
+    <SeekBar android:id="@+id/angle_debug_seek"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:max="720" android:progress="140" />
+  </LinearLayout>
+
+  <ScrollView android:id="@+id/ar_tools_panel"
+      android:layout_width="match_parent" android:layout_height="wrap_content"
+      android:layout_below="@id/ar_header" android:layout_above="@id/angle_debug_controls"
+      android:layout_marginStart="16dp" android:layout_marginEnd="16dp" android:layout_marginBottom="8dp"
+      android:visibility="gone">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:background="@drawable/nav_ar_panel" android:orientation="vertical" android:padding="14dp">
+      <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:text="@string/ar_developer_label" android:textColor="@android:color/white"
+          android:textSize="16sp" android:textStyle="bold" />
+      <Button android:id="@+id/calibrate_button" style="@style/NavButton.Secondary"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="10dp" android:text="@string/navigation_calibrate" />
+      <Button android:id="@+id/reset_nav_button" style="@style/NavButton.Secondary"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="8dp" android:text="@string/navigation_reset" />
+      <Button android:id="@+id/stair_display_toggle" style="@style/NavButton.Secondary"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="8dp" android:text="@string/stair_display_line" />
+      <LinearLayout android:id="@+id/dataset_controls"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="8dp" android:orientation="vertical">
+        <TextView android:id="@+id/recording_start_point" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:textColor="@color/nav_ar_text"
+            android:textSize="13sp" android:visibility="gone" />
+        <Button android:id="@+id/record_ar_button" style="@style/NavButton.Secondary"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/ar_record_start" />
+        <Button android:id="@+id/recordings_button" style="@style/NavButton.Secondary"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:text="@string/ar_recordings" />
+        <Button android:id="@+id/experiment_replay_button" style="@style/NavButton.Secondary"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:text="@string/experiment_replay_start" />
+        <Button android:id="@+id/stop_playback_button" style="@style/NavButton.Secondary"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:visibility="gone" android:text="@string/ar_playback_stop" />
+      </LinearLayout>
+      <CheckBox android:id="@+id/semantic_enable" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:checked="true" android:text="@string/semantic_enable"
+          android:textColor="@android:color/white" />
+      <CheckBox android:id="@+id/semantic_correction" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:checked="true" android:text="@string/semantic_correction"
+          android:textColor="@android:color/white" />
+      <TextView android:id="@+id/semantic_model_state" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:text="@string/semantic_loading" android:textColor="@android:color/white" />
+      <CheckBox android:id="@+id/semantic_mask" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:text="@string/semantic_mask" android:textColor="@android:color/white" />
+      <CheckBox android:id="@+id/semantic_landmarks" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:text="@string/semantic_landmarks" android:textColor="@android:color/white" />
+      <CheckBox android:id="@+id/semantic_boundaries" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:checked="true"
+          android:text="@string/semantic_boundaries" android:textColor="@android:color/white" />
+      <CheckBox android:id="@+id/semantic_status" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:text="@string/semantic_status" android:textColor="@android:color/white" />
+      <CheckBox android:id="@+id/semantic_compare" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:text="@string/semantic_compare" android:textColor="@android:color/white" />
+      <Button android:id="@+id/vision_debug_button" style="@style/NavButton.Secondary"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="8dp" android:text="@string/vision_debug_on" />
+      <TextView android:id="@+id/vision_debug_status"
+          android:layout_width="match_parent" android:layout_height="wrap_content"
+          android:layout_marginTop="8dp" android:text="@string/vision_debug_wait"
+          android:textColor="@color/nav_ar_text" android:textSize="12sp"
+          android:fontFamily="monospace" android:visibility="gone" />
+      <TextView android:id="@+id/debug_text" android:layout_width="match_parent"
+          android:layout_height="wrap_content" android:layout_marginTop="12dp"
+          android:text="@string/navigation_initial" android:textColor="@color/nav_ar_text"
+          android:textSize="12sp" android:fontFamily="monospace" />
+    </LinearLayout>
+  </ScrollView>
+</RelativeLayout>

@@ -1,0 +1,100 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          126.95,
+          37.49
+        ]
+      },
+      "properties": {
+        "index": 0,
+        "turnType": 200,
+        "pointType": "SP",
+        "totalDistance": 120,
+        "totalTime": 100,
+        "description": "출발"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            126.95,
+            37.49
+          ],
+          [
+            126.951,
+            37.49
+          ],
+          [
+            126.951,
+            37.491
+          ]
+        ]
+      },
+      "properties": {
+        "index": 1,
+        "distance": 100,
+        "time": 80
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          126.951,
+          37.491
+        ]
+      },
+      "properties": {
+        "index": 2,
+        "turnType": 212,
+        "description": "좌측 횡단보도"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            126.951,
+            37.491
+          ],
+          [
+            126.952,
+            37.491
+          ]
+        ]
+      },
+      "properties": {
+        "index": 3,
+        "distance": 20,
+        "time": 20
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          126.952,
+          37.491
+        ]
+      },
+      "properties": {
+        "index": 4,
+        "turnType": 201,
+        "pointType": "EP",
+        "description": "도착"
+      }
+    }
+  ]
+}

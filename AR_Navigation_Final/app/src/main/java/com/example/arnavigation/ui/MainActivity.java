@@ -1,0 +1,256 @@
+package com.example.arnavigation.ui;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.lifecycle.ViewModelProvider;
+import com.example.arnavigation.ArNavigationApplication;
+import com.example.arnavigation.R;
+import com.example.arnavigation.databinding.ActivityMainBinding;
+import com.example.arnavigation.navigation.NavigationAction;
+import com.example.arnavigation.navigation.NavigationViewModel;
+import com.example.arnavigation.ui.ar.ArNavigationHost;
+import com.example.arnavigation.ui.map.MapNavigationHost;
+
+/** Activity-scoped navigation session host for the map and AR tabs. */
+public final class MainActivity extends AppCompatActivity
+        implements MapNavigationHost, ArNavigationHost {
+    private static final String KEY_SELECTED_TAB = "selected_tab";
+
+    private ActivityMainBinding binding;
+    private NavigationViewModel navigationViewModel;
+    private PermissionCoordinator permissionCoordinator;
+    private MainNavigationController navigationController;
+    private static final int PICK_ROOM = 610, INDOOR_GUIDE = 611;
+    private com.example.arnavigation.journey.JourneyState journey;
+    private com.example.arnavigation.model.Destination pendingEntrance;
+    private boolean activityResumed;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (view, insets) -> {
+            androidx.core.graphics.Insets bars = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout() | WindowInsetsCompat.Type.ime());
+            view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+            return WindowInsetsCompat.CONSUMED;
+        });
+
+        ArNavigationApplication application = (ArNavigationApplication) getApplication();
+        navigationViewModel = new ViewModelProvider(
+                this,
+                new NavigationViewModelFactory(application.getNavigationDependencies()))
+                .get(NavigationViewModel.class);
+        journey = new ViewModelProvider(this).get(com.example.arnavigation.journey.JourneyState.class);
+        navigationViewModel.setIndoorTransferPending(journey.route() != null);
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey("entrance_lat")) pendingEntrance = new com.example.arnavigation.model.Destination(
+                "pending-culture", "문화관 출입구", new com.example.arnavigation.model.GeoPoint(
+                savedInstanceState.getDouble("entrance_lat"), savedInstanceState.getDouble("entrance_lng")),
+                com.example.arnavigation.model.DestinationSource.MAP_TAP, null);
+        }
+        permissionCoordinator = new PermissionCoordinator(this, this::notifyPermissionChanged);
+        navigationController = new MainNavigationController(
+                getSupportFragmentManager(),
+                binding.mainBottomNavigation,
+                R.id.main_fragment_container,
+                this::allowArSelection);
+
+        if (application.getApiAvailability().isMapsAvailable()
+                && application.getApiAvailability().isPlacesAvailable()
+                && application.getApiAvailability().isRoutesAvailable()) {
+            binding.configurationStatus.setVisibility(View.GONE);
+        } else {
+            binding.configurationStatus.setText(
+                    application.getApiAvailability().getUserFacingSummary());
+            binding.configurationStatus.setVisibility(View.VISIBLE);
+        }
+        journey.launchReady().observe(this, ready -> {
+            if (Boolean.TRUE.equals(ready) && activityResumed) startIndoorGuide();
+        });
+        navigationViewModel.getState().observe(this, state -> {
+            if (!journey.gate.isHandingOff() && !journey.isLaunchReady() && journey.destinationId() != null && (state.getDestination() == null
+                    || !journey.destinationId().equals(state.getDestination().getId()))) {
+                journey.clear(); navigationViewModel.setIndoorTransferPending(false);
+            }
+        });
+        navigationController.restore(savedInstanceState == null
+                ? MainNavigationController.TAB_MAP
+                : savedInstanceState.getString(
+                        KEY_SELECTED_TAB, MainNavigationController.TAB_MAP));
+    }
+
+    public com.example.arnavigation.journey.JourneyState getJourney() { return journey; }
+
+    /** Culture Hall requests a room before replacing the current journey. Canceling keeps it intact. */
+    public void selectDestination(com.example.arnavigation.model.Destination destination) {
+        if ("문화관".equals(destination.getName())) {
+            chooseCultureRoom(destination);
+        } else {
+            navigationViewModel.dispatch(new NavigationAction.SelectDestination(destination));
+        }
+    }
+
+    public void chooseCultureRoom() {
+        com.example.arnavigation.navigation.NavigationUiState state = navigationViewModel.getState().getValue();
+        com.example.arnavigation.model.Destination destination = state == null ? null : state.getDestination();
+        boolean cultureRoom = destination != null && destination.getId().startsWith("culture-room-");
+        if (destination == null || !("문화관".equals(destination.getName()) || cultureRoom)) {
+            Toast.makeText(this, R.string.final_choose_culture_first, Toast.LENGTH_LONG).show(); return;
+        }
+        chooseCultureRoom(destination);
+    }
+
+    private void chooseCultureRoom(com.example.arnavigation.model.Destination entrance) {
+        if (pendingEntrance != null) return;
+        pendingEntrance = entrance;
+        startActivityForResult(new android.content.Intent(this,
+                com.google.ar.core.examples.java.helloar.MapRouteActivity.class)
+                .putExtra("final_pick_room", true).putExtra("map_index", 0), PICK_ROOM);
+    }
+
+    @Override protected void onActivityResult(int request, int result, @Nullable android.content.Intent data) {
+        super.onActivityResult(request, result, data);
+        if (request == PICK_ROOM) {
+            if (result == RESULT_OK && data != null && pendingEntrance != null) {
+                String id = "culture-room-" + java.util.UUID.randomUUID();
+                com.example.arnavigation.model.Destination destination = new com.example.arnavigation.model.Destination(
+                    id, getString(R.string.final_destination_format, data.getStringExtra("final_room_name")),
+                    com.example.arnavigation.entrance.CultureHallEntrance.FRONT_POINT,
+                    com.example.arnavigation.model.DestinationSource.MAP_TAP, null);
+                // Select first: the state observer must not invalidate the new route against the old destination.
+                navigationViewModel.dispatch(new NavigationAction.SelectDestination(destination));
+                journey.set(id, data.getExtras()); navigationViewModel.setIndoorTransferPending(true);
+                openMapTab();
+                navigationViewModel.dispatch(new NavigationAction.ConfirmDestination());
+            }
+            pendingEntrance = null;
+        } else if (request == INDOOR_GUIDE) {
+            journey.clear(); navigationViewModel.setIndoorTransferPending(false); openMapTab();
+        }
+    }
+
+    public void completeIndoorHandoff(String destinationId, boolean success) {
+        if (!java.util.Objects.equals(destinationId, journey.destinationId())) return;
+        if (success) {
+            journey.setLaunchReady(true);
+
+        } else {
+            journey.clear(); navigationViewModel.setIndoorTransferPending(false);
+            if (!isDestroyed()) {
+                Toast.makeText(this, R.string.final_camera_release_error, Toast.LENGTH_LONG).show();
+                openMapTab();
+            }
+        }
+    }
+
+    public void startIndoorGuide() {
+        if (journey.route() == null || !journey.isLaunchReady() || isFinishing()) return;
+        android.content.Intent intent = new android.content.Intent(this,
+            com.google.ar.core.examples.java.helloar.HelloArActivity.class);
+        intent.putExtras(journey.route());
+        intent.putExtra(com.google.ar.core.examples.java.helloar.HelloArActivity.EXTRA_AUTO_START_ON_FLOOR, true);
+        journey.setLaunchReady(false);
+        startActivityForResult(intent, INDOOR_GUIDE);
+    }
+
+    @NonNull
+    @Override
+    public NavigationViewModel getNavigationViewModel() {
+        return navigationViewModel;
+    }
+
+    @Override
+    public void openArTab() {
+        if (allowArSelection()) navigationController.openAr();
+    }
+
+    @Override
+    public void openMapTab() {
+        navigationController.openMap();
+    }
+
+    @Override
+    public PermissionState getLocationPermissionState() {
+        return permissionCoordinator.getLocationState();
+    }
+
+    @Override
+    public void requestLocationPermission() {
+        permissionCoordinator.requestLocation();
+    }
+
+    @Override
+    public PermissionState getCameraPermissionState() {
+        return permissionCoordinator.getCameraState();
+    }
+
+    @Override
+    public void requestCameraPermission() {
+        permissionCoordinator.requestCamera();
+    }
+
+    private boolean allowArSelection() {
+        if (permissionCoordinator.getLocationState() == PermissionState.GRANTED) return true;
+        Toast.makeText(this, R.string.precise_location_required, Toast.LENGTH_SHORT).show();
+        permissionCoordinator.requestLocation();
+        return false;
+    }
+
+    private void notifyPermissionChanged() {
+        for (Fragment fragment : getSupportFragmentManager().getFragments()) {
+            if (fragment instanceof PermissionAware) {
+                ((PermissionAware) fragment).onPermissionStateChanged();
+            }
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        navigationViewModel.dispatch(new NavigationAction.ResumeNavigation());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        activityResumed = true;
+        notifyPermissionChanged();
+        if (journey.isLaunchReady()) startIndoorGuide();
+    }
+
+    @Override protected void onPause() {
+        activityResumed = false;
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        navigationViewModel.dispatch(new NavigationAction.PauseNavigation());
+        super.onStop();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        if (pendingEntrance != null) {
+            outState.putDouble("entrance_lat", pendingEntrance.getPoint().getLatitude());
+            outState.putDouble("entrance_lng", pendingEntrance.getPoint().getLongitude());
+        }
+        outState.putString(KEY_SELECTED_TAB, navigationController.getSelectedTab());
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onDestroy() {
+        binding = null;
+        super.onDestroy();
+    }
+}

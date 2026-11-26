@@ -1,0 +1,82 @@
+[
+  {
+    "image": "video1-outdoor.png",
+    "resultVideo": "assets/transition_results_075_gate1to4/video1/video1_transition.mp4",
+    "resultVideoSha256": "e8b2606e37ed4cc8c1afe09941f83e67e0b65357aa407d9ee0b83fbd547617ea",
+    "frameIndexZeroBased": 44,
+    "observation": {
+      "timestampMs": "14667",
+      "insideScore": "0.04991468618754997",
+      "gate1Score": "0.04991468618754997",
+      "gate2Score": "0.022550969531007523",
+      "gate3Score": "0.028501859610818435",
+      "gate4Score": "0.046342670799070326",
+      "matchedGate": "gate1",
+      "validStructure": "True",
+      "mode": "OUTDOOR",
+      "ambiguous": "False",
+      "inferenceMs": "105.3",
+      "validPixelFraction": "0.9814"
+    }
+  },
+  {
+    "image": "video1-first-indoor.png",
+    "resultVideo": "assets/transition_results_075_gate1to4/video1/video1_transition.mp4",
+    "resultVideoSha256": "e8b2606e37ed4cc8c1afe09941f83e67e0b65357aa407d9ee0b83fbd547617ea",
+    "frameIndexZeroBased": 58,
+    "observation": {
+      "timestampMs": "19333",
+      "insideScore": "0.7805957869606299",
+      "gate1Score": "0.6183323651371684",
+      "gate2Score": "0.7163717500220579",
+      "gate3Score": "0.7805957869606299",
+      "gate4Score": "0.7649227998957815",
+      "matchedGate": "gate3",
+      "validStructure": "True",
+      "mode": "INDOOR",
+      "ambiguous": "False",
+      "inferenceMs": "104.55",
+      "validPixelFraction": "0.9322"
+    }
+  },
+  {
+    "image": "video1-reentry-indoor.png",
+    "resultVideo": "assets/transition_results_075_gate1to4/video1/video1_transition.mp4",
+    "resultVideoSha256": "e8b2606e37ed4cc8c1afe09941f83e67e0b65357aa407d9ee0b83fbd547617ea",
+    "frameIndexZeroBased": 60,
+    "observation": {
+      "timestampMs": "20000",
+      "insideScore": "0.8010846313767999",
+      "gate1Score": "0.5762737054256599",
+      "gate2Score": "0.7359700954156687",
+      "gate3Score": "0.8010846313767999",
+      "gate4Score": "0.7607352757984628",
+      "matchedGate": "gate3",
+      "validStructure": "True",
+      "mode": "INDOOR",
+      "ambiguous": "False",
+      "inferenceMs": "103.63",
+      "validPixelFraction": "0.9553"
+    }
+  },
+  {
+    "image": "video2-first-indoor.png",
+    "resultVideo": "assets/transition_results_075_gate1to4/video2/video2_transition.mp4",
+    "resultVideoSha256": "f65652fae2080b83cb4bc6c1111044f0f83baed25bfe27fed494d2af28578c67",
+    "frameIndexZeroBased": 31,
+    "observation": {
+      "timestampMs": "10333",
+      "insideScore": "0.7767310704020098",
+      "gate1Score": "0.6127635573037958",
+      "gate2Score": "0.728798274111672",
+      "gate3Score": "0.7767310704020098",
+      "gate4Score": "0.6910958091528505",
+      "matchedGate": "gate3",
+      "validStructure": "True",
+      "mode": "INDOOR",
+      "ambiguous": "False",
+      "inferenceMs": "102.8",
+      "validPixelFraction": "0.9678"
+    }
+  }
+]

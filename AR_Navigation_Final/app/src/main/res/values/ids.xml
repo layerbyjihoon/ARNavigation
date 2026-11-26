@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="confirm_listener_tag" type="id" />
+    <item name="start_ar_listener_tag" type="id" />
+</resources>

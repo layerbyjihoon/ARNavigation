@@ -1,0 +1,18 @@
+<resources>
+    <style name="Theme.ARNavigation" parent="Theme.Material3.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">@color/nav_background</item>
+        <item name="android:statusBarColor">@color/nav_background</item>
+        <item name="android:navigationBarColor">@color/nav_ink</item>
+        <item name="colorPrimary">@color/nav_accent</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSecondary">@color/nav_accent</item>
+        <item name="colorSurface">@color/nav_surface</item>
+        <item name="colorOnSurface">@color/nav_ink</item>
+        <item name="colorOnSurfaceVariant">@color/nav_muted</item>
+        <item name="android:colorBackground">@color/nav_background</item>
+        <item name="materialButtonStyle">@style/NavButton.Primary</item>
+    </style>
+</resources>
+

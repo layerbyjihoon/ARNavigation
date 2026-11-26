@@ -1,0 +1,41 @@
+{
+  "routes": [
+    {
+      "distanceMeters": 123,
+      "duration": "95.5s",
+      "polyline": {
+        "encodedPolyline": "_p~iF~ps|U_ulLnnqC_mqNvxq`@"
+      },
+      "legs": [
+        {
+          "steps": [
+            {
+              "startLocation": {
+                "latLng": {"latitude": 38.5, "longitude": -120.2}
+              },
+              "endLocation": {
+                "latLng": {"latitude": 40.7, "longitude": -120.95}
+              },
+              "navigationInstruction": {
+                "maneuver": "TURN_LEFT",
+                "instructions": "<b>좌회전</b> &amp; 직진"
+              }
+            },
+            {
+              "startLocation": {
+                "latLng": {"latitude": 40.7, "longitude": -120.95}
+              },
+              "endLocation": {
+                "latLng": {"latitude": 43.252, "longitude": -126.453}
+              },
+              "navigationInstruction": {
+                "maneuver": "STRAIGHT",
+                "instructions": "직진"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

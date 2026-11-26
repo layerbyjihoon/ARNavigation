@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.CAMERA" />
+  <uses-feature android:name="android.hardware.camera.ar" android:required="false" />
+  <uses-feature android:glEsVersion="0x00030000" android:required="true" />
+  <application>
+    <meta-data android:name="com.google.ar.core" android:value="optional" />
+    <activity android:name="com.google.ar.core.examples.java.helloar.HelloArActivity"
+        android:exported="false" android:screenOrientation="portrait"
+        android:configChanges="orientation|screenSize" android:theme="@style/Theme.AppCompat.NoActionBar" />
+    <activity android:name="com.google.ar.core.examples.java.helloar.MapRouteActivity"
+        android:exported="false" android:screenOrientation="portrait" android:theme="@style/NavRouteTheme" />
+  </application>
+</manifest>

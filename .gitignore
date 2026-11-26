@@ -1,0 +1,25 @@
+# Android Studio / IntelliJ
+.idea/
+*.iml
+
+# Gradle
+.gradle/
+build/
+**/build/
+
+# Local machine and secrets
+local.properties
+keystore.properties
+*.jks
+*.keystore
+
+# Native / external build
+.externalNativeBuild/
+.cxx/
+
+# macOS
+.DS_Store
+
+# Captures and generated reports
+captures/
+

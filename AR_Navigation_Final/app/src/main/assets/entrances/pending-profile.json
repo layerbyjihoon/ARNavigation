@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "modelId": "segformer-b0-ade20k-512-v1",
+  "viewPolicy": "upright-full-frame",
+  "entranceId": "PENDING_ENTRANCE",
+  "buildingId": "PENDING_BUILDING",
+  "indoorMapId": "PENDING_MAP",
+  "startNodeId": "PENDING_NODE",
+  "floorId": "PENDING_FLOOR",
+  "latitude": 0,
+  "longitude": 0,
+  "insideMasks": [],
+  "negativeMasks": []
+}

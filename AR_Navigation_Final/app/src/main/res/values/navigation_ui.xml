@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 tokens from the Figma wireframes. -->
+    <color name="nav_background">#FEF7FF</color>
+    <color name="nav_surface">#FEF7FF</color>
+    <color name="nav_ink">#1D1B20</color>
+    <color name="nav_muted">#49454F</color>
+    <color name="nav_border">#CAC4D0</color>
+    <color name="nav_accent">#6750A4</color>
+    <color name="nav_soft">#ECE6F0</color>
+    <color name="nav_ar_surface">#F21D1B20</color>
+    <color name="nav_ar_text">#E6E0E9</color>
+
+    <style name="NavButton" parent="Widget.Material3.Button">
+        <item name="android:minHeight">48dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="cornerRadius">24dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+    <style name="NavButton.Primary">
+        <item name="backgroundTint">@color/nav_button_primary_tint</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+    <style name="NavButton.Secondary">
+        <item name="backgroundTint">@color/nav_soft</item>
+        <item name="android:textColor">@color/nav_ink</item>
+    </style>
+    <style name="NavActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/nav_soft</item>
+    </style>
+</resources>

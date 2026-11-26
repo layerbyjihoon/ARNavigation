@@ -1,0 +1,19 @@
+# Copy this file to local.properties and set sdk.dir for your machine.
+# Never commit local.properties or real API keys.
+sdk.dir=/absolute/path/to/Android/sdk
+
+# Android-restricted keys (application ID + SHA-1).
+MAPS_API_KEY=
+PLACES_API_KEY=
+
+# Prefer a backend proxy. For a direct PoC call, use a separate disposable key
+# with Android app + Routes API restrictions, low quota, and a budget alert.
+# Task 04 must send X-Android-Package and X-Android-Cert for direct REST calls.
+ROUTES_PROXY_BASE_URL=
+ROUTES_API_KEY=
+
+# Active walking route provider: TMAP pedestrian API.
+# Set either appKey (local PoC) or a TMAP-compatible backend proxy base URL.
+# The proxy receives POST /tmap/routes/pedestrian?version=1 and injects appKey.
+TMAP_APP_KEY=
+TMAP_PROXY_BASE_URL=
